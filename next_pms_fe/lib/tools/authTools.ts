@@ -53,17 +53,18 @@ const authOptions: NextAuthConfig = {
         async jwt({ token, user }: { token: JWT; user?: User; }) {
             // 1. Initial sign in (Pertama kali login)
             if (user) {
-                token.id = user.id;
-                token.role = user.role;
-                token.user_code = user.user_code;
-                token.name = user.name;
-                token.username = user.username;
-                token.remember_me = user.remember_me;
+                const u = user as any;
+                token.id = u.user_info?.id || u.id;
+                token.role = u.user_info?.role || u.role;
+                token.user_code = u.user_info?.user_code || u.user_code;
+                token.name = u.user_info?.fullname || u.name;
+                token.username = u.user_info?.username || u.username;
+                token.remember_me = u.remember_me;
 
-                token.access_token = user.access_token;
-                token.refresh_token = user.refresh_token;
+                token.access_token = u.access_token;
+                token.refresh_token = u.refresh_token;
 
-                const expireDurationInSeconds = user.remember_me ? (24 * 60 * 60) : (7 * 60 * 60);
+                const expireDurationInSeconds = u.remember_me === '1' || u.remember_me === true ? (24 * 60 * 60) : (7 * 60 * 60);
                 token.access_token_expires = Math.floor(Date.now() / 1000) + expireDurationInSeconds - 120;
 
                 return token;
@@ -73,11 +74,10 @@ const authOptions: NextAuthConfig = {
             const now = Math.floor(Date.now() / 1000);
             if (token.access_token_expires && now > token.access_token_expires) {
                 try {
-                    // Jalankan rotasi token di sini
                     const refreshedTokens = await refreshToken(
                         token.user_code || token.id || '',
                         token.refresh_token || '',
-                        token.remember_me ? 'true' : 'false'
+                        token.remember_me ? '1' : '0'
                     );
 
                     // Perbarui token di dalam cookie NextAuth

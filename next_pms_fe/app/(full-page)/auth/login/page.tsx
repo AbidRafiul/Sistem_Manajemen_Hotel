@@ -55,8 +55,13 @@ const LoginPage = () => {
         remember_me: data.remember_me ? '1' : '0'
       });
 
+      const userData = {
+        ...vaLogin.data,
+        remember_me: data.remember_me ? '1' : '0'
+      };
+
       const nAuth = await signIn('credentials', {
-        userData: JSON.stringify(vaLogin.data),
+        userData: JSON.stringify(userData),
         redirect: false
       });
 

@@ -31,5 +31,13 @@ export async function seed(knex) {
     updated_at: dDatetimeIso,
   };
 
-  await knex("user_credential").insert(oData);
+  const existingUser = await knex("user_credential").where("user_code", uniqueId).first();
+  if (existingUser) {
+    await knex("user_credential").where("user_code", uniqueId).update({
+      password: hashedPassword,
+      updated_at: dDatetimeIso
+    });
+  } else {
+    await knex("user_credential").insert(oData);
+  }
 };

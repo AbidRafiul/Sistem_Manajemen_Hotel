@@ -38,24 +38,24 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                         <span>Standart WO</span>
                     </Link>
 
-                    <button ref={menubuttonRef} type="button" className="p-link layout-menu-button layout-topbar-button" onClick={onMenuToggle}>
+                    <button ref={menubuttonRef} type="button" className="p-link layout-menu-button layout-topbar-button" onClick={onMenuToggle} suppressHydrationWarning>
                         <i className="pi pi-bars" />
                     </button>
                 </div>
 
                 <div className="flex gap-2 align-items-center">
-                    <div className='flex align-items-center'>
+                    <div className='flex align-items-center' suppressHydrationWarning>
                         <div style={{ fontWeight: "bold", fontSize: "12px" }}>{realZonedTime}</div>
                         &nbsp;&nbsp;<b>|</b>&nbsp;&nbsp;
                         <div className="text-700">
                             {session?.user?.name}
                         </div>
                     </div>
-                    <button type="button" className="p-link layout-topbar-button">
+                    <button type="button" className="p-link layout-topbar-button" suppressHydrationWarning>
                         <i className="pi pi-bell"></i>
                         <span>Notification</span>
                     </button>
-                    <button type="button" onClick={(e) => op?.current?.toggle(e)} className="p-link layout-topbar-button">
+                    <button type="button" onClick={(e) => op?.current?.toggle(e)} className="p-link layout-topbar-button" suppressHydrationWarning>
                         <i className="pi pi-user"></i>
                         <span>Log Out</span>
                     </button>

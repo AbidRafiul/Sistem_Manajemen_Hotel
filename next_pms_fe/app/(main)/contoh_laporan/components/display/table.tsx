@@ -101,10 +101,10 @@ const Table = ({
 
     // 2. TEMPLATE KODE TIKET + TOMBOL COPY (Kolom Kedua)
     const ticketCodeBodyTemplate = (rowData: TableData) => {
-        const handleCopy = (e: React.MouseEvent, code: string) => {
+        const handleCopy = (e: React.MouseEvent, kode: string) => {
             e.stopPropagation();
-            navigator.clipboard.writeText(code);
-            showSuccess(toast, `Kode tiket ${code} disalin ke clipboard`);
+            navigator.clipboard.writeText(kode);
+            showSuccess(toast, `Kode tiket ${kode} disalin ke clipboard`);
         };
 
         return (

@@ -168,6 +168,7 @@ const AppMenu = () => {
                             type="search"
                             ref={searchRef}
                             className="w-full"
+                            suppressHydrationWarning
                             value={state.searchVal}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const keyword = e.target.value;

@@ -4,7 +4,7 @@ import { DataTable } from 'primereact/datatable';
 import { FORMATTER_CONFIG, HEADER_CONFIG, initValue, TableData, TableProps } from '../interfaces';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
-import { formatDateSystem, formatTime, formatTimeStringToDate } from '@/lib/tools/dateTools';
+import { formatDateSystem, formatTimeOnlyTZ, formatTimeStringToDate } from '@/lib/tools/dateTools';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { IconField } from 'primereact/iconfield';
@@ -172,8 +172,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="kode" header="Kode" align="center" sortable style={{ minWidth: '8rem' }}></Column>
                     <Column field="nama" header="Nama" style={{ minWidth: '16rem' }}></Column>
-                    <Column field="waktu_mulai" header="Waktu Mulai" body={(rowData) => formatTime(rowData.waktu_mulai)} align="center" sortable style={{ minWidth: '14rem' }}></Column>
-                    <Column field="waktu_selesai" header="Waktu Selesai" body={(rowData) => formatTime(rowData.waktu_selesai)} align="center" sortable style={{ minWidth: '14rem' }}></Column>
+                    <Column field="waktu_mulai" header="Waktu Mulai" body={(rowData) => formatTimeOnlyTZ(rowData.waktu_mulai)} align="center" sortable style={{ minWidth: '14rem' }}></Column>
+                    <Column field="waktu_selesai" header="Waktu Selesai" body={(rowData) => formatTimeOnlyTZ(rowData.waktu_selesai)} align="center" sortable style={{ minWidth: '14rem' }}></Column>
                     {/* <Column field="status" header="Status" align="center" style={{ minWidth: '10rem' }}></Column> */}
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '14rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '14rem' }}></Column>

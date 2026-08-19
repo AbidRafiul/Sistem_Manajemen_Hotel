@@ -19,6 +19,7 @@ import express from "express";
 import RefreshToken from "./auth/refresh_token.js";
 import Login from "./auth/login.js";
 import Setup from "./setup/index.js";
+import Master from "./master/index.js";
 import Contoh from "./contoh/index.js";
 import Function from "./components/index.js";
 
@@ -38,6 +39,12 @@ router.use(
   "/setup",
   [validateAccessToken, contextMiddleware],
   Setup
+);
+// Master
+router.use(
+  "/master",
+  [validateAccessToken, contextMiddleware],
+  Master
 );
 // Setup
 router.use(

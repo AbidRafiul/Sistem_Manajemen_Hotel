@@ -101,8 +101,7 @@ export const validateAccessToken = async (req, res, next) => {
   const token = header && header.split(" ")[1];
 
   if (process.env.APP_DEBUG === 'true' && req.headers["x-uniqueid"]) {
-    req.auth = { user_code: req.headers["x-uniqueid"], role: "DEV", username: "DEV" };
-    return next();
+    req.auth = { user_id: 1, user_code: req.headers["x-uniqueid"], role: "DEV", username: "DEV" }; return next();
   }
 
   if (!token || !header.startsWith("Bearer ")) {
@@ -118,6 +117,7 @@ export const validateAccessToken = async (req, res, next) => {
     const { payload } = await jwtVerify(token, secretKey);
 
     req.auth = {
+      user_id: payload.user_id || 1,
       user_code: payload.user_code,
       username: payload.username,
       role: payload.role,
@@ -125,8 +125,12 @@ export const validateAccessToken = async (req, res, next) => {
 
     return next();
   } catch (error) {
-    Logging(error, { func: "validateAccessToken", file: 'middleware/validate_header.js' });
-    const errorMessage = error.message.includes('|') ? error.message.split('|')[1] : "Token tidak valid harap login ulang";
+    if (error?.code !== 'ERR_JWT_EXPIRED') {
+      Logging(error, { func: "validateAccessToken", file: 'middleware/validate_header.js' });
+    }
+    const errorMessage = error?.code === 'ERR_JWT_EXPIRED' 
+        ? "Token expired" 
+        : (error.message.includes('|') ? error.message.split('|')[1] : "Token tidak valid harap login ulang");
     const statusCode = error.message.includes('|') ? parseInt(error.message.split('|')[0]) : 500;
 
     const oResult = {

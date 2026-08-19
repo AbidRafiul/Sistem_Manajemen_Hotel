@@ -85,6 +85,7 @@ router.post("/", async (req, res) => {
     const oUser = await DB("user_credential")
       .where("username", oPayload.username)
       .select(
+        "id",
         "user_code",
         "password",
         "username",
@@ -131,6 +132,7 @@ router.post("/", async (req, res) => {
       }
 
       const credential = {
+        id: oUser.id,
         user_code: oUser.user_code,
         username: oUser.username,
         fullname: oUser.fullname,
