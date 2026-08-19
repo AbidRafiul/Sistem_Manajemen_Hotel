@@ -81,8 +81,7 @@ router.post("/", async (req, res) => {
         }
 
         const oResultSuccess = {
-            status: status.SUKSES,
-            message: `${oDeletedCount} metode pembayaran berhasil dihapus dari sistem`,
+            status: status.SUKSES, message: `${oDeletedCount} metode pembayaran berhasil dihapus dari sistem`,
             datetime: formatDateSystem(),
         };
 

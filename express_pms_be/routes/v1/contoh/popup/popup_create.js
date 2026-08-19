@@ -8,7 +8,7 @@ import {
   validatePayload,
 } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
-import { getLastKodeRegister, setLastKodeRegister } from "../../components/tools/getter_setter.js";
+import { generateSequence } from "../../components/tools/generateCode.js";
 
 const router = express.Router();
 
@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
     let cUniqueCode = "";
 
     await DB.transaction(async (trx) => {
-      cUniqueCode = await getLastKodeRegister("SFT", 4, true, trx);
+      cUniqueCode = await generateSequence("FMT-SHIFT", trx);
 
       const oData = {
         kode: cUniqueCode,
@@ -77,9 +77,12 @@ router.post("/", async (req, res) => {
         updated_at: formatDateSystem(),
       };
 
+      const existingData = await trx("mst_shift").where("kode", cUniqueCode).first();
+      if (existingData) {
+        return res.status(400).json({ status: status.BAD_REQUEST, message: "Kode shift sudah digunakan, silakan gunakan kode lain.", datetime: formatDateSystem() });
+      }
+      
       await trx("mst_shift").insert(oData);
-
-      await setLastKodeRegister("SFT", trx);
 
       await ChangesLog(
         {

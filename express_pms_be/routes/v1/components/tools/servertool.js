@@ -333,9 +333,10 @@ export const generateUserTokens = async (user, rememberMe = false) => {
   const refreshExpireInSeconds = rememberMe ? (7 * 24 * 60 * 60) : (24 * 60 * 60);
 
   const accessToken = await new SignJWT({
+    user_id: user.id || 1,
     user_code: user.user_code,
     username: user.username,
-    role: user.role
+    role: user.role,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()

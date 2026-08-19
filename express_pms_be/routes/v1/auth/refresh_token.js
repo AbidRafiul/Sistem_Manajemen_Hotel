@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
             {
                 user_code: Joi.string().required().label("User Code"),
                 refresh_token: Joi.string().required().label("Refresh Token"),
-                remember_me: Joi.string().valid('1', '0').required().label("Remember me")
+                remember_me: Joi.alternatives().try(Joi.string().valid('1', '0', 'true', 'false'), Joi.boolean(), Joi.number().valid(1, 0)).required().label("Remember me")
             },
             { "any.required": "{#label} wajib diisi" },
             oPayload
@@ -48,9 +48,14 @@ router.post("/", async (req, res) => {
             return res.status(422).json(oResult);
         }
 
-        const storedRefreshToken = await redisPub.get(`refresh_token:${oPayload.user_code}`);
+        const dbToken = await DB("access_token")
+            .where("user_code", oPayload.user_code)
+            .where("token", oPayload.refresh_token)
+            .where("expired", "0")
+            .where("expires_at", ">", new Date())
+            .first();
 
-        if (!storedRefreshToken || storedRefreshToken !== oPayload.refresh_token) {
+        if (!dbToken) {
             return res.status(401).json({
                 status: status.GAGAL,
                 message: "Sesi telah berakhir sepenuhnya. Harap login kembali dengan password.",
@@ -64,7 +69,9 @@ router.post("/", async (req, res) => {
             .first();
 
         if (!oUser || oUser.status != "1") {
-            await redisPub.del(`refresh_token:${oPayload.user_code}`);
+            await DB("access_token")
+                .where("user_code", oPayload.user_code)
+                .update({ expired: "1" });
             return res.status(403).json({
                 status: status.GAGAL,
                 message: "Akun Anda dinonaktifkan atau tidak ditemukan.",
@@ -73,7 +80,8 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const oToken = await generateUserTokens(oUser, oPayload.remember_me == '1');
+        const isRememberMe = oPayload.remember_me === '1' || oPayload.remember_me === 'true' || oPayload.remember_me === true || oPayload.remember_me === 1;
+        const oToken = await generateUserTokens(oUser, isRememberMe);
 
         return res.status(200).json({
             status: status.SUKSES,
