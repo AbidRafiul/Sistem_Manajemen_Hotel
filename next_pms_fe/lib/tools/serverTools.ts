@@ -75,12 +75,13 @@ const routeMiddleware = async (searchUrl: string) => {
     if (session.user.user_code) {
         try {
             const resp = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_DIR_PATH}`,
+                `${process.env.API_URL}/setup/nav/user-data`,
                 { user_code: session?.user?.user_code },
                 {
                     headers: {
-                        'X-ENDPOINT': "/setup/nav/user-data",
-                        'X-Level': "1",
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'X-Timestamp': formatDateISO(new Date()) as string,
                     }
                 }
             );
@@ -122,7 +123,7 @@ const refreshToken = async (userCode: string, refreshToken: string, rememberMe: 
     const encryptedBody = credentialPayload;
 
     const refreshResponse = await axios.post(
-        `${process.env.API_URL}/api/v1/auth/refresh-token`,
+        `${process.env.API_URL}/auth/refresh-token`,
         encryptedBody,
         {
             headers: {
