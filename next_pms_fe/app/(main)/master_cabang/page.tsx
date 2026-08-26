@@ -60,6 +60,7 @@ const Page = () => {
             check_in_time: '14:00',
             check_out_time: '12:00',
             timezone: 'Asia/Jakarta',
+            is_pkp: 0,
             is_active: 1
         },
         validate: (data: initValue) => {

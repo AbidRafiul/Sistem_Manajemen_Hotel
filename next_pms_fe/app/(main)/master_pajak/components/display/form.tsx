@@ -18,9 +18,8 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
 
     const fetchCabang = async (keyword = '') => {
         try {
-            const res = await postData('/api/interceptor/routes', {
-                endpoint: '/master/cabang',
-                payload: { page: 1, perPage: 100, keyword }
+            const res = await postData('/master/cabang/cabang-data', {
+                page: 1, perPage: 100, keyword
             });
             setCabangList(res.data.data);
         } catch (error) {
@@ -148,7 +147,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                             <Dropdown
                                 id="kode_cabang"
                                 name="kode_cabang"
-                                options={cabangList.map((c) => ({ label: c.nama_hotel, value: c.kode_cabang }))}
+                                options={cabangList.map((c) => ({ label: c.name, value: c.kode_cabang }))}
                                 value={formik?.values.kode_cabang || ''}
                                 onChange={(e) => formik?.setFieldValue('kode_cabang', e.value)}
                                 placeholder="Pilih Cabang"
