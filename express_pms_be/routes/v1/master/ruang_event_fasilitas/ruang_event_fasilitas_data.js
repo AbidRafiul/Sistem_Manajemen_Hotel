@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ status: status.BAD_REQUEST, message: "kode_ruang_event wajib dikirim", datetime: formatDateSystem() });
     }
     const vaData = await DB("mst_ruang_event_fasilitas as ref")
-      .join("mst_fasilitas as f", "ref.kode_fasilitas", "f.kode")
+      .join("mst_fasilitas as f", "ref.kode_fasilitas", "f.kode_fasilitas")
       .where("ref.kode_ruang_event", oPayload.kode_ruang_event)
       .select("ref.id", "ref.kode_ruang_event", "ref.kode_fasilitas", "f.name as nama_fasilitas", "ref.created_at", "ref.created_by");
     
