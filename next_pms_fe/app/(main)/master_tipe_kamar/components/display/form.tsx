@@ -16,6 +16,7 @@ import { InputSwitch } from 'primereact/inputswitch';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
     const [cabangList, setCabangList] = useState([]);
+    const [bedTypeList, setBedTypeList] = useState([]);
 
     const fetchCabang = async (keyword = '') => {
         try {
@@ -29,12 +30,24 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
         }
     };
 
+    const fetchBedType = async (keyword = '') => {
+        try {
+            const res = await postData('/master/bed-type/bed-type-data', { perPage: 50, keyword });
+            setBedTypeList(res.data.data);
+        } catch (error) { console.error(error); }
+    };
+
     const handleFilterCabang = (e: any) => {
         fetchCabang(e.filter);
     };
 
+    const handleFilterBedType = (e: any) => {
+        fetchBedType(e.filter);
+    };
+
     useEffect(() => {
         fetchCabang();
+        fetchBedType();
     }, []);
 
     const handleSave = async (input: initValue) => {
@@ -51,6 +64,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             const oBody: Record<string, any> = {
                 kode_cabang: input.kode_cabang,
                 name: input.name,
+                kode_bed_type: input.kode_bed_type || null,
                 kapasitas_dasar: input.kapasitas_dasar,
                 kapasitas_maksimal: input.kapasitas_maksimal,
                 luas_m2: input.luas_m2,
@@ -186,22 +200,45 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 {getFormErrorMessage('name')}
                             </div>
                             <div className="flex flex-column gap-1 w-full">
-                                <label htmlFor="luas_m2" className="font-semibold text-sm">
-                                    Luas (m²)
+                                <label htmlFor="kode_bed_type" className="font-semibold text-sm">
+                                    Tipe Bed
                                 </label>
-                                <InputNumber
-                                    id="luas_m2"
-                                    name="luas_m2"
-                                    value={formik?.values.luas_m2}
-                                    onValueChange={(e) => formik?.setFieldValue('luas_m2', e.value)}
+                                <Dropdown
+                                    id="kode_bed_type"
+                                    name="kode_bed_type"
+                                    value={formik?.values.kode_bed_type}
+                                    options={bedTypeList}
+                                    optionLabel="name"
+                                    optionValue="kode_bed_type"
+                                    onChange={formik?.handleChange}
+                                    placeholder="-- Pilih Tipe Bed (Opsional) --"
+                                    filter
+                                    onFilter={handleFilterBedType}
+                                    resetFilterOnHide={true}
+                                    showClear
                                     className="w-full"
-                                    showButtons
-                                    min={1}
-                                    max={1000}
-                                    suffix=" m²"
                                 />
                             </div>
                         </div>
+
+                        {/* Luas */}
+                        <div className="flex flex-column gap-1 w-full mt-2">
+                            <label htmlFor="luas_m2" className="font-semibold text-sm">
+                                Luas (m²)
+                            </label>
+                            <InputNumber
+                                id="luas_m2"
+                                name="luas_m2"
+                                value={formik?.values.luas_m2}
+                                onValueChange={(e) => formik?.setFieldValue('luas_m2', e.value)}
+                                className="w-full"
+                                showButtons
+                                min={1}
+                                max={1000}
+                                suffix=" m²"
+                            />
+                        </div>
+
 
                         {/* Kapasitas */}
                         <div className="flex flex-column md:flex-row gap-3 w-full mt-2">

@@ -10,7 +10,9 @@ export interface TableData {
     id?: number;
     kode_cabang?: string;
     kode_tipe_kamar?: string;
+    kode_bed_type?: string | number | null;
     cabang_name?: string;
+    bed_type_name?: string;
     name: string;
     kapasitas_dasar: number;
     kapasitas_maksimal: number;
@@ -25,6 +27,7 @@ export interface initValue {
     kode_cabang?: string;
     kode_tipe_kamar?: string;
     name: string;
+    kode_bed_type?: string | number | null;
     kapasitas_dasar: number;
     kapasitas_maksimal: number;
     luas_m2: number | null;
@@ -80,6 +83,7 @@ export interface FormProps {
 export const HEADER_CONFIG = {
     kode_tipe_kamar: 'Kode Tipe Kamar',
     name: 'Nama Tipe Kamar',
+    bed_type_name: 'Tipe Bed',
     kapasitas_dasar: 'Kapasitas Dasar',
     kapasitas_maksimal: 'Kapasitas Maksimal',
     luas_m2: 'Luas (m2)',

@@ -58,7 +58,6 @@ const Page = () => {
             kode_cabang: '',
             kode_lantai: '',
             kode_tipe_kamar: '',
-            kode_bed_type: null,
             nomor_kamar: '',
             tipe_view: 'City View',
             boleh_merokok: 0,
@@ -142,7 +141,7 @@ const Page = () => {
             const formattedData = transformTableData(res.data.data, {
                 headerMap: HEADER_CONFIG,
                 customFormatters: FORMATTER_CONFIG,
-                excludeKeys: ['id', 'kode_cabang', 'kode_lantai', 'kode_tipe_kamar', 'kode_bed_type', 'created_at', 'updated_at']
+                excludeKeys: ['id', 'kode_cabang', 'kode_lantai', 'kode_tipe_kamar', 'created_at', 'updated_at']
             });
 
             setDataRekap((p) => ({
