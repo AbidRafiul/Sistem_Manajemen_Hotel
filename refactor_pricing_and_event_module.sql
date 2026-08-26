@@ -5,7 +5,7 @@ ALTER TABLE mst_tipe_kamar ADD COLUMN kode_bed_type VARCHAR(255) NULL;
 
 -- Asumsikan mst_bed_type menggunakan kolom kode sebagai unik
 ALTER TABLE mst_tipe_kamar ADD CONSTRAINT fk_tipe_kamar_bed 
-FOREIGN KEY (kode_bed_type) REFERENCES mst_bed_type(kode) ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY (kode_bed_type) REFERENCES mst_bed_type(kode_bed_type) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- 2. MAPPING FASILITAS KE TIPE KAMAR
 CREATE TABLE mst_room_type_fasilitas (
@@ -14,8 +14,8 @@ CREATE TABLE mst_room_type_fasilitas (
     kode_fasilitas VARCHAR(255) NOT NULL,
     created_at DATETIME NOT NULL,
     created_by VARCHAR(255),
-    CONSTRAINT fk_rtf_tipe_kamar FOREIGN KEY (kode_tipe_kamar) REFERENCES mst_tipe_kamar(kode) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_rtf_fasilitas FOREIGN KEY (kode_fasilitas) REFERENCES mst_fasilitas(kode) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fk_rtf_tipe_kamar FOREIGN KEY (kode_tipe_kamar) REFERENCES mst_tipe_kamar(kode_tipe_kamar) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_rtf_fasilitas FOREIGN KEY (kode_fasilitas) REFERENCES mst_fasilitas(kode_fasilitas) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- 3. PEMBUATAN MODUL "FUNCTION SPACE" (RUANG EVENT)
@@ -51,7 +51,7 @@ CREATE TABLE mst_ruang_event (
     deleted_at DATETIME NULL,
     deleted_by VARCHAR(255),
     is_active TINYINT(1) DEFAULT 1,
-    CONSTRAINT fk_re_cabang FOREIGN KEY (kode_cabang) REFERENCES mst_cabang(kode) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_re_cabang FOREIGN KEY (kode_cabang) REFERENCES mst_cabang(kode_cabang) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_re_tipe FOREIGN KEY (kode_tipe_ruang_event) REFERENCES mst_tipe_ruang_event(kode) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -63,7 +63,7 @@ CREATE TABLE mst_ruang_event_fasilitas (
     created_at DATETIME NOT NULL,
     created_by VARCHAR(255),
     CONSTRAINT fk_ref_ruang FOREIGN KEY (kode_ruang_event) REFERENCES mst_ruang_event(kode) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_ref_fasilitas FOREIGN KEY (kode_fasilitas) REFERENCES mst_fasilitas(kode) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fk_ref_fasilitas FOREIGN KEY (kode_fasilitas) REFERENCES mst_fasilitas(kode_fasilitas) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- 3.4 Harga Ruang Event
@@ -107,6 +107,6 @@ CREATE TABLE trx_reservasi_event (
     deleted_by VARCHAR(255),
     is_active TINYINT(1) DEFAULT 1,
     CONSTRAINT fk_tre_ruang FOREIGN KEY (kode_ruang_event) REFERENCES mst_ruang_event(kode) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_tre_cabang FOREIGN KEY (kode_cabang) REFERENCES mst_cabang(kode) ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT fk_tre_cabang FOREIGN KEY (kode_cabang) REFERENCES mst_cabang(kode_cabang) ON DELETE RESTRICT ON UPDATE CASCADE
     -- constraints for tamu, corporate, and reservasi_kamar can be added if those tables strictly use `kode`
 );
