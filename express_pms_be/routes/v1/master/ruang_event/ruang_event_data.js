@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
-  const sortField = ["kode","nama_ruang","kode_cabang","kode_tipe_ruang_event","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
+  const sortField = ["kode_ruang_event","nama_ruang","kode_cabang","kode_tipe_ruang_event","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
   try {
     const baseQuery = DB("mst_ruang_event as re")
@@ -29,9 +29,9 @@ router.post("/", async (req, res) => {
       .whereNull("re.deleted_at").modify(qb => {
       if (oPayload.kode_cabang) qb.where("re.kode_cabang", oPayload.kode_cabang);
       if (oPayload.kode_tipe_ruang_event) qb.where("re.kode_tipe_ruang_event", oPayload.kode_tipe_ruang_event);
-      if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(re.kode) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
+      if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(re.kode_ruang_event) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
-    const selectFields = ["re.id","re.kode","re.kode_cabang","c.nama_hotel as cabang_name","re.kode_tipe_ruang_event","tre.nama_tipe as tipe_ruang_name","re.nama_ruang","re.kapasitas_orang","re.luas_sqm","re.layout_support","re.is_active","re.created_at","re.updated_at"];
+    const selectFields = ["re.id","re.kode_ruang_event","re.kode_cabang","c.nama_hotel as cabang_name","re.kode_tipe_ruang_event","tre.nama_tipe as tipe_ruang_name","re.nama_ruang","re.kapasitas_orang","re.luas_sqm","re.layout_support","re.is_active","re.created_at","re.updated_at"];
     let vaData = [], totalRecords = 0;
     if (hasPagination) {
       const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;

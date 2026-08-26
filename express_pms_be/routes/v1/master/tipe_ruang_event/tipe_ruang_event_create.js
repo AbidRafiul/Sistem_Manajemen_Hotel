@@ -32,15 +32,15 @@ router.post("/", async (req, res) => {
     let cUniqueCode = "";
     await DB.transaction(async (trx) => {
       cUniqueCode = await generateSequence("FMT-TIPERUANGEVENT", trx);
-      const oData = { kode: cUniqueCode, nama_tipe: oPayload.nama_tipe, is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1, created_by: req.auth?.user_id || 1, created_at: formatDateSystem(), updated_at: formatDateSystem() };
+      const oData = { kode_tipe_ruang_event: cUniqueCode, nama_tipe: oPayload.nama_tipe, is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1, created_by: req.auth?.user_id || 1, created_at: formatDateSystem(), updated_at: formatDateSystem() };
       
-      const existingData = await trx("mst_tipe_ruang_event").where("kode", cUniqueCode).first();
+      const existingData = await trx("mst_tipe_ruang_event").where("kode_tipe_ruang_event", cUniqueCode).first();
       if (existingData) throw new Error("DUPLICATE_CODE");
       
       await trx("mst_tipe_ruang_event").insert(oData);
       await ChangesLog({ description: "Tambah Master Tipe Ruang Event", tableName: "mst_tipe_ruang_event", referenceCode: cUniqueCode, action: "CREATE", dataBefore: null, dataAfter: oData, user: username, tz: oPayload.tz || "UTC" }, trx);
     });
-    return res.status(200).json({ status: status.SUKSES, message: "Data Master Tipe Ruang Event berhasil dibuat", datetime: formatDateSystem(), data: { kode: cUniqueCode } });
+    return res.status(200).json({ status: status.SUKSES, message: "Data Master Tipe Ruang Event berhasil dibuat", datetime: formatDateSystem(), data: { kode_tipe_ruang_event: cUniqueCode } });
   } catch (error) {
     if (error.message === "DUPLICATE_CODE") return res.status(400).json({ status: status.BAD_REQUEST, message: "Kode sudah digunakan, silakan coba lagi.", datetime: formatDateSystem() });
     const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };

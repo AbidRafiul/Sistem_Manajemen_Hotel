@@ -20,13 +20,13 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
-  const sortField = ["kode","nama_tipe","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
+  const sortField = ["kode_tipe_ruang_event","nama_tipe","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
   try {
     const baseQuery = DB("mst_tipe_ruang_event as tre").whereNull("tre.deleted_at").modify(qb => {
-      if (keyword) qb.where(function() { this.whereRaw("LOWER(tre.nama_tipe) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(tre.kode) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
+      if (keyword) qb.where(function() { this.whereRaw("LOWER(tre.nama_tipe) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(tre.kode_tipe_ruang_event) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
-    const selectFields = ["tre.id","tre.kode","tre.nama_tipe","tre.is_active","tre.created_at","tre.updated_at"];
+    const selectFields = ["tre.id","tre.kode_tipe_ruang_event","tre.nama_tipe","tre.is_active","tre.created_at","tre.updated_at"];
     let vaData = [], totalRecords = 0;
     if (hasPagination) {
       const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;

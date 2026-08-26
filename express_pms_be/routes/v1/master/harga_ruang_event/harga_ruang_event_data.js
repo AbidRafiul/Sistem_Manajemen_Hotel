@@ -20,16 +20,16 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
-  const sortField = ["kode","kode_ruang_event","tipe_sewa","harga","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
+  const sortField = ["kode_harga_ruang_event","kode_ruang_event","tipe_sewa","harga","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
   try {
     const baseQuery = DB("mst_harga_ruang_event as hre")
       .join("mst_ruang_event as re", "hre.kode_ruang_event", "re.kode")
       .whereNull("hre.deleted_at").modify(qb => {
       if (oPayload.kode_ruang_event) qb.where("hre.kode_ruang_event", oPayload.kode_ruang_event);
-      if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(hre.kode) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
+      if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(hre.kode_harga_ruang_event) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
-    const selectFields = ["hre.id","hre.kode","hre.kode_ruang_event","re.nama_ruang as ruang_name","hre.tipe_sewa","hre.kode_musim","hre.harga","hre.is_active","hre.created_at","hre.updated_at"];
+    const selectFields = ["hre.id","hre.kode_harga_ruang_event","hre.kode_ruang_event","re.nama_ruang as ruang_name","hre.tipe_sewa","hre.kode_musim","hre.harga","hre.is_active","hre.created_at","hre.updated_at"];
     let vaData = [], totalRecords = 0;
     if (hasPagination) {
       const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;
