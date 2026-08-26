@@ -33,6 +33,11 @@ import pajakCreate from "./pajak/pajak_create.js";
 import pajakUpdate from "./pajak/pajak_update.js";
 import pajakDelete from "./pajak/pajak_delete.js";
 
+import fasilitasData from "./fasilitas/fasilitas_data.js";
+import fasilitasCreate from "./fasilitas/fasilitas_create.js";
+import fasilitasUpdate from "./fasilitas/fasilitas_update.js";
+import fasilitasDelete from "./fasilitas/fasilitas_delete.js";
+
 import corporateData from "./corporate/corporate_data.js";
 import corporateCreate from "./corporate/corporate_create.js";
 import corporateUpdate from "./corporate/corporate_update.js";
@@ -113,6 +118,12 @@ router.use("/pajak/pajak-data", pajakData);
 router.use("/pajak/pajak-create", pajakCreate);
 router.use("/pajak/pajak-update", pajakUpdate);
 router.use("/pajak/pajak-delete", pajakDelete);
+
+// Master Fasilitas
+router.use("/fasilitas/fasilitas-data", fasilitasData);
+router.use("/fasilitas/fasilitas-create", fasilitasCreate);
+router.use("/fasilitas/fasilitas-update", fasilitasUpdate);
+router.use("/fasilitas/fasilitas-delete", fasilitasDelete);
 
 // Master Corporate
 router.use("/corporate/corporate-data", corporateData);
