@@ -222,6 +222,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                     className={isFormFieldInvalid('kode_tipe_kamar') ? 'p-invalid w-full' : 'w-full'}
                                 />
                                 {getFormErrorMessage('kode_tipe_kamar')}
+                            </div>
                         </div>
 
                         {/* Nomor Kamar & View */}
