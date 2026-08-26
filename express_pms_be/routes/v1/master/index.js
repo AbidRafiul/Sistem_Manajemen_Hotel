@@ -68,6 +68,27 @@ import kamarCreate from "./kamar/kamar_create.js";
 import kamarUpdate from "./kamar/kamar_update.js";
 import kamarDelete from "./kamar/kamar_delete.js";
 
+import roomTypeFasilitasAssign from "./room_type_fasilitas/room_type_fasilitas_assign.js";
+import roomTypeFasilitasData from "./room_type_fasilitas/room_type_fasilitas_data.js";
+
+import tipeRuangEventData from "./tipe_ruang_event/tipe_ruang_event_data.js";
+import tipeRuangEventCreate from "./tipe_ruang_event/tipe_ruang_event_create.js";
+import tipeRuangEventUpdate from "./tipe_ruang_event/tipe_ruang_event_update.js";
+import tipeRuangEventDelete from "./tipe_ruang_event/tipe_ruang_event_delete.js";
+
+import ruangEventData from "./ruang_event/ruang_event_data.js";
+import ruangEventCreate from "./ruang_event/ruang_event_create.js";
+import ruangEventUpdate from "./ruang_event/ruang_event_update.js";
+import ruangEventDelete from "./ruang_event/ruang_event_delete.js";
+
+import ruangEventFasilitasAssign from "./ruang_event_fasilitas/ruang_event_fasilitas_assign.js";
+import ruangEventFasilitasData from "./ruang_event_fasilitas/ruang_event_fasilitas_data.js";
+
+import hargaRuangEventData from "./harga_ruang_event/harga_ruang_event_data.js";
+import hargaRuangEventCreate from "./harga_ruang_event/harga_ruang_event_create.js";
+import hargaRuangEventUpdate from "./harga_ruang_event/harga_ruang_event_update.js";
+import hargaRuangEventDelete from "./harga_ruang_event/harga_ruang_event_delete.js";
+
 // Routes
 // Master Cabang
 router.use("/cabang/cabang-data", cabangData);
@@ -134,5 +155,31 @@ router.use("/kamar/kamar-data", kamarData);
 router.use("/kamar/kamar-create", kamarCreate);
 router.use("/kamar/kamar-update", kamarUpdate);
 router.use("/kamar/kamar-delete", kamarDelete);
+
+// Master Room Type Fasilitas
+router.use("/room-type-fasilitas/room-type-fasilitas-assign", roomTypeFasilitasAssign);
+router.use("/room-type-fasilitas/room-type-fasilitas-data", roomTypeFasilitasData);
+
+// Master Tipe Ruang Event
+router.use("/tipe-ruang-event/tipe-ruang-event-data", tipeRuangEventData);
+router.use("/tipe-ruang-event/tipe-ruang-event-create", tipeRuangEventCreate);
+router.use("/tipe-ruang-event/tipe-ruang-event-update", tipeRuangEventUpdate);
+router.use("/tipe-ruang-event/tipe-ruang-event-delete", tipeRuangEventDelete);
+
+// Master Ruang Event
+router.use("/ruang-event/ruang-event-data", ruangEventData);
+router.use("/ruang-event/ruang-event-create", ruangEventCreate);
+router.use("/ruang-event/ruang-event-update", ruangEventUpdate);
+router.use("/ruang-event/ruang-event-delete", ruangEventDelete);
+
+// Master Ruang Event Fasilitas
+router.use("/ruang-event-fasilitas/ruang-event-fasilitas-assign", ruangEventFasilitasAssign);
+router.use("/ruang-event-fasilitas/ruang-event-fasilitas-data", ruangEventFasilitasData);
+
+// Master Harga Ruang Event
+router.use("/harga-ruang-event/harga-ruang-event-data", hargaRuangEventData);
+router.use("/harga-ruang-event/harga-ruang-event-create", hargaRuangEventCreate);
+router.use("/harga-ruang-event/harga-ruang-event-update", hargaRuangEventUpdate);
+router.use("/harga-ruang-event/harga-ruang-event-delete", hargaRuangEventDelete);
 
 export default router;

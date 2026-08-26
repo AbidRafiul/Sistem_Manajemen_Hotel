@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
   try {
     if (!oPayload || Object.keys(oPayload).length < 1) return res.status(400).json({ status: status.BAD_REQUEST, message: "Invalid request body", datetime: formatDateSystem() });
     const cValidation = await validatePayload(
-      { kode_cabang: Joi.string().required().label("Kode Cabang"),  name: Joi.string().required().label("Nama Tipe"), kapasitas_dasar: Joi.number().required().label("Kapasitas Dasar"), kapasitas_maksimal: Joi.number().required().label("Kapasitas Maksimal"), luas_m2: Joi.number().optional().allow("", null).label("Luas m2"), deskripsi: Joi.string().optional().allow("", null).label("Deskripsi"), is_active: Joi.number().valid(0,1).optional().default(1).label("Status Aktif") },
+      { kode_cabang: Joi.string().required().label("Kode Cabang"),  name: Joi.string().required().label("Nama Tipe"), kode_bed_type: Joi.string().allow(null).optional().label("Bed Type"), kapasitas_dasar: Joi.number().required().label("Kapasitas Dasar"), kapasitas_maksimal: Joi.number().required().label("Kapasitas Maksimal"), luas_m2: Joi.number().optional().allow("", null).label("Luas m2"), deskripsi: Joi.string().optional().allow("", null).label("Deskripsi"), is_active: Joi.number().valid(0,1).optional().default(1).label("Status Aktif") },
       { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi", "number.base": "{#label} harus berupa angka" },
       oPayload, { table: "mst_tipe_kamar", allowUnknown: true }
     );
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
     let cUniqueCode = "";
     await DB.transaction(async (trx) => {
       cUniqueCode = await generateSequence("FMT-TIPEKAMAR", trx);
-      const oData = { kode_cabang: oPayload.kode_cabang, kode_tipe_kamar: cUniqueCode, 
+      const oData = { kode_cabang: oPayload.kode_cabang, kode_tipe_kamar: cUniqueCode, kode_bed_type: oPayload.kode_bed_type || null, 
         nama_tipe: oPayload.name,
         kapasitas_dasar: oPayload.kapasitas_dasar,
         kapasitas_maksimal: oPayload.kapasitas_maksimal,
