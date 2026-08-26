@@ -30,7 +30,6 @@ router.post("/", async (req, res) => {
       .join("mst_cabang as h", "r.kode_cabang", "h.kode_cabang")
       .join("mst_lantai as f", "r.kode_lantai", "f.kode_lantai")
       .join("mst_tipe_kamar as rt", "r.kode_tipe_kamar", "rt.kode_tipe_kamar")
-      .leftJoin("mst_bed_type as bt", "r.kode_bed_type", "bt.kode_bed_type")
       .whereNull("r.deleted_at").modify(qb => {
       if (oPayload.kode_cabang) qb.where("r.kode_cabang", oPayload.kode_cabang);
       if (oPayload.kode_lantai) qb.where("r.kode_lantai", oPayload.kode_lantai);
@@ -38,9 +37,9 @@ router.post("/", async (req, res) => {
       if (keyword) qb.where(function() { this.whereRaw("LOWER(r.nomor_kamar) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(r.kode_kamar) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
     const selectFields = [
-      "r.id","r.kode_cabang","r.kode_gedung","r.kode_lantai","r.kode_tipe_kamar","r.kode_bed_type","r.kode_kamar","r.nomor_kamar as name",
+      "r.id","r.kode_cabang","r.kode_gedung","r.kode_lantai","r.kode_tipe_kamar","r.kode_kamar","r.nomor_kamar as name",
       "r.tipe_pemandangan as tipe_view","r.catatan","r.boleh_merokok","r.occupancy_status","r.housekeeping_status","r.is_active","r.created_at","r.updated_at",
-      "h.nama_hotel as cabang_name","f.nama_lantai as floor_name","rt.nama_tipe as room_type_name","bt.name as bed_type_name"
+      "h.nama_hotel as cabang_name","f.nama_lantai as floor_name","rt.nama_tipe as room_type_name"
     ];
     let orderByCol = `r.${sortField}`;
     if (sortField === 'nomor_kamar' || sortField === 'name') orderByCol = 'r.nomor_kamar';
