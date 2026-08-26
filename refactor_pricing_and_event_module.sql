@@ -1,4 +1,5 @@
 -- 1. REFACTOR TIPE KAMAR & BED TYPE
+ALTER TABLE mst_kamar DROP FOREIGN KEY fk_room_bed_type;
 ALTER TABLE mst_kamar DROP COLUMN kode_bed_type;
 
 ALTER TABLE mst_tipe_kamar ADD COLUMN kode_bed_type VARCHAR(255) NULL;
