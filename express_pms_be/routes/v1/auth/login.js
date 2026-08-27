@@ -82,7 +82,7 @@ router.post("/", async (req, res) => {
       return res.status(422).json(oResult);
     }
 
-    const oUser = await DB("user_credential")
+    const oUser = await DB("mst_user")
       .where("username", oPayload.username)
       .select(
         "id",

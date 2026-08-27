@@ -33,6 +33,11 @@ import pajakCreate from "./pajak/pajak_create.js";
 import pajakUpdate from "./pajak/pajak_update.js";
 import pajakDelete from "./pajak/pajak_delete.js";
 
+import fasilitasData from "./fasilitas/fasilitas_data.js";
+import fasilitasCreate from "./fasilitas/fasilitas_create.js";
+import fasilitasUpdate from "./fasilitas/fasilitas_update.js";
+import fasilitasDelete from "./fasilitas/fasilitas_delete.js";
+
 import corporateData from "./corporate/corporate_data.js";
 import corporateCreate from "./corporate/corporate_create.js";
 import corporateUpdate from "./corporate/corporate_update.js";
@@ -52,6 +57,11 @@ import ratePlanData from "./rate_plan/rate_plan_data.js";
 import ratePlanCreate from "./rate_plan/rate_plan_create.js";
 import ratePlanUpdate from "./rate_plan/rate_plan_update.js";
 import ratePlanDelete from "./rate_plan/rate_plan_delete.js";
+
+import ratePlanPriceData from "./rate_plan_price/rate_plan_price_data.js";
+import ratePlanPriceCreate from "./rate_plan_price/rate_plan_price_create.js";
+import ratePlanPriceUpdate from "./rate_plan_price/rate_plan_price_update.js";
+import ratePlanPriceDelete from "./rate_plan_price/rate_plan_price_delete.js";
 
 import seasonData from "./season/season_data.js";
 import seasonCreate from "./season/season_create.js";
@@ -114,6 +124,12 @@ router.use("/pajak/pajak-create", pajakCreate);
 router.use("/pajak/pajak-update", pajakUpdate);
 router.use("/pajak/pajak-delete", pajakDelete);
 
+// Master Fasilitas
+router.use("/fasilitas/fasilitas-data", fasilitasData);
+router.use("/fasilitas/fasilitas-create", fasilitasCreate);
+router.use("/fasilitas/fasilitas-update", fasilitasUpdate);
+router.use("/fasilitas/fasilitas-delete", fasilitasDelete);
+
 // Master Corporate
 router.use("/corporate/corporate-data", corporateData);
 router.use("/corporate/corporate-create", corporateCreate);
@@ -137,6 +153,12 @@ router.use("/rate-plan/rate-plan-data", ratePlanData);
 router.use("/rate-plan/rate-plan-create", ratePlanCreate);
 router.use("/rate-plan/rate-plan-update", ratePlanUpdate);
 router.use("/rate-plan/rate-plan-delete", ratePlanDelete);
+
+// Master Rate Plan Price (Harga Kamar)
+router.use("/rate-plan-price/rate-plan-price-data", ratePlanPriceData);
+router.use("/rate-plan-price/rate-plan-price-create", ratePlanPriceCreate);
+router.use("/rate-plan-price/rate-plan-price-update", ratePlanPriceUpdate);
+router.use("/rate-plan-price/rate-plan-price-delete", ratePlanPriceDelete);
 
 // Master Season
 router.use("/season/season-data", seasonData);

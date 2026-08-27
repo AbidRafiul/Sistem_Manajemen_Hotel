@@ -24,14 +24,16 @@ router.post("/", async (req, res) => {
   const sortOrder = oPayload.sortOrder || "desc";
   try {
     const baseQuery = DB("mst_ruang_event as re")
-      .join("mst_cabang as c", "re.kode_cabang", "c.kode")
-      .join("mst_tipe_ruang_event as tre", "re.kode_tipe_ruang_event", "tre.kode")
+      .join("mst_cabang as c", "re.kode_cabang", "c.kode_cabang")
+      .join("mst_tipe_ruang_event as tre", "re.kode_tipe_ruang_event", "tre.kode_tipe_ruang_event")
+      .leftJoin("mst_gedung as g", "re.kode_gedung", "g.kode_gedung")
+      .leftJoin("mst_lantai as l", "re.kode_lantai", "l.kode_lantai")
       .whereNull("re.deleted_at").modify(qb => {
       if (oPayload.kode_cabang) qb.where("re.kode_cabang", oPayload.kode_cabang);
       if (oPayload.kode_tipe_ruang_event) qb.where("re.kode_tipe_ruang_event", oPayload.kode_tipe_ruang_event);
       if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(re.kode_ruang_event) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
-    const selectFields = ["re.id","re.kode_ruang_event","re.kode_cabang","c.nama_hotel as cabang_name","re.kode_tipe_ruang_event","tre.nama_tipe as tipe_ruang_name","re.nama_ruang","re.kapasitas_orang","re.luas_sqm","re.layout_support","re.is_active","re.created_at","re.updated_at"];
+    const selectFields = ["re.id","re.kode_ruang_event","re.kode_cabang","c.nama_hotel as cabang_name","re.kode_gedung","g.nama_gedung","re.kode_lantai","l.nama_lantai","re.kode_tipe_ruang_event","tre.nama_tipe as tipe_ruang_name","re.nama_ruang","re.kapasitas_orang","re.luas_sqm","re.layout_support","re.is_active","re.created_at","re.updated_at"];
     let vaData = [], totalRecords = 0;
     if (hasPagination) {
       const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;

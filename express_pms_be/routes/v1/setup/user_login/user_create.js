@@ -32,10 +32,7 @@ import {
   decryptXCredential,
   hmac,
 } from "../../components/tools/encrypt_tools.js";
-import {
-  getLastKodeRegister,
-  setLastKodeRegister,
-} from "../../components/tools/getter_setter.js";
+import { generateSequence } from "../../components/tools/generateCode.js";
 
 const router = express.Router();
 
@@ -90,7 +87,7 @@ router.post("/", async (req, res) => {
       oPayload,
       {
         uniqueField: ["username", "telp"],
-        table: "user_credential",
+        table: "mst_user",
         allowUnknown: true,
       },
     );
@@ -113,11 +110,8 @@ router.post("/", async (req, res) => {
       return res.status(422).json(oResult);
     }
 
-    // Ambil rule navigasi berdasarkan role
+    // Ambil rule navigasi berdasarkan role langsung (dinamis)
     let cRole = oPayload.role;
-    if (oPayload.role === "superadmin" || oPayload.role === "admin") {
-      cRole = "master";
-    }
 
     const oNavigation = await DB("mst_navigation")
       .select("menu")
@@ -136,7 +130,7 @@ router.post("/", async (req, res) => {
 
     // Memulai Transaksi Database
     await DB.transaction(async (trx) => {
-      cUserCode = await getLastKodeRegister("USR", 7, true, trx);
+      cUserCode = await generateSequence("FMT-USR", trx);
 
       const oData = {
         fullname: oPayload.fullname,
@@ -159,17 +153,16 @@ router.post("/", async (req, res) => {
 
       // Insert navigasi user
       await trx("user_navigation").insert({
-        Menu: oNavigation.menu,
+        menu: oNavigation.menu,
         user_code: cUserCode,
-        CreatedAt: formatDateSystem(),
-        UpdatedAt: formatDateSystem(),
+        created_at: formatDateSystem(),
+        updated_at: formatDateSystem(),
       });
 
-      // Insert data user credential
-      await trx("user_credential").insert(oData);
+      // Insert data mst_user
+      await trx("mst_user").insert(oData);
 
-      // Sinkronisasi counter register database
-      await setLastKodeRegister("USR", trx);
+      // Sinkronisasi sudah ditangani oleh generateSequence
 
       // Masking password pada audit log
       const oLogData = { ...oData };
@@ -180,8 +173,8 @@ router.post("/", async (req, res) => {
       // Pencatatan Changes Log
       await ChangesLog(
         {
-          description: "Tambah User Credential",
-          tableName: "user_credential",
+          description: "Tambah User",
+          tableName: "mst_user",
           referenceCode: cUserCode,
           action: "CREATE",
           dataBefore: null,

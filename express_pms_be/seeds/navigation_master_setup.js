@@ -19,6 +19,8 @@ export async function seed(knex) {
         { label: "Master Kamar", icon: "pi pi-fw pi-home", to: "/master_kamar" },
         { label: "Bed Type", icon: "pi pi-fw pi-inbox", to: "/master_bed_type" },
         { label: "Fasilitas & Amenity", icon: "pi pi-fw pi-star", to: "/master_amenity" },
+        { label: "Master Fasilitas", icon: "pi pi-fw pi-verified", to: "/master_fasilitas" },
+        { label: "Tipe Ruang Event", icon: "pi pi-fw pi-tags", to: "/master_tipe_ruang_event" },
         { label: "Rate Plan (Paket Harga)", icon: "pi pi-fw pi-dollar", to: "/master_rate_plan" },
         { label: "Season & Pricing", icon: "pi pi-fw pi-calendar", to: "/master_season" },
         { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" },

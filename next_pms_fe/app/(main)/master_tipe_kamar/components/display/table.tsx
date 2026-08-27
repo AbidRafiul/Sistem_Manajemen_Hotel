@@ -77,6 +77,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kapasitas_maksimal: rowData.kapasitas_maksimal !== undefined ? rowData.kapasitas_maksimal : 2,
                         luas_m2: rowData.luas_m2 !== undefined ? rowData.luas_m2 : null,
                         deskripsi: rowData.deskripsi || '',
+                        kode_bed_type: rowData.kode_bed_type || null,
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
                     });
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
@@ -125,6 +126,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                             formik.setValues({
                                 kode_cabang: '',
                                 name: '',
+                                kode_bed_type: null,
                                 kapasitas_dasar: 1,
                                 kapasitas_maksimal: 2,
                                 luas_m2: null,
@@ -183,6 +185,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="kode_tipe_kamar" header="Kode Tipe" align="center" sortable style={{ minWidth: '8rem' }}></Column>
                     <Column field="cabang_name" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Tipe Kamar" sortable style={{ minWidth: '16rem' }}></Column>
+                    <Column field="bed_type_name" header="Tipe Bed" style={{ minWidth: '12rem' }} body={(rowData) => rowData.bed_type_name || '-'}></Column>
                     <Column field="kapasitas_dasar" header="Kapasitas Dasar" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kapasitas_maksimal" header="Kapasitas Maks" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="luas_m2" header="Luas (m²)" align="center" sortable style={{ minWidth: '8rem' }} body={(rowData) => rowData.luas_m2 ? `${rowData.luas_m2} m²` : '-'}></Column>

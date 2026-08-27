@@ -12,7 +12,6 @@ export interface TableData {
     kode_cabang?: string | number;
     kode_lantai?: string | number;
     kode_tipe_kamar?: string | number;
-    kode_bed_type?: string | number | null;
     nomor_kamar: string;
     tipe_view: string;
     boleh_merokok: number;
@@ -22,7 +21,6 @@ export interface TableData {
     cabang_name?: string;
     floor_name?: string;
     room_type_name?: string;
-    bed_type_name?: string;
     created_at?: string;
     updated_at?: string;
 }
@@ -32,7 +30,6 @@ export interface initValue {
     kode_cabang: string | number;
     kode_lantai: string | number;
     kode_tipe_kamar: string | number;
-    kode_bed_type: string | number | null;
     nomor_kamar: string;
     tipe_view: string;
     boleh_merokok: number;
@@ -92,7 +89,6 @@ export const HEADER_CONFIG = {
     cabang_name: 'Cabang',
     floor_name: 'Lantai',
     room_type_name: 'Tipe Kamar',
-    bed_type_name: 'Tipe Bed',
     nomor_kamar: 'Nomor Kamar',
     tipe_view: 'View',
     boleh_merokok: 'Boleh Merokok',

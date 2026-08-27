@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const oUser = await DB("user_credential")
+        const oUser = await DB("mst_user")
             .where("user_code", oPayload.user_code)
             .select("user_code", "username", "role", "fullname", "status")
             .first();

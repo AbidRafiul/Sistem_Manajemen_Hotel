@@ -16,7 +16,6 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
     const [cabangList, setCabangList] = useState([]);
     const [lantaiList, setLantaiList] = useState([]);
     const [tipeKamarList, setTipeKamarList] = useState([]);
-    const [bedTypeList, setBedTypeList] = useState([]);
 
     const fetchCabang = async (keyword = '') => {
         try {
@@ -36,17 +35,10 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             setTipeKamarList(res.data.data);
         } catch (error) { console.error(error); }
     };
-    const fetchBedType = async (keyword = '') => {
-        try {
-            const res = await postData('/master/bed-type/bed-type-data', { perPage: 50, keyword });
-            setBedTypeList(res.data.data);
-        } catch (error) { console.error(error); }
-    };
 
     const handleFilterHotel = (e: any) => fetchCabang(e.filter);
     const handleFilterLantai = (e: any) => fetchLantai(e.filter);
     const handleFilterTipeKamar = (e: any) => fetchTipeKamar(e.filter);
-    const handleFilterBedType = (e: any) => fetchBedType(e.filter);
     const handleSave = async (input: initValue) => {
         setState((p) => ({ ...p, load: true }));
 
@@ -62,7 +54,6 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 kode_cabang: input.kode_cabang,
                 kode_lantai: input.kode_lantai,
                 kode_tipe_kamar: input.kode_tipe_kamar,
-                kode_bed_type: input.kode_bed_type || null,
                 name: input.nomor_kamar,
                 tipe_view: input.tipe_view,
                 boleh_merokok: input.boleh_merokok,
@@ -149,7 +140,6 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
         fetchCabang();
         fetchLantai();
         fetchTipeKamar();
-        fetchBedType();
     }, []);
 
     return (
@@ -232,25 +222,6 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                     className={isFormFieldInvalid('kode_tipe_kamar') ? 'p-invalid w-full' : 'w-full'}
                                 />
                                 {getFormErrorMessage('kode_tipe_kamar')}
-                            </div>
-                            <div className="flex flex-column gap-1 w-full">
-                                <label htmlFor="kode_bed_type" className="font-semibold text-sm">
-                                    Tipe Bed
-                                </label>
-                                <Dropdown
-                                    id="kode_bed_type"
-                                    name="kode_bed_type"
-                                    value={formik?.values.kode_bed_type}
-                                    options={bedTypeList}
-                                    optionLabel="name"
-                                    optionValue="kode_bed_type"
-                                    onChange={formik?.handleChange}
-                                    placeholder="-- Pilih Tipe Bed --"
-                                    filter
-                                    onFilter={handleFilterBedType}
-                                    resetFilterOnHide={true}
-                                    className="w-full"
-                                />
                             </div>
                         </div>
 
