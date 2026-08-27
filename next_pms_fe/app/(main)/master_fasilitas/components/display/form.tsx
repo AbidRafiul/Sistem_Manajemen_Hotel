@@ -51,7 +51,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             const vaData = await postData(cEndPoint, oBody, oHeaders);
             const res = vaData.data;
 
-            showSuccess(toast, res.message || 'Berhasil Menyimpan Data Fasilitas');
+            showSuccess(toast, res?.message || 'Berhasil Menyimpan Data Fasilitas');
             formik.resetForm();
             setState((p) => ({ ...p, add: false, edit: false, delete: false }));
             await getData(apiEndpointGet);
@@ -77,7 +77,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             const vaData = await postData(apiEndpointDelete, { kode_fasilitas: vaCode, tz: getTzUser() });
             const res = vaData.data;
 
-            showSuccess(toast, res.message || 'Berhasil menghapus data Fasilitas.');
+            showSuccess(toast, res?.message || 'Berhasil menghapus data Fasilitas.');
             setState((p) => ({ ...p, selectedDatas: [], add: false, edit: false, delete: false }));
             await getData(apiEndpointGet);
         } catch (error: any) {

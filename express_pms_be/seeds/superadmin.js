@@ -31,13 +31,14 @@ export async function seed(knex) {
     updated_at: dDatetimeIso,
   };
 
-  const existingUser = await knex("user_credential").where("user_code", uniqueId).first();
+  const existingUser = await knex("mst_user").where("user_code", uniqueId).first();
+
   if (existingUser) {
-    await knex("user_credential").where("user_code", uniqueId).update({
+    await knex("mst_user").where("user_code", uniqueId).update({
       password: hashedPassword,
-      updated_at: dDatetimeIso
+      updated_at: new Date()
     });
   } else {
-    await knex("user_credential").insert(oData);
+    await knex("mst_user").insert(oData);
   }
 };

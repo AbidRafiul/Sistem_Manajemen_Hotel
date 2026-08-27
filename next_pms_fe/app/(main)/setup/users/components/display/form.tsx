@@ -26,7 +26,7 @@ import { Button } from "primereact/button";
 import { apiEndpointCreate, apiEndpointDelete, apiEndpointGet, apiEndpointUpdate } from "../endpoints";
 import postData from "@/lib/axios/postData";
 import { showError, showSuccess } from "@/lib/tools/generalTools";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getTzUser } from "@/lib/tools/dateTools";
 
 const Form = ({
@@ -37,15 +37,21 @@ const Form = ({
     getData
 }: FormProps) => {
 
+    const [roles, setRoles] = useState<{ label: string, value: string }[]>([]);
+
     const fetchComponentData = async () => {
         setState((p) => ({ ...p, load: true }));
 
         try {
-
-
+            const vaData = await postData("/setup/nav/mst-list", {});
+            const res = vaData.data?.data || [];
+            const mappedRoles = res.map((r: any) => ({
+                label: r.role,
+                value: r.role
+            }));
+            setRoles(mappedRoles);
         } catch (error: any) {
-            const e = error?.response?.data || error;
-            showError(toast, e?.message || "Terjadi Kesalahan");
+            console.error("Gagal mengambil data role:", error);
         } finally {
             setState((p) => ({ ...p, load: false }));
         }
@@ -69,6 +75,8 @@ const Form = ({
 
             const oBody: Record<string, any> = {
                 fullname: input.fullname,
+                username: input.username,
+                password: input.password,
                 telp: input.telp,
                 status: input.status,
                 role: input.role,
@@ -156,9 +164,9 @@ const Form = ({
         }
     }, [state.submittedData])
 
-    // useEffect(() => {
-    //     fetchComponentData()
-    // }, [])
+    useEffect(() => {
+        fetchComponentData()
+    }, [])
 
     return <>
         <Dialog
@@ -270,16 +278,13 @@ const Form = ({
                             <Dropdown
                                 id="role"
                                 name="role"
-                                options={[
-                                    { label: "Admin", value: "admin" },
-                                    { label: "Support", value: "support" },
-                                    { label: "User", value: "user" },
-                                ]}
+                                options={roles}
+                                placeholder="Pilih Role"
                                 value={formik?.values.role}
                                 onChange={(e) => {
                                     formik?.setFieldValue('role', e.value);
                                 }}
-                                className={isFormFieldInvalid('role') ? 'p-invalid' : ''}
+                                className={isFormFieldInvalid('role') ? 'p-invalid w-full' : 'w-full'}
                             />
                         </div>
                         {isFormFieldInvalid('role') ? getFormErrorMessage('role') : ''}

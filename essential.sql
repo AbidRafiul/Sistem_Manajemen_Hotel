@@ -1629,13 +1629,13 @@ CREATE TABLE `trx_room_status_log` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `user_credential`
+-- Table structure for table `mst_user`
 --
 
-DROP TABLE IF EXISTS `user_credential`;
+DROP TABLE IF EXISTS `mst_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_credential` (
+CREATE TABLE `mst_user` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_code` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1702,13 +1702,13 @@ CREATE TABLE `user_navigation` (
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Dumping data for table `user_credential`
+-- Dumping data for table `mst_user`
 --
 
-LOCK TABLES `user_credential` WRITE;
-/*!40000 ALTER TABLE `user_credential` DISABLE KEYS */;
-INSERT INTO `user_credential` VALUES (7,'USR000000','superadmin@admin.com','Superadmin','08100000000','superadmin','5e7bd870d5c8563803be2973dd4403ef50c918d3b728f22787c9514d0f379f94d7f6bbb7e8b0a8cc338a6a18bd399aa8e5888a28b5f91452ad55fd6e2cf0b58c','1','UTC','2026-08-14 07:31:36',NULL,NULL,'2026-08-14 07:52:07');
-/*!40000 ALTER TABLE `user_credential` ENABLE KEYS */;
+LOCK TABLES `mst_user` WRITE;
+/*!40000 ALTER TABLE `mst_user` DISABLE KEYS */;
+INSERT INTO `mst_user` VALUES (7,'USR000000','superadmin@admin.com','Superadmin','08100000000','superadmin','5e7bd870d5c8563803be2973dd4403ef50c918d3b728f22787c9514d0f379f94d7f6bbb7e8b0a8cc338a6a18bd399aa8e5888a28b5f91452ad55fd6e2cf0b58c','1','UTC','2026-08-14 07:31:36',NULL,NULL,'2026-08-14 07:52:07');
+/*!40000 ALTER TABLE `mst_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

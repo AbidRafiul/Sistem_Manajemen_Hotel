@@ -75,7 +75,7 @@ router.post("/", async (req, res) => {
       oPayload,
       {
         uniqueField: ["username", "telp"],
-        table: "user_credential",
+        table: "mst_user",
         excludedField: "user_code",
         allowUnknown: true,
       }
@@ -99,8 +99,8 @@ router.post("/", async (req, res) => {
       return res.status(422).json(oResult);
     }
 
-    // Ambil data sebelum di-update untuk verifikasi eksistensi dan audit log
-    const oDataBefore = await DB("user_credential")
+    // Ambil data user sebelumnya di mst_user
+    const oDataBefore = await DB("mst_user")
       .where("user_code", oPayload.user_code)
       .first();
 
@@ -133,7 +133,8 @@ router.post("/", async (req, res) => {
 
     // Eksekusi perubahan di dalam Transaksi Database
     await DB.transaction(async (trx) => {
-      await trx("user_credential")
+      // Update data mst_user
+      await trx("mst_user")
         .where("user_code", oPayload.user_code)
         .update(oData);
 
@@ -150,8 +151,8 @@ router.post("/", async (req, res) => {
 
       await ChangesLog(
         {
-          description: "Update User Credential",
-          tableName: "user_credential",
+          description: "Update User",
+          tableName: "mst_user",
           referenceCode: oPayload.user_code,
           action: "UPDATE",
           dataBefore: oLogDataBefore,

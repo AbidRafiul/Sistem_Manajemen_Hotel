@@ -73,7 +73,7 @@ router.post("/", async (req, res) => {
     }
 
     // Ambil data sebelum dihapus untuk kebutuhan ChangesLog
-    const oDataBefore = await DB("user_credential")
+    const oDataBefore = await DB("mst_user")
       .whereIn("user_code", oPayload.user_code);
 
     if (!oDataBefore || oDataBefore.length === 0) {
@@ -87,7 +87,7 @@ router.post("/", async (req, res) => {
     // Eksekusi penghapusan dalam Transaksi Database
     await DB.transaction(async (trx) => {
       // Hapus data credential
-      await trx("user_credential")
+      await trx("mst_user")
         .whereIn("user_code", oPayload.user_code)
         .del();
 
@@ -106,7 +106,7 @@ router.post("/", async (req, res) => {
         await ChangesLog(
           {
             description: `Hapus User Credential (${item.user_code})`,
-            tableName: "user_credential",
+            tableName: "mst_user",
             referenceCode: item.user_code,
             action: "DELETE",
             dataBefore: oLogDataBefore,

@@ -44,31 +44,43 @@ router.post("/", async (req, res) => {
         }
 
 
-        console.log("oPayload", oPayload)
-
-
-        const oNavigation = await DB('user_navigation')
-            .select('menu')
+        // Ambil role user dari mst_user
+        const oUser = await DB('mst_user')
+            .select('role')
             .where('user_code', oPayload.user_code)
             .first();
 
-
-        if (!oNavigation || !oNavigation?.menu) {
+        if (!oUser?.role) {
             return res.status(400).json({
                 status: status.GAGAL,
-                message: "Data navigasi tidak ditemukan",
+                message: "User tidak ditemukan",
                 datetime: formatDateSystem(),
-            })
+            });
         }
 
-        const vaData = JSON.parse(oNavigation.menu)
+        // Cari menu di mst_navigation berdasarkan role
+        const oNavigation = await DB('mst_navigation')
+            .select('menu')
+            .where('role', oUser.role)
+            .first();
+
+        if (!oNavigation?.menu) {
+            return res.status(400).json({
+                status: status.GAGAL,
+                message: "Data navigasi tidak ditemukan untuk role: " + oUser.role,
+                datetime: formatDateSystem(),
+            });
+        }
+
+        const vaData = JSON.parse(oNavigation.menu);
 
         return res.status(200).json({
             status: status.SUKSES,
             message: "Data ditemukan",
             datetime: formatDateSystem(),
             data: vaData
-        })
+        });
+
 
     } catch (error) {
         const oResult = {

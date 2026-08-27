@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   try {
     const cValidation = await validatePayload(
-      { kode_ruang_event: Joi.string().required().label("Kode"), kode_cabang: Joi.string().required().label("Kode Cabang"), kode_tipe_ruang_event: Joi.string().required().label("Tipe Ruang Event"), nama_ruang: Joi.string().required().label("Nama Ruang"), kapasitas_orang: Joi.number().optional().allow("", null).label("Kapasitas Orang"), luas_sqm: Joi.number().optional().allow("", null).label("Luas m2"), layout_support: Joi.string().optional().allow("", null).label("Layout Support"), is_active: Joi.number().valid(0,1).optional().label("Status Aktif") },
+      { kode_ruang_event: Joi.string().required().label("Kode"), kode_cabang: Joi.string().required().label("Kode Cabang"), kode_gedung: Joi.string().optional().allow("", null).label("Kode Gedung"), kode_lantai: Joi.string().optional().allow("", null).label("Kode Lantai"), kode_tipe_ruang_event: Joi.string().required().label("Tipe Ruang Event"), nama_ruang: Joi.string().required().label("Nama Ruang"), kapasitas_orang: Joi.number().optional().allow("", null).label("Kapasitas Orang"), luas_sqm: Joi.number().optional().allow("", null).label("Luas m2"), layout_support: Joi.string().optional().allow("", null).label("Layout Support"), is_active: Joi.number().valid(0,1).optional().label("Status Aktif") },
       { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi" },
       oPayload, { table: "mst_ruang_event", allowUnknown: true }
     );
@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
     const existing = await DB("mst_ruang_event").where("kode_ruang_event", oPayload.kode_ruang_event).whereNull("deleted_at").first();
     if (!existing) return res.status(404).json({ status: status.NOT_FOUND, message: "Data tidak ditemukan", datetime: formatDateSystem() });
     
-    const oData = { kode_cabang: oPayload.kode_cabang, kode_tipe_ruang_event: oPayload.kode_tipe_ruang_event, nama_ruang: oPayload.nama_ruang, kapasitas_orang: oPayload.kapasitas_orang ?? existing.kapasitas_orang, luas_sqm: oPayload.luas_sqm ?? existing.luas_sqm, layout_support: oPayload.layout_support ?? existing.layout_support, is_active: oPayload.is_active !== undefined ? oPayload.is_active : existing.is_active, updated_by: req.auth?.user_id || 1, updated_at: formatDateSystem() };
+    const oData = { kode_cabang: oPayload.kode_cabang, kode_gedung: oPayload.kode_gedung !== undefined ? oPayload.kode_gedung : existing.kode_gedung, kode_lantai: oPayload.kode_lantai !== undefined ? oPayload.kode_lantai : existing.kode_lantai, kode_tipe_ruang_event: oPayload.kode_tipe_ruang_event, nama_ruang: oPayload.nama_ruang, kapasitas_orang: oPayload.kapasitas_orang ?? existing.kapasitas_orang, luas_sqm: oPayload.luas_sqm ?? existing.luas_sqm, layout_support: oPayload.layout_support ?? existing.layout_support, is_active: oPayload.is_active !== undefined ? oPayload.is_active : existing.is_active, updated_by: req.auth?.user_id || 1, updated_at: formatDateSystem() };
     await DB.transaction(async (trx) => {
       await trx("mst_ruang_event").where("kode_ruang_event", oPayload.kode_ruang_event).update(oData);
       await ChangesLog({ description: "Update Master Ruang Event", tableName: "mst_ruang_event", referenceCode: oPayload.kode_ruang_event, action: "UPDATE", dataBefore: existing, dataAfter: { ...existing, ...oData }, user: username, tz: oPayload.tz || "UTC" }, trx);

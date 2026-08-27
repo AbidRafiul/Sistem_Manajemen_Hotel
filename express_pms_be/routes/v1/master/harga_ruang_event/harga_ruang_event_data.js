@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
   const sortOrder = oPayload.sortOrder || "desc";
   try {
     const baseQuery = DB("mst_harga_ruang_event as hre")
-      .join("mst_ruang_event as re", "hre.kode_ruang_event", "re.kode")
+      .join("mst_ruang_event as re", "hre.kode_ruang_event", "re.kode_ruang_event")
       .whereNull("hre.deleted_at").modify(qb => {
       if (oPayload.kode_ruang_event) qb.where("hre.kode_ruang_event", oPayload.kode_ruang_event);
       if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(hre.kode_harga_ruang_event) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
