@@ -58,6 +58,11 @@ import ratePlanCreate from "./rate_plan/rate_plan_create.js";
 import ratePlanUpdate from "./rate_plan/rate_plan_update.js";
 import ratePlanDelete from "./rate_plan/rate_plan_delete.js";
 
+import ratePlanPriceData from "./rate_plan_price/rate_plan_price_data.js";
+import ratePlanPriceCreate from "./rate_plan_price/rate_plan_price_create.js";
+import ratePlanPriceUpdate from "./rate_plan_price/rate_plan_price_update.js";
+import ratePlanPriceDelete from "./rate_plan_price/rate_plan_price_delete.js";
+
 import seasonData from "./season/season_data.js";
 import seasonCreate from "./season/season_create.js";
 import seasonUpdate from "./season/season_update.js";
@@ -148,6 +153,12 @@ router.use("/rate-plan/rate-plan-data", ratePlanData);
 router.use("/rate-plan/rate-plan-create", ratePlanCreate);
 router.use("/rate-plan/rate-plan-update", ratePlanUpdate);
 router.use("/rate-plan/rate-plan-delete", ratePlanDelete);
+
+// Master Rate Plan Price (Harga Kamar)
+router.use("/rate-plan-price/rate-plan-price-data", ratePlanPriceData);
+router.use("/rate-plan-price/rate-plan-price-create", ratePlanPriceCreate);
+router.use("/rate-plan-price/rate-plan-price-update", ratePlanPriceUpdate);
+router.use("/rate-plan-price/rate-plan-price-delete", ratePlanPriceDelete);
 
 // Master Season
 router.use("/season/season-data", seasonData);
