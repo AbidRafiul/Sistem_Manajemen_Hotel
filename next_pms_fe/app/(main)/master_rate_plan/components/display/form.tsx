@@ -43,6 +43,8 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 name: input.name,
                 kode_cabang: input.kode_cabang,
                 tipe_paket: input.tipe_paket,
+                tipe_markup: input.tipe_markup,
+                nilai_markup: input.nilai_markup,
                 bisa_refund: input.bisa_refund,
                 termasuk_sarapan: input.termasuk_sarapan,
                 minimal_malam: input.minimal_malam,
@@ -196,6 +198,46 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 className={isFormFieldInvalid('tipe_paket') ? 'p-invalid w-full' : 'w-full'}
                             />
                             {getFormErrorMessage('tipe_paket')}
+                        </div>
+
+                        {/* Markup */}
+                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
+                            <div className="flex flex-column gap-1 w-full">
+                                <label htmlFor="tipe_markup" className="font-semibold text-sm">
+                                    Tipe Markup <span className="text-red-500">*</span>
+                                </label>
+                                <Dropdown
+                                    id="tipe_markup"
+                                    name="tipe_markup"
+                                    options={[{ label: 'Nominal (Rp)', value: 'nominal' }, { label: 'Persentase (%)', value: 'persen' }]}
+                                    value={formik?.values.tipe_markup || 'nominal'}
+                                    onChange={(e) => {
+                                        formik?.setFieldValue('tipe_markup', e.value);
+                                        formik?.setFieldValue('nilai_markup', 0); // Reset value when type changes
+                                    }}
+                                    placeholder="Pilih Tipe Markup"
+                                    className={isFormFieldInvalid('tipe_markup') ? 'p-invalid w-full' : 'w-full'}
+                                />
+                                {getFormErrorMessage('tipe_markup')}
+                            </div>
+                            <div className="flex flex-column gap-1 w-full">
+                                <label htmlFor="nilai_markup" className="font-semibold text-sm">
+                                    Nilai Markup <span className="text-red-500">*</span>
+                                </label>
+                                <InputNumber
+                                    id="nilai_markup"
+                                    name="nilai_markup"
+                                    value={formik?.values.nilai_markup}
+                                    onValueChange={(e) => formik?.setFieldValue('nilai_markup', e.value)}
+                                    className={isFormFieldInvalid('nilai_markup') ? 'p-invalid w-full' : 'w-full'}
+                                    mode={formik?.values.tipe_markup === 'nominal' ? 'currency' : 'decimal'}
+                                    currency={formik?.values.tipe_markup === 'nominal' ? 'IDR' : undefined}
+                                    locale="id-ID"
+                                    suffix={formik?.values.tipe_markup === 'persen' ? '%' : ''}
+                                    min={0}
+                                />
+                                {getFormErrorMessage('nilai_markup')}
+                            </div>
                         </div>
 
                         {/* Minimal & Maksimal Malam */}

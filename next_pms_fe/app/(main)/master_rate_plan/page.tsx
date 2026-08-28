@@ -57,6 +57,8 @@ const Page = () => {
             kode_cabang: '',
             name: '',
             tipe_paket: 'RO',
+            tipe_markup: 'nominal',
+            nilai_markup: 0,
             bisa_refund: 0,
             termasuk_sarapan: 0,
             minimal_malam: 1,

@@ -64,6 +64,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             const oBody: Record<string, any> = {
                 kode_cabang: input.kode_cabang,
                 name: input.name,
+                harga_default: input.harga_default,
                 kode_bed_type: input.kode_bed_type || null,
                 kapasitas_dasar: input.kapasitas_dasar,
                 kapasitas_maksimal: input.kapasitas_maksimal,
@@ -221,22 +222,40 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                             </div>
                         </div>
 
-                        {/* Luas */}
-                        <div className="flex flex-column gap-1 w-full mt-2">
-                            <label htmlFor="luas_m2" className="font-semibold text-sm">
-                                Luas (m²)
-                            </label>
-                            <InputNumber
-                                id="luas_m2"
-                                name="luas_m2"
-                                value={formik?.values.luas_m2}
-                                onValueChange={(e) => formik?.setFieldValue('luas_m2', e.value)}
-                                className="w-full"
-                                showButtons
-                                min={1}
-                                max={1000}
-                                suffix=" m²"
-                            />
+                        {/* Harga Default & Luas */}
+                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
+                            <div className="flex flex-column gap-1 w-full">
+                                <label htmlFor="harga_default" className="font-semibold text-sm">
+                                    Harga Default <span className="text-red-500">*</span>
+                                </label>
+                                <InputNumber
+                                    id="harga_default"
+                                    name="harga_default"
+                                    value={formik?.values.harga_default}
+                                    onValueChange={(e) => formik?.setFieldValue('harga_default', e.value)}
+                                    className={isFormFieldInvalid('harga_default') ? 'p-invalid w-full' : 'w-full'}
+                                    mode="currency"
+                                    currency="IDR"
+                                    locale="id-ID"
+                                />
+                                {getFormErrorMessage('harga_default')}
+                            </div>
+                            <div className="flex flex-column gap-1 w-full">
+                                <label htmlFor="luas_m2" className="font-semibold text-sm">
+                                    Luas (m²)
+                                </label>
+                                <InputNumber
+                                    id="luas_m2"
+                                    name="luas_m2"
+                                    value={formik?.values.luas_m2}
+                                    onValueChange={(e) => formik?.setFieldValue('luas_m2', e.value)}
+                                    className="w-full"
+                                    showButtons
+                                    min={1}
+                                    max={1000}
+                                    suffix=" m²"
+                                />
+                            </div>
                         </div>
 
 

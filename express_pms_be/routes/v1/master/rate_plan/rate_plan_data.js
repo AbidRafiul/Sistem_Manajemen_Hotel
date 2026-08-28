@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
     const baseQuery = DB("mst_paket_harga as rp").whereNull("rp.deleted_at").modify(qb => {
       if (keyword) qb.where(function() { this.whereRaw("LOWER(rp.nama_paket) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(rp.kode_paket_harga) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
-    const selectFields = ["rp.id","rp.kode_paket_harga","rp.nama_paket as name","rp.tipe_paket","rp.dapat_di_refund as bisa_refund","rp.termasuk_sarapan","rp.minimal_malam","rp.maksimal_malam","rp.is_active","rp.created_at","rp.updated_at"];
+    const selectFields = ["rp.id","rp.kode_paket_harga","rp.nama_paket as name","rp.tipe_paket","rp.tipe_markup","rp.nilai_markup","rp.dapat_di_refund as bisa_refund","rp.termasuk_sarapan","rp.minimal_malam","rp.maksimal_malam","rp.is_active","rp.created_at","rp.updated_at"];
     let vaData = [], totalRecords = 0;
     if (hasPagination) {
       const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;

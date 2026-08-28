@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
       .whereNull("rt.deleted_at").modify(qb => {
       if (keyword) qb.where(function() { this.whereRaw("LOWER(rt.nama_tipe) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(rt.kode_tipe_kamar) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
     });
-    const selectFields = ["rt.id","rt.kode_tipe_kamar","rt.kode_cabang","h.nama_hotel as cabang_name","rt.nama_tipe as name","rt.kode_bed_type","bt.name as bed_type_name","rt.kapasitas_dasar","rt.kapasitas_maksimal","rt.luas_sqm as luas_m2","rt.deskripsi","rt.is_active","rt.created_at","rt.updated_at"];
+    const selectFields = ["rt.id","rt.kode_tipe_kamar","rt.kode_cabang","h.nama_hotel as cabang_name","rt.nama_tipe as name","rt.kode_bed_type","bt.name as bed_type_name","rt.kapasitas_dasar","rt.kapasitas_maksimal","rt.luas_sqm as luas_m2","rt.harga_default","rt.deskripsi","rt.is_active","rt.created_at","rt.updated_at"];
     let vaData = [], totalRecords = 0;
     if (hasPagination) {
       const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;
