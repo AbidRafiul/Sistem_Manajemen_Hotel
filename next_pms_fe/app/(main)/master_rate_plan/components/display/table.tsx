@@ -74,6 +74,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kode_cabang: rowData.kode_cabang || '',
                         name: rowData.name || '',
                         tipe_paket: rowData.tipe_paket || 'RO',
+                        tipe_markup: rowData.tipe_markup || 'nominal',
+                        nilai_markup: rowData.nilai_markup || 0,
                         bisa_refund: rowData.bisa_refund !== undefined ? rowData.bisa_refund : 0,
                         termasuk_sarapan: rowData.termasuk_sarapan !== undefined ? rowData.termasuk_sarapan : 0,
                         minimal_malam: rowData.minimal_malam !== undefined ? rowData.minimal_malam : 1,
@@ -134,6 +136,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                                 kode_cabang: '',
                                 name: '',
                                 tipe_paket: 'RO',
+                                tipe_markup: 'nominal',
+                                nilai_markup: 0,
                                 bisa_refund: 0,
                                 termasuk_sarapan: 0,
                                 minimal_malam: 1,
@@ -193,6 +197,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Rate Plan" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="tipe_paket" header="Tipe Paket" align="center" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="markup" header="Markup" align="center" style={{ minWidth: '10rem' }} body={(rowData) => rowData.tipe_markup === 'nominal' ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rowData.nilai_markup || 0) : `${rowData.nilai_markup || 0}%`}></Column>
                     <Column field="bisa_refund" header="Refundable" align="center" body={(rowData) => booleanBodyTemplate(rowData.bisa_refund)} style={{ minWidth: '8rem' }}></Column>
                     <Column field="termasuk_sarapan" header="Sarapan" align="center" body={(rowData) => booleanBodyTemplate(rowData.termasuk_sarapan)} style={{ minWidth: '8rem' }}></Column>
                     <Column field="minimal_malam" header="Min Malam" align="center" sortable style={{ minWidth: '8rem' }}></Column>

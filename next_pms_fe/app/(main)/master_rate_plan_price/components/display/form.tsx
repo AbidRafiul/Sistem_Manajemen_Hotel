@@ -135,6 +135,33 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
         }
     }, [state.add, state.edit]);
 
+    const autoFetchPrice = async () => {
+        if (state.add && formik?.values.kode_tipe_kamar && formik?.values.kode_rate_plan) {
+            try {
+                const res = await postData('/master/rate-plan-price/rate-plan-price-hitung', {
+                    kode_tipe_kamar: formik.values.kode_tipe_kamar,
+                    kode_rate_plan: formik.values.kode_rate_plan,
+                    kode_season: formik.values.kode_season || null
+                });
+                
+                if (res.data?.data?.price !== undefined) {
+                    // Hanya set jika saat ini kosong atau user belum mengetik manual.
+                    // Untuk mempermudah, kita set saja sebagai saran base price
+                    formik.setFieldValue('price', res.data.data.price);
+                }
+            } catch (error) {
+                console.error('Gagal mengambil harga otomatis', error);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (state.add && formik?.values.kode_tipe_kamar && formik?.values.kode_rate_plan) {
+            autoFetchPrice();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formik?.values.kode_tipe_kamar, formik?.values.kode_rate_plan, formik?.values.kode_season]);
+
     return (
         <>
             <Dialog

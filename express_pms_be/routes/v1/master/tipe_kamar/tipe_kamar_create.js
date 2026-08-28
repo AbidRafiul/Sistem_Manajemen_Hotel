@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
   try {
     if (!oPayload || Object.keys(oPayload).length < 1) return res.status(400).json({ status: status.BAD_REQUEST, message: "Invalid request body", datetime: formatDateSystem() });
     const cValidation = await validatePayload(
-      { kode_cabang: Joi.string().required().label("Kode Cabang"),  name: Joi.string().required().label("Nama Tipe"), kode_bed_type: Joi.string().allow(null).optional().label("Bed Type"), kapasitas_dasar: Joi.number().required().label("Kapasitas Dasar"), kapasitas_maksimal: Joi.number().required().label("Kapasitas Maksimal"), luas_m2: Joi.number().optional().allow("", null).label("Luas m2"), deskripsi: Joi.string().optional().allow("", null).label("Deskripsi"), is_active: Joi.number().valid(0,1).optional().default(1).label("Status Aktif") },
+      { kode_cabang: Joi.string().required().label("Kode Cabang"),  name: Joi.string().required().label("Nama Tipe"), kode_bed_type: Joi.string().allow(null).optional().label("Bed Type"), kapasitas_dasar: Joi.number().required().label("Kapasitas Dasar"), kapasitas_maksimal: Joi.number().required().label("Kapasitas Maksimal"), luas_m2: Joi.number().optional().allow("", null).label("Luas m2"), deskripsi: Joi.string().optional().allow("", null).label("Deskripsi"), is_active: Joi.number().valid(0,1).optional().default(1).label("Status Aktif"), harga_default: Joi.number().min(0).required().label("Harga Default") },
       { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi", "number.base": "{#label} harus berupa angka" },
       oPayload, { table: "mst_tipe_kamar", allowUnknown: true }
     );
@@ -36,6 +36,7 @@ router.post("/", async (req, res) => {
         kapasitas_dasar: oPayload.kapasitas_dasar,
         kapasitas_maksimal: oPayload.kapasitas_maksimal,
         luas_sqm: oPayload.luas_m2,
+        harga_default: oPayload.harga_default,
         deskripsi: oPayload.deskripsi,
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1, created_by: req.auth?.user_id || 1, created_at: formatDateSystem(), updated_at: formatDateSystem() };
       

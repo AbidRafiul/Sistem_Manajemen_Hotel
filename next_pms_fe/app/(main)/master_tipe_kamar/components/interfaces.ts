@@ -14,6 +14,7 @@ export interface TableData {
     cabang_name?: string;
     bed_type_name?: string;
     name: string;
+    harga_default: number;
     kapasitas_dasar: number;
     kapasitas_maksimal: number;
     luas_m2: number | null;
@@ -28,6 +29,7 @@ export interface initValue {
     kode_tipe_kamar?: string;
     name: string;
     kode_bed_type?: string | number | null;
+    harga_default: number;
     kapasitas_dasar: number;
     kapasitas_maksimal: number;
     luas_m2: number | null;

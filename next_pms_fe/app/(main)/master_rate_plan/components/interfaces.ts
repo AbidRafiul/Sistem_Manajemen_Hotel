@@ -12,6 +12,8 @@ export interface TableData {
     kode_cabang?: string;
     name: string;
     tipe_paket: string;
+    tipe_markup: string;
+    nilai_markup: number;
     bisa_refund: number;
     termasuk_sarapan: number;
     minimal_malam: number;
@@ -26,6 +28,8 @@ export interface initValue {
     kode_cabang?: string;
     name: string;
     tipe_paket: string;
+    tipe_markup: string;
+    nilai_markup: number;
     bisa_refund: number;
     termasuk_sarapan: number;
     minimal_malam: number;

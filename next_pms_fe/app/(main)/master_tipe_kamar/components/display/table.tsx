@@ -73,6 +73,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kode_tipe_kamar: rowData.kode_tipe_kamar || '',
                         kode_cabang: rowData.kode_cabang || '',
                         name: rowData.name || '',
+                        harga_default: rowData.harga_default || 0,
                         kapasitas_dasar: rowData.kapasitas_dasar !== undefined ? rowData.kapasitas_dasar : 1,
                         kapasitas_maksimal: rowData.kapasitas_maksimal !== undefined ? rowData.kapasitas_maksimal : 2,
                         luas_m2: rowData.luas_m2 !== undefined ? rowData.luas_m2 : null,
@@ -126,6 +127,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                             formik.setValues({
                                 kode_cabang: '',
                                 name: '',
+                                harga_default: 0,
                                 kode_bed_type: null,
                                 kapasitas_dasar: 1,
                                 kapasitas_maksimal: 2,
@@ -185,6 +187,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="kode_tipe_kamar" header="Kode Tipe" align="center" sortable style={{ minWidth: '8rem' }}></Column>
                     <Column field="cabang_name" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Tipe Kamar" sortable style={{ minWidth: '16rem' }}></Column>
+                    <Column field="harga_default" header="Harga Default" align="right" sortable style={{ minWidth: '10rem' }} body={(rowData) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rowData.harga_default)}></Column>
                     <Column field="bed_type_name" header="Tipe Bed" style={{ minWidth: '12rem' }} body={(rowData) => rowData.bed_type_name || '-'}></Column>
                     <Column field="kapasitas_dasar" header="Kapasitas Dasar" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kapasitas_maksimal" header="Kapasitas Maks" align="center" sortable style={{ minWidth: '10rem' }}></Column>

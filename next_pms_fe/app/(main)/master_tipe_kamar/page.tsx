@@ -55,6 +55,7 @@ const Page = () => {
     const formik = useFormik<initValue>({
         initialValues: {
             name: '',
+            harga_default: 0,
             kode_bed_type: null,
             kapasitas_dasar: 1,
             kapasitas_maksimal: 2,
