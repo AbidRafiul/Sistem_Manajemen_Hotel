@@ -4,37 +4,24 @@
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file menuBuilder.tsx
- * @description Komponen visual tree menu builder dengan drag-and-drop reorder (2 level)
+ * @description Komponen visual tree menu builder dengan drag-and-drop N-level (PrimeReact Tree)
  *
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
- * @created 2026-08-27
+ * @created 2026-08-28
  *
  * @contributors
  * - Fadil <risqullah.s.fadhilah@gmail.com>
  *
- * @lastModified Fadil (2026-08-27)
- * @version 1.0.1
+ * @lastModified Fadil (2026-08-28)
+ * @version 2.0.0
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dialog } from 'primereact/dialog';
-import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    SortableContext,
-    useSortable,
-    verticalListSortingStrategy,
-    arrayMove,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { Tree, TreeDragDropEvent } from 'primereact/tree';
+import { TreeNode } from 'primereact/treenode';
 import { MenuBuilderProps, NavMenuItem } from '../interfaces';
 import IconPicker from './iconPicker';
 
@@ -51,16 +38,16 @@ interface ItemDialogProps {
 const ItemDialog = ({ visible, title, initialData, onHide, onSave }: ItemDialogProps) => {
     const [form, setForm] = useState({ label: '', icon: '', to: '', ...initialData });
 
-    // Sync bila initialData berubah (edit)
     const handleOpen = () => setForm({ label: '', icon: '', to: '', ...initialData });
 
     const footer = (
         <div className="flex justify-content-end gap-2">
-            <Button label="Batal" icon="pi pi-times" severity="secondary" outlined onClick={onHide} />
+            <Button label="Batal" icon="pi pi-times" severity="secondary" outlined onClick={onHide} type="button" />
             <Button
                 label="Simpan"
                 icon="pi pi-check"
                 severity="success"
+                type="button"
                 onClick={() => {
                     if (!form.label.trim()) return;
                     onSave(form);
@@ -83,7 +70,6 @@ const ItemDialog = ({ visible, title, initialData, onHide, onSave }: ItemDialogP
             footer={footer}
         >
             <div className="flex flex-column gap-3 pt-2">
-                {/* Label */}
                 <div className="flex flex-column gap-1">
                     <label className="font-semibold text-sm">
                         Label <span className="text-red-500">*</span>
@@ -100,13 +86,11 @@ const ItemDialog = ({ visible, title, initialData, onHide, onSave }: ItemDialogP
                     )}
                 </div>
 
-                {/* Icon Picker */}
                 <IconPicker
                     value={form.icon}
                     onChange={(ic) => setForm((p) => ({ ...p, icon: ic }))}
                 />
 
-                {/* Route URL */}
                 <div className="flex flex-column gap-1">
                     <label className="font-semibold text-sm">
                         Route URL <span className="text-color-secondary text-xs font-normal">(opsional, kosongkan untuk grup)</span>
@@ -124,342 +108,255 @@ const ItemDialog = ({ visible, title, initialData, onHide, onSave }: ItemDialogP
     );
 };
 
-/* ─────────────── Sortable item (level 2 / leaf) ─────────────── */
+/* ─────────────── Helper Functions ─────────────── */
 
-interface SortableLeafProps {
-    item: NavMenuItem;
-    id: string;
-    groupIdx: number;
-    leafIdx: number;
-    onEdit: (groupIdx: number, leafIdx: number) => void;
-    onDelete: (groupIdx: number, leafIdx: number) => void;
-}
-
-const SortableLeaf = ({ item, id, groupIdx, leafIdx, onEdit, onDelete }: SortableLeafProps) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={{
-                transform: CSS.Transform.toString(transform),
-                transition,
-                opacity: isDragging ? 0.4 : 1,
-                background: 'var(--surface-50)',
-                marginLeft: '1.5rem',
-            }}
-            className="flex align-items-center gap-2 border-1 border-200 border-round p-2 mb-1"
-        >
-            {/* Drag handle */}
-            <span
-                {...attributes}
-                {...listeners}
-                className="cursor-grab text-color-secondary"
-                style={{ touchAction: 'none' }}
-            >
-                <i className="pi pi-bars" style={{ fontSize: '0.85rem' }} />
-            </span>
-
-            {item.icon && <i className={item.icon} style={{ fontSize: '0.85rem', minWidth: '1rem' }} />}
-            <span className="flex-1 text-sm" style={{ wordBreak: 'break-word' }}>{item.label}</span>
-            {item.to && (
-                <code className="text-xs text-color-secondary" style={{ fontFamily: 'monospace' }}>
-                    {item.to}
-                </code>
-            )}
-
-            <Button
-                icon="pi pi-pencil"
-                text
-                rounded
-                size="small"
-                severity="info"
-                onClick={() => onEdit(groupIdx, leafIdx)}
-                className="p-0"
-                style={{ width: '1.8rem', height: '1.8rem' }}
-                type="button"
-            />
-            <Button
-                icon="pi pi-trash"
-                text
-                rounded
-                size="small"
-                severity="danger"
-                onClick={() => onDelete(groupIdx, leafIdx)}
-                className="p-0"
-                style={{ width: '1.8rem', height: '1.8rem' }}
-                type="button"
-            />
-        </div>
-    );
+const convertToTreeNodes = (items: NavMenuItem[], parentKey: string = ''): TreeNode[] => {
+    return items.map((item, index) => {
+        const key = parentKey ? `${parentKey}-${index}` : `${index}`;
+        return {
+            key,
+            label: item.label,
+            icon: item.icon,
+            data: item.to,
+            children: item.items ? convertToTreeNodes(item.items, key) : [],
+            expanded: true // Expand all by default in builder
+        };
+    });
 };
 
-/* ─────────────── Sortable group (level 1) ─────────────── */
+const convertToNavMenuItems = (nodes: TreeNode[]): NavMenuItem[] => {
+    return nodes.map((node) => {
+        const item: NavMenuItem = {
+            label: node.label as string,
+            icon: (node.icon as string) || undefined,
+        };
+        if (node.data) {
+            item.to = node.data;
+        }
+        if (node.children && node.children.length > 0) {
+            item.items = convertToNavMenuItems(node.children);
+        }
+        return item;
+    });
+};
 
-interface SortableGroupProps {
-    group: NavMenuItem;
-    id: string;
-    groupIdx: number;
-    onEditGroup: (groupIdx: number) => void;
-    onDeleteGroup: (groupIdx: number) => void;
-    onAddLeaf: (groupIdx: number) => void;
-    onEditLeaf: (groupIdx: number, leafIdx: number) => void;
-    onDeleteLeaf: (groupIdx: number, leafIdx: number) => void;
-    onLeafDragEnd: (groupIdx: number, event: DragEndEvent) => void;
-}
-
-const SortableGroup = ({
-    group,
-    id,
-    groupIdx,
-    onEditGroup,
-    onDeleteGroup,
-    onAddLeaf,
-    onEditLeaf,
-    onDeleteLeaf,
-    onLeafDragEnd,
-}: SortableGroupProps) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-
-    const leafIds = (group.items || []).map((_, i) => `leaf-${groupIdx}-${i}`);
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={{
-                transform: CSS.Transform.toString(transform),
-                transition,
-                opacity: isDragging ? 0.4 : 1,
-                background: 'var(--surface-card)',
-            }}
-            className="border-1 border-300 border-round mb-2"
-        >
-            {/* Group header */}
-            <div className="flex align-items-center gap-2 p-2 border-bottom-1 border-200">
-                <span
-                    {...attributes}
-                    {...listeners}
-                    className="cursor-grab text-color-secondary"
-                    style={{ touchAction: 'none' }}
-                >
-                    <i className="pi pi-bars" />
-                </span>
-                {group.icon && <i className={group.icon} />}
-                <span className="font-semibold flex-1">{group.label}</span>
-
-                <Button
-                    icon="pi pi-pencil"
-                    text
-                    rounded
-                    size="small"
-                    severity="info"
-                    onClick={() => onEditGroup(groupIdx)}
-                    style={{ width: '1.8rem', height: '1.8rem' }}
-                    type="button"
-                />
-                <Button
-                    icon="pi pi-trash"
-                    text
-                    rounded
-                    size="small"
-                    severity="danger"
-                    onClick={() => onDeleteGroup(groupIdx)}
-                    style={{ width: '1.8rem', height: '1.8rem' }}
-                    type="button"
-                />
-            </div>
-
-            {/* Leaf items */}
-            <div className="p-2">
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={(e) => onLeafDragEnd(groupIdx, e)}
-                >
-                    <SortableContext items={leafIds} strategy={verticalListSortingStrategy}>
-                        {(group.items || []).map((leaf, leafIdx) => (
-                            <SortableLeaf
-                                key={`leaf-${groupIdx}-${leafIdx}`}
-                                id={`leaf-${groupIdx}-${leafIdx}`}
-                                item={leaf}
-                                groupIdx={groupIdx}
-                                leafIdx={leafIdx}
-                                onEdit={onEditLeaf}
-                                onDelete={onDeleteLeaf}
-                            />
-                        ))}
-                    </SortableContext>
-                </DndContext>
-
-                {(group.items || []).length === 0 && (
-                    <p className="text-color-secondary text-sm text-center py-2 m-0">
-                        Belum ada item menu
-                    </p>
-                )}
-
-                <Button
-                    label="Tambah Item"
-                    icon="pi pi-plus"
-                    size="small"
-                    text
-                    severity="success"
-                    onClick={() => onAddLeaf(groupIdx)}
-                    className="mt-1 w-full"
-                    type="button"
-                />
-            </div>
-        </div>
-    );
+const findNodeByKey = (nodes: TreeNode[], key: string): TreeNode | null => {
+    for (const node of nodes) {
+        if (node.key === key) return node;
+        if (node.children) {
+            const found = findNodeByKey(node.children, key);
+            if (found) return found;
+        }
+    }
+    return null;
 };
 
 /* ─────────────── MenuBuilder utama ─────────────── */
 
 const MenuBuilder = ({ menu, onChange }: MenuBuilderProps) => {
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+    const nodes = useMemo(() => convertToTreeNodes(menu), [menu]);
 
-    // Dialog state
     const [dialog, setDialog] = useState<{
         visible: boolean;
-        type: 'addGroup' | 'editGroup' | 'addLeaf' | 'editLeaf';
-        groupIdx: number;
-        leafIdx: number;
+        type: 'addRoot' | 'addChild' | 'edit';
+        targetKey: string | null;
         initial: { label: string; icon: string; to: string };
     }>({
         visible: false,
-        type: 'addGroup',
-        groupIdx: -1,
-        leafIdx: -1,
+        type: 'addRoot',
+        targetKey: null,
         initial: { label: '', icon: '', to: '' },
     });
 
     const openDialog = (
         type: typeof dialog.type,
-        groupIdx: number,
-        leafIdx: number,
+        targetKey: string | null,
         initial?: { label: string; icon: string; to: string }
     ) => {
-        setDialog({ visible: true, type, groupIdx, leafIdx, initial: initial || { label: '', icon: '', to: '' } });
+        setDialog({ visible: true, type, targetKey, initial: initial || { label: '', icon: '', to: '' } });
     };
 
     const handleSave = (data: { label: string; icon: string; to: string }) => {
-        const updated = structuredClone(menu);
+        const updatedNodes = structuredClone(nodes);
 
-        if (dialog.type === 'addGroup') {
-            updated.push({ label: data.label, icon: data.icon, items: [] });
-        } else if (dialog.type === 'editGroup') {
-            updated[dialog.groupIdx] = {
-                ...updated[dialog.groupIdx],
+        if (dialog.type === 'addRoot') {
+            updatedNodes.push({
+                key: `new-${Date.now()}`,
                 label: data.label,
                 icon: data.icon,
-            };
-        } else if (dialog.type === 'addLeaf') {
-            const group = updated[dialog.groupIdx];
-            if (!group.items) group.items = [];
-            group.items.push({ label: data.label, icon: data.icon, to: data.to || undefined });
-        } else if (dialog.type === 'editLeaf') {
-            const leaf = updated[dialog.groupIdx].items![dialog.leafIdx];
-            leaf.label = data.label;
-            leaf.icon = data.icon;
-            leaf.to = data.to || undefined;
+                data: data.to,
+                children: []
+            });
+        } else if (dialog.type === 'addChild' && dialog.targetKey) {
+            const targetNode = findNodeByKey(updatedNodes, dialog.targetKey);
+            if (targetNode) {
+                if (!targetNode.children) targetNode.children = [];
+                targetNode.children.push({
+                    key: `new-${Date.now()}`,
+                    label: data.label,
+                    icon: data.icon,
+                    data: data.to,
+                    children: []
+                });
+            }
+        } else if (dialog.type === 'edit' && dialog.targetKey) {
+            const targetNode = findNodeByKey(updatedNodes, dialog.targetKey);
+            if (targetNode) {
+                targetNode.label = data.label;
+                targetNode.icon = data.icon;
+                targetNode.data = data.to;
+            }
         }
 
-        onChange(updated);
+        onChange(convertToNavMenuItems(updatedNodes));
     };
 
-    const handleDeleteGroup = (groupIdx: number) => {
-        const updated = structuredClone(menu);
-        updated.splice(groupIdx, 1);
-        onChange(updated);
+    const handleDelete = (key: string) => {
+        const updatedNodes = structuredClone(nodes);
+
+        const deleteNode = (nodeList: TreeNode[]) => {
+            const index = nodeList.findIndex(n => n.key === key);
+            if (index !== -1) {
+                nodeList.splice(index, 1);
+                return true;
+            }
+            for (const node of nodeList) {
+                if (node.children && deleteNode(node.children)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        deleteNode(updatedNodes);
+        onChange(convertToNavMenuItems(updatedNodes));
     };
 
-    const handleDeleteLeaf = (groupIdx: number, leafIdx: number) => {
-        const updated = structuredClone(menu);
-        updated[groupIdx].items!.splice(leafIdx, 1);
-        onChange(updated);
+    const onDragDrop = (e: TreeDragDropEvent) => {
+        // e.value contains the new array of TreeNodes after drop
+        onChange(convertToNavMenuItems(e.value as TreeNode[]));
     };
 
-    const handleGroupDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-
-        const oldIdx = Number(String(active.id).replace('group-', ''));
-        const newIdx = Number(String(over.id).replace('group-', ''));
-        onChange(arrayMove(menu, oldIdx, newIdx));
+    const nodeTemplate = (node: TreeNode, options: any) => {
+        return (
+            <div className="flex align-items-center justify-content-between w-full" style={{ minWidth: '100%' }}>
+                <div className="flex align-items-center gap-2">
+                    <span className="font-medium text-sm">{node.label}</span>
+                    {node.data && (
+                        <code className="text-xs text-color-secondary ml-2 border-1 border-300 p-1 border-round surface-100" style={{ fontFamily: 'monospace' }}>
+                            {node.data}
+                        </code>
+                    )}
+                </div>
+                <div className="flex align-items-center ml-4 gap-1">
+                    <Button
+                        icon="pi pi-plus"
+                        text
+                        rounded
+                        size="small"
+                        severity="success"
+                        tooltip="Tambah Submenu"
+                        tooltipOptions={{ position: 'top' }}
+                        className="p-0 h-2rem w-2rem"
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDialog('addChild', node.key as string);
+                        }}
+                    />
+                    <Button
+                        icon="pi pi-pencil"
+                        text
+                        rounded
+                        size="small"
+                        severity="info"
+                        tooltip="Edit"
+                        tooltipOptions={{ position: 'top' }}
+                        className="p-0 h-2rem w-2rem"
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDialog('edit', node.key as string, {
+                                label: node.label as string,
+                                icon: (node.icon as string) || '',
+                                to: (node.data as string) || ''
+                            });
+                        }}
+                    />
+                    <Button
+                        icon="pi pi-trash"
+                        text
+                        rounded
+                        size="small"
+                        severity="danger"
+                        tooltip="Hapus"
+                        tooltipOptions={{ position: 'top' }}
+                        className="p-0 h-2rem w-2rem"
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(node.key as string);
+                        }}
+                    />
+                </div>
+            </div>
+        );
     };
-
-    const handleLeafDragEnd = (groupIdx: number, event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-
-        const oldIdx = Number(String(active.id).split('-')[2]);
-        const newIdx = Number(String(over.id).split('-')[2]);
-
-        const updated = structuredClone(menu);
-        updated[groupIdx].items = arrayMove(updated[groupIdx].items || [], oldIdx, newIdx);
-        onChange(updated);
-    };
-
-    const groupIds = menu.map((_, i) => `group-${i}`);
 
     const dialogTitle =
-        dialog.type === 'addGroup' ? 'Tambah Grup Menu'
-            : dialog.type === 'editGroup' ? 'Edit Grup Menu'
-                : dialog.type === 'addLeaf' ? 'Tambah Item Menu'
-                    : 'Edit Item Menu';
+        dialog.type === 'addRoot' ? 'Tambah Menu Utama'
+            : dialog.type === 'addChild' ? 'Tambah Submenu'
+                : 'Edit Menu';
 
     return (
         <>
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                /* Tambahan CSS untuk membuat garis panduan / Tree Lines */
+                .custom-menu-tree .p-treenode-children {
+                    border-left: 1px dashed var(--surface-400);
+                    margin-left: 1.15rem;
+                    padding-left: 0.85rem;
+                }
+                .custom-menu-tree .p-treenode-content {
+                    padding-top: 0.5rem;
+                    padding-bottom: 0.5rem;
+                    border-radius: 6px;
+                }
+                .custom-menu-tree .p-treenode-content:hover {
+                    background: var(--surface-100);
+                }
+                `
+            }} />
+
             <div className="flex flex-column gap-2">
-                {menu.length === 0 && (
-                    <div className="text-center text-color-secondary py-3 border-1 border-dashed border-300 border-round">
+                {nodes.length === 0 && (
+                    <div className="text-center text-color-secondary py-3 border-1 border-dashed border-300 border-round mb-2">
                         <i className="pi pi-sitemap text-3xl mb-2 block text-300" />
-                        <p className="m-0 text-sm">Belum ada menu. Mulai dengan menambah grup.</p>
+                        <p className="m-0 text-sm">Belum ada menu. Mulai dengan menambah menu utama.</p>
                     </div>
                 )}
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleGroupDragEnd}
-                >
-                    <SortableContext items={groupIds} strategy={verticalListSortingStrategy}>
-                        {menu.map((group, groupIdx) => (
-                            <SortableGroup
-                                key={`group-${groupIdx}`}
-                                id={`group-${groupIdx}`}
-                                group={group}
-                                groupIdx={groupIdx}
-                                onEditGroup={(gi) =>
-                                    openDialog('editGroup', gi, -1, {
-                                        label: group.label,
-                                        icon: group.icon || '',
-                                        to: '',
-                                    })
-                                }
-                                onDeleteGroup={handleDeleteGroup}
-                                onAddLeaf={(gi) => openDialog('addLeaf', gi, -1)}
-                                onEditLeaf={(gi, li) =>
-                                    openDialog('editLeaf', gi, li, {
-                                        label: group.items![li].label,
-                                        icon: group.items![li].icon || '',
-                                        to: group.items![li].to || '',
-                                    })
-                                }
-                                onDeleteLeaf={handleDeleteLeaf}
-                                onLeafDragEnd={handleLeafDragEnd}
-                            />
-                        ))}
-                    </SortableContext>
-                </DndContext>
+                {nodes.length > 0 && (
+                    <div className="border-1 border-300 border-round p-2 surface-card mb-2" style={{ minHeight: '200px' }}>
+                        <Tree 
+                            value={nodes} 
+                            dragdropScope="menu-builder" 
+                            onDragDrop={onDragDrop} 
+                            nodeTemplate={nodeTemplate} 
+                            className="w-full border-none p-0 bg-transparent custom-menu-tree"
+                            style={{ overflow: 'hidden' }}
+                        />
+                    </div>
+                )}
 
                 <Button
-                    label="Tambah Grup Menu"
+                    label="Tambah Menu Utama"
                     icon="pi pi-plus"
                     severity="secondary"
                     outlined
                     size="small"
-                    onClick={() => openDialog('addGroup', -1, -1)}
+                    onClick={() => openDialog('addRoot', null)}
                     className="w-full"
                     type="button"
                 />
