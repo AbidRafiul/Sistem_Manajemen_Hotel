@@ -62,6 +62,7 @@ import ratePlanPriceData from "./rate_plan_price/rate_plan_price_data.js";
 import ratePlanPriceCreate from "./rate_plan_price/rate_plan_price_create.js";
 import ratePlanPriceUpdate from "./rate_plan_price/rate_plan_price_update.js";
 import ratePlanPriceDelete from "./rate_plan_price/rate_plan_price_delete.js";
+import ratePlanPriceHitung from "./rate_plan_price/rate_plan_price_hitung.js";
 
 import seasonData from "./season/season_data.js";
 import seasonCreate from "./season/season_create.js";
@@ -80,6 +81,9 @@ import kamarDelete from "./kamar/kamar_delete.js";
 
 import roomTypeFasilitasAssign from "./room_type_fasilitas/room_type_fasilitas_assign.js";
 import roomTypeFasilitasData from "./room_type_fasilitas/room_type_fasilitas_data.js";
+
+import roomTypeAmenityAssign from "./room_type_amenity/room_type_amenity_assign.js";
+import roomTypeAmenityData from "./room_type_amenity/room_type_amenity_data.js";
 
 import tipeRuangEventData from "./tipe_ruang_event/tipe_ruang_event_data.js";
 import tipeRuangEventCreate from "./tipe_ruang_event/tipe_ruang_event_create.js";
@@ -159,6 +163,7 @@ router.use("/rate-plan-price/rate-plan-price-data", ratePlanPriceData);
 router.use("/rate-plan-price/rate-plan-price-create", ratePlanPriceCreate);
 router.use("/rate-plan-price/rate-plan-price-update", ratePlanPriceUpdate);
 router.use("/rate-plan-price/rate-plan-price-delete", ratePlanPriceDelete);
+router.use("/rate-plan-price/rate-plan-price-hitung", ratePlanPriceHitung);
 
 // Master Season
 router.use("/season/season-data", seasonData);
@@ -181,6 +186,10 @@ router.use("/kamar/kamar-delete", kamarDelete);
 // Master Room Type Fasilitas
 router.use("/room-type-fasilitas/room-type-fasilitas-assign", roomTypeFasilitasAssign);
 router.use("/room-type-fasilitas/room-type-fasilitas-data", roomTypeFasilitasData);
+
+// Master Room Type Amenity
+router.use("/room-type-amenity/room-type-amenity-assign", roomTypeAmenityAssign);
+router.use("/room-type-amenity/room-type-amenity-data", roomTypeAmenityData);
 
 // Master Tipe Ruang Event
 router.use("/tipe-ruang-event/tipe-ruang-event-data", tipeRuangEventData);
