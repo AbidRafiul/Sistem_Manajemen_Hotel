@@ -22,8 +22,15 @@ router.post("/", async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
   try {
-    if (!oPayload || Object.keys(oPayload).length < 1) return res.status(400).json({ status: status.BAD_REQUEST, message: "Invalid request body", datetime: formatDateSystem() });
-    
+    if (!oPayload || Object.keys(oPayload).length < 1)
+      return res
+        .status(400)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Invalid request body",
+          datetime: formatDateSystem(),
+        });
+
     const schema = {
       kode_tipe_kamar: Joi.string().required().label("Tipe Kamar"),
       kode_rate_plan: Joi.string().required().label("Rate Plan"),
@@ -32,23 +39,36 @@ router.post("/", async (req, res) => {
       extra_bed_price: Joi.number().min(0).optional().allow(null, "").label("Harga Extra Bed"),
       valid_from: Joi.date().iso().required().label("Berlaku Mulai"),
       valid_to: Joi.date().iso().optional().allow(null, "").label("Berlaku Sampai"),
-      is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif")
+      is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
     };
 
     const cValidation = await validatePayload(
       schema,
-      { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi", "number.base": "{#label} harus berupa angka", "number.min": "{#label} tidak boleh negatif", "date.format": "{#label} format tanggal salah" },
-      oPayload, { table: "mst_rate_plan_price", allowUnknown: true }
+      {
+        "string.base": "{#label} harus berupa teks",
+        "any.required": "{#label} wajib diisi",
+        "number.base": "{#label} harus berupa angka",
+        "number.min": "{#label} tidak boleh negatif",
+        "date.format": "{#label} format tanggal salah",
+      },
+      oPayload,
+      { table: "mst_rate_plan_price", allowUnknown: true }
     );
-    if (cValidation) return res.status(422).json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+    if (cValidation)
+      return res
+        .status(422)
+        .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
 
     let cUniqueCode = "";
-    
+
     // Normalize empty strings to null and format dates
     const season = oPayload.kode_season || null;
     const validTo = oPayload.valid_to ? formatDateSystem(oPayload.valid_to, "yyyy-MM-dd") : null;
     const validFrom = formatDateSystem(oPayload.valid_from, "yyyy-MM-dd");
-    const extraBed = (oPayload.extra_bed_price === "" || oPayload.extra_bed_price == null) ? null : oPayload.extra_bed_price;
+    const extraBed =
+      oPayload.extra_bed_price === "" || oPayload.extra_bed_price == null
+        ? null
+        : oPayload.extra_bed_price;
 
     await DB.transaction(async (trx) => {
       // Validasi Overlap
@@ -64,13 +84,15 @@ router.post("/", async (req, res) => {
         existingQuery.whereNull("kode_season");
       }
 
-      existingQuery.where(function() {
-        if (validTo) {
-          this.where("valid_from", "<=", validTo);
-        }
-      }).andWhere(function() {
-        this.where("valid_to", ">=", validFrom).orWhereNull("valid_to");
-      });
+      existingQuery
+        .where(function () {
+          if (validTo) {
+            this.where("valid_from", "<=", validTo);
+          }
+        })
+        .andWhere(function () {
+          this.where("valid_to", ">=", validFrom).orWhereNull("valid_to");
+        });
 
       const overlaps = await existingQuery;
       if (overlaps.length > 0) {
@@ -78,7 +100,7 @@ router.post("/", async (req, res) => {
       }
 
       cUniqueCode = await generateSequence("FMT-HARGAKAMAR", trx);
-      
+
       const oData = {
         kode_harga_price: cUniqueCode,
         kode_tipe_kamar: oPayload.kode_tipe_kamar,
@@ -91,20 +113,55 @@ router.post("/", async (req, res) => {
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
         created_by: req.auth?.user_id || 1,
         created_at: formatDateSystem(),
-        updated_at: formatDateSystem()
+        updated_at: formatDateSystem(),
       };
-      
+
       await trx("mst_rate_plan_price").insert(oData);
-      await ChangesLog({ description: "Tambah Master Harga Kamar", tableName: "mst_rate_plan_price", referenceCode: cUniqueCode, action: "CREATE", dataBefore: null, dataAfter: oData, user: username, tz: oPayload.tz || "UTC" }, trx);
+      await ChangesLog(
+        {
+          description: "Tambah Master Harga Kamar",
+          tableName: "mst_rate_plan_price",
+          referenceCode: cUniqueCode,
+          action: "CREATE",
+          dataBefore: null,
+          dataAfter: oData,
+          user: username,
+          tz: oPayload.tz || "UTC",
+        },
+        trx
+      );
     });
-    
-    return res.status(200).json({ status: status.SUKSES, message: "Data Master Harga Kamar berhasil dibuat", datetime: formatDateSystem(), data: { kode_harga_price: cUniqueCode } });
+
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data Master Harga Kamar berhasil dibuat",
+        datetime: formatDateSystem(),
+        data: { kode_harga_price: cUniqueCode },
+      });
   } catch (error) {
     if (error.message === "OVERLAP_DATE") {
-      return res.status(400).json({ status: status.BAD_REQUEST, message: "Sudah ada harga aktif untuk kombinasi ini pada rentang tanggal tersebut", datetime: formatDateSystem() });
+      return res
+        .status(400)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Sudah ada harga aktif untuk kombinasi ini pada rentang tanggal tersebut",
+          datetime: formatDateSystem(),
+        });
     }
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/rate_plan_price/rate_plan_price_create.js", func: "create", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/rate_plan_price/rate_plan_price_create.js",
+      func: "create",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

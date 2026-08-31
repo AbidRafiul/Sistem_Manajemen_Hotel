@@ -21,27 +21,43 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
-  
+
   try {
     if (!oPayload || Object.keys(oPayload).length < 1) {
-      return res.status(400).json({ status: status.BAD_REQUEST, message: "Invalid request body", datetime: formatDateSystem() });
+      return res
+        .status(400)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Invalid request body",
+          datetime: formatDateSystem(),
+        });
     }
 
     const schema = {
       kode_tipe_kamar: Joi.string().required().label("Kode Tipe Kamar"),
       kode_rate_plan: Joi.string().required().label("Kode Rate Plan"),
       kode_season: Joi.string().optional().allow(null, "").label("Kode Season"),
-      tanggal: Joi.date().iso().optional().allow(null, "").label("Tanggal")
+      tanggal: Joi.date().iso().optional().allow(null, "").label("Tanggal"),
     };
 
     const cValidation = await validatePayload(
       schema,
-      { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi", "date.format": "{#label} format tanggal salah" },
-      oPayload, { allowUnknown: true }
+      {
+        "string.base": "{#label} harus berupa teks",
+        "any.required": "{#label} wajib diisi",
+        "date.format": "{#label} format tanggal salah",
+      },
+      oPayload,
+      { allowUnknown: true }
     );
-    if (cValidation) return res.status(422).json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+    if (cValidation)
+      return res
+        .status(422)
+        .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
 
-    const targetDate = oPayload.tanggal ? formatDateSystem(oPayload.tanggal, "yyyy-MM-dd") : formatDateSystem(new Date(), "yyyy-MM-dd");
+    const targetDate = oPayload.tanggal
+      ? formatDateSystem(oPayload.tanggal, "yyyy-MM-dd")
+      : formatDateSystem(new Date(), "yyyy-MM-dd");
     const season = oPayload.kode_season || null;
 
     // 1. Cek mst_rate_plan_price untuk override
@@ -51,7 +67,7 @@ router.post("/", async (req, res) => {
       .where("is_active", 1)
       .whereNull("deleted_at")
       .where("valid_from", "<=", targetDate)
-      .andWhere(function() {
+      .andWhere(function () {
         this.where("valid_to", ">=", targetDate).orWhereNull("valid_to");
       });
 
@@ -71,8 +87,8 @@ router.post("/", async (req, res) => {
         data: {
           price: parseFloat(overrideData.price),
           source: "override",
-          kode_harga_price: overrideData.kode_harga_price
-        }
+          kode_harga_price: overrideData.kode_harga_price,
+        },
       });
     }
 
@@ -93,7 +109,7 @@ router.post("/", async (req, res) => {
       return res.status(404).json({
         status: status.NOT_FOUND,
         message: "Kombinasi Tipe Kamar dan Rate Plan tidak ditemukan",
-        datetime: formatDateSystem()
+        datetime: formatDateSystem(),
       });
     }
 
@@ -102,10 +118,10 @@ router.post("/", async (req, res) => {
     const tipeMarkup = rpData.tipe_markup;
 
     let computedPrice = hargaDefault;
-    if (tipeMarkup === 'nominal') {
+    if (tipeMarkup === "nominal") {
       computedPrice += nilaiMarkup;
-    } else if (tipeMarkup === 'persen') {
-      computedPrice += (hargaDefault * nilaiMarkup / 100);
+    } else if (tipeMarkup === "persen") {
+      computedPrice += (hargaDefault * nilaiMarkup) / 100;
     }
 
     return res.status(200).json({
@@ -118,14 +134,23 @@ router.post("/", async (req, res) => {
         breakdown: {
           harga_default: hargaDefault,
           tipe_markup: tipeMarkup,
-          nilai_markup: nilaiMarkup
-        }
-      }
+          nilai_markup: nilaiMarkup,
+        },
+      },
     });
-
   } catch (error) {
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/rate_plan_price/rate_plan_price_hitung.js", func: "hitung", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/rate_plan_price/rate_plan_price_hitung.js",
+      func: "hitung",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

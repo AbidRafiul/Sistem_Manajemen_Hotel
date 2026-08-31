@@ -20,24 +20,90 @@ router.post("/", async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
   try {
-    if (!oPayload || Object.keys(oPayload).length < 1) return res.status(400).json({ status: status.BAD_REQUEST, message: "Invalid request body", datetime: formatDateSystem() });
+    if (!oPayload || Object.keys(oPayload).length < 1)
+      return res
+        .status(400)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Invalid request body",
+          datetime: formatDateSystem(),
+        });
     const cValidation = await validatePayload(
       { kode_amenity: Joi.array().items(Joi.string()).min(1).required().label("Kode Amenity") },
-      { "array.base": "{#label} harus berupa array", "array.min": "Minimal pilih satu data untuk dihapus", "any.required": "{#label} wajib dikirim" },
-      oPayload, { table: "mst_amenity", allowUnknown: true }
+      {
+        "array.base": "{#label} harus berupa array",
+        "array.min": "Minimal pilih satu data untuk dihapus",
+        "any.required": "{#label} wajib dikirim",
+      },
+      oPayload,
+      { table: "mst_amenity", allowUnknown: true }
     );
-    if (cValidation) return res.status(422).json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+    if (cValidation)
+      return res
+        .status(422)
+        .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
     await DB.transaction(async (trx) => {
-      const records = await trx("mst_amenity").whereIn("kode_amenity", oPayload.kode_amenity).whereNull("deleted_at").forUpdate();
-      if (!records || records.length < 1) { const e = new Error("Data tidak ditemukan"); e.statusCode = 404; throw e; }
-      await trx("mst_amenity").whereIn("kode_amenity", oPayload.kode_amenity).update({ is_active: 0, deleted_at: formatDateSystem(), deleted_by: req.auth?.user_id || 1, updated_at: formatDateSystem(), updated_by: req.auth?.user_id || 1 });
-      for (const r of records) await ChangesLog({ description: "Soft Delete Master Amenity", tableName: "mst_amenity", referenceCode: r.kode_amenity, action: "DELETE", dataBefore: r, dataAfter: { ...r, is_active: 0, deleted_at: formatDateSystem() }, user: username, tz: oPayload.tz || "UTC" }, trx);
+      const records = await trx("mst_amenity")
+        .whereIn("kode_amenity", oPayload.kode_amenity)
+        .whereNull("deleted_at")
+        .forUpdate();
+      if (!records || records.length < 1) {
+        const e = new Error("Data tidak ditemukan");
+        e.statusCode = 404;
+        throw e;
+      }
+      await trx("mst_amenity")
+        .whereIn("kode_amenity", oPayload.kode_amenity)
+        .update({
+          is_active: 0,
+          deleted_at: formatDateSystem(),
+          deleted_by: req.auth?.user_id || 1,
+          updated_at: formatDateSystem(),
+          updated_by: req.auth?.user_id || 1,
+        });
+      for (const r of records)
+        await ChangesLog(
+          {
+            description: "Soft Delete Master Amenity",
+            tableName: "mst_amenity",
+            referenceCode: r.kode_amenity,
+            action: "DELETE",
+            dataBefore: r,
+            dataAfter: { ...r, is_active: 0, deleted_at: formatDateSystem() },
+            user: username,
+            tz: oPayload.tz || "UTC",
+          },
+          trx
+        );
     });
-    return res.status(200).json({ status: status.SUKSES, message: "Data Master Amenity berhasil dihapus", datetime: formatDateSystem() });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data Master Amenity berhasil dihapus",
+        datetime: formatDateSystem(),
+      });
   } catch (error) {
-    if (error.statusCode === 404) return res.status(404).json({ status: status.NOT_FOUND, message: "Data tidak ditemukan atau sudah terhapus", datetime: formatDateSystem() });
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/amenity/amenity_delete.js", func: "delete", request: oPayload, response: oResult, user: username });
+    if (error.statusCode === 404)
+      return res
+        .status(404)
+        .json({
+          status: status.NOT_FOUND,
+          message: "Data tidak ditemukan atau sudah terhapus",
+          datetime: formatDateSystem(),
+        });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/amenity/amenity_delete.js",
+      func: "delete",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

@@ -22,21 +22,80 @@ router.post("/", async (req, res) => {
   try {
     const cValidation = await validatePayload(
       { kode_paket_harga: Joi.array().items(Joi.string()).min(1).required().label("Kode") },
-      { "array.base": "{#label} harus berupa array", "array.min": "Minimal pilih satu data", "any.required": "{#label} wajib dikirim" },
-      oPayload, { table: "mst_paket_harga", allowUnknown: true }
+      {
+        "array.base": "{#label} harus berupa array",
+        "array.min": "Minimal pilih satu data",
+        "any.required": "{#label} wajib dikirim",
+      },
+      oPayload,
+      { table: "mst_paket_harga", allowUnknown: true }
     );
-    if (cValidation) return res.status(422).json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+    if (cValidation)
+      return res
+        .status(422)
+        .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
     await DB.transaction(async (trx) => {
-      const records = await trx("mst_paket_harga").whereIn("kode_paket_harga", oPayload.kode_paket_harga).whereNull("deleted_at").forUpdate();
-      if (!records || records.length < 1) { const e = new Error("Data tidak ditemukan"); e.statusCode = 404; throw e; }
-      await trx("mst_paket_harga").whereIn("kode_paket_harga", oPayload.kode_paket_harga).update({ is_active: 0, deleted_at: formatDateSystem(), deleted_by: req.auth?.user_id || 1, updated_at: formatDateSystem(), updated_by: req.auth?.user_id || 1 });
-      for (const r of records) await ChangesLog({ description: "Soft Delete Master Rate Plan", tableName: "mst_paket_harga", referenceCode: r.kode_paket_harga, action: "DELETE", dataBefore: r, dataAfter: { ...r, is_active: 0, deleted_at: formatDateSystem() }, user: username, tz: oPayload.tz || "UTC" }, trx);
+      const records = await trx("mst_paket_harga")
+        .whereIn("kode_paket_harga", oPayload.kode_paket_harga)
+        .whereNull("deleted_at")
+        .forUpdate();
+      if (!records || records.length < 1) {
+        const e = new Error("Data tidak ditemukan");
+        e.statusCode = 404;
+        throw e;
+      }
+      await trx("mst_paket_harga")
+        .whereIn("kode_paket_harga", oPayload.kode_paket_harga)
+        .update({
+          is_active: 0,
+          deleted_at: formatDateSystem(),
+          deleted_by: req.auth?.user_id || 1,
+          updated_at: formatDateSystem(),
+          updated_by: req.auth?.user_id || 1,
+        });
+      for (const r of records)
+        await ChangesLog(
+          {
+            description: "Soft Delete Master Rate Plan",
+            tableName: "mst_paket_harga",
+            referenceCode: r.kode_paket_harga,
+            action: "DELETE",
+            dataBefore: r,
+            dataAfter: { ...r, is_active: 0, deleted_at: formatDateSystem() },
+            user: username,
+            tz: oPayload.tz || "UTC",
+          },
+          trx
+        );
     });
-    return res.status(200).json({ status: status.SUKSES, message: "Data berhasil dihapus", datetime: formatDateSystem() });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data berhasil dihapus",
+        datetime: formatDateSystem(),
+      });
   } catch (error) {
-    if (error.statusCode === 404) return res.status(404).json({ status: status.NOT_FOUND, message: "Data tidak ditemukan atau sudah terhapus", datetime: formatDateSystem() });
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/rate_plan/rate_plan_delete.js", func: "delete", request: oPayload, response: oResult, user: username });
+    if (error.statusCode === 404)
+      return res
+        .status(404)
+        .json({
+          status: status.NOT_FOUND,
+          message: "Data tidak ditemukan atau sudah terhapus",
+          datetime: formatDateSystem(),
+        });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/rate_plan/rate_plan_delete.js",
+      func: "delete",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

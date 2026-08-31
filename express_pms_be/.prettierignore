@@ -1,0 +1,11 @@
+node_modules
+seeds
+migrations
+core/config
+public
+temp
+routes/v1/setup
+routes/v1/contoh
+routes/v1/auth
+routes/v1/components
+routes/v1/index.js

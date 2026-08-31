@@ -3,7 +3,7 @@
  * @project Standard
  * @file index.js
  * @description File index untuk routing Master
- * 
+ *
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
  * @created 2026-08-12
  * @lastModified Fadil (2026-08-13)
