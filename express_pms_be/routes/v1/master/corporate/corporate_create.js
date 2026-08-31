@@ -79,8 +79,6 @@ router.post("/", async (req, res) => {
         created_at: formatDateSystem(),
         updated_at: formatDateSystem(),
       };
-      console.log("oPayload:", oPayload);
-      console.log("oData:", oData);
 
       const existingData = await trx("mst_corporate_account")
         .where("kode_corporate", cUniqueCode)
