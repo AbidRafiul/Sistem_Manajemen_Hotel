@@ -61,7 +61,9 @@ const Page = () => {
             kapasitas_maksimal: 2,
             luas_m2: null,
             deskripsi: '',
-            is_active: 1
+            is_active: 1,
+            kode_fasilitas: [],
+            kode_amenity: []
         },
         validate: (data: initValue) => {
             let errors: Record<string, string> = {};

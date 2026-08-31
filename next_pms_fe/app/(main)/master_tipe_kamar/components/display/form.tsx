@@ -11,12 +11,15 @@ import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { useEffect, useState } from 'react';
 import { Dropdown } from 'primereact/dropdown';
+import { MultiSelect } from 'primereact/multiselect';
 import { getTzUser } from '@/lib/tools/dateTools';
 import { InputSwitch } from 'primereact/inputswitch';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
     const [cabangList, setCabangList] = useState([]);
     const [bedTypeList, setBedTypeList] = useState([]);
+    const [fasilitasList, setFasilitasList] = useState([]);
+    const [amenityList, setAmenityList] = useState([]);
 
     const fetchCabang = async (keyword = '') => {
         try {
@@ -37,6 +40,20 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
         } catch (error) { console.error(error); }
     };
 
+    const fetchFasilitas = async (keyword = '') => {
+        try {
+            const res = await postData('/master/fasilitas/fasilitas-data', { perPage: 1000, keyword });
+            setFasilitasList(res.data.data);
+        } catch (error) { console.error(error); }
+    };
+
+    const fetchAmenity = async (keyword = '') => {
+        try {
+            const res = await postData('/master/amenity/amenity-data', { perPage: 1000, keyword });
+            setAmenityList(res.data.data);
+        } catch (error) { console.error(error); }
+    };
+
     const handleFilterCabang = (e: any) => {
         fetchCabang(e.filter);
     };
@@ -48,7 +65,38 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
     useEffect(() => {
         fetchCabang();
         fetchBedType();
+        fetchFasilitas();
+        fetchAmenity();
     }, []);
+
+    useEffect(() => {
+        const fetchAssigned = async () => {
+            if (state.edit && formik.values.kode_tipe_kamar) {
+                setState(p => ({ ...p, load: true }));
+                try {
+                    const [resFas, resAm] = await Promise.all([
+                        postData('/master/room-type-fasilitas/room-type-fasilitas-data', { kode_tipe_kamar: formik.values.kode_tipe_kamar }),
+                        postData('/master/room-type-amenity/room-type-amenity-data', { kode_tipe_kamar: formik.values.kode_tipe_kamar })
+                    ]);
+                    const assignedFas = resFas.data.data.map((f: any) => f.kode_fasilitas);
+                    const assignedAm = resAm.data.data.map((a: any) => a.kode_amenity);
+                    formik.setFieldValue('kode_fasilitas', assignedFas);
+                    formik.setFieldValue('kode_amenity', assignedAm);
+                } catch(e) {
+                    console.error("Gagal mengambil data fasilitas/amenity assigned", e);
+                } finally {
+                    setState(p => ({ ...p, load: false }));
+                }
+            } else if (state.add) {
+                formik.setFieldValue('kode_fasilitas', []);
+                formik.setFieldValue('kode_amenity', []);
+            }
+        };
+        if (state.add || state.edit) {
+            fetchAssigned();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.add, state.edit]);
 
     const handleSave = async (input: initValue) => {
         setState((p) => ({ ...p, load: true }));
@@ -80,6 +128,18 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
 
             const vaData = await postData(cEndPoint, oBody, oHeaders);
             const res = vaData.data;
+
+            const savedKode = isEdit ? input.kode_tipe_kamar : res.data?.kode_tipe_kamar;
+
+            try {
+                await Promise.all([
+                    postData('/master/room-type-fasilitas/room-type-fasilitas-assign', { kode_tipe_kamar: savedKode, kode_fasilitas: input.kode_fasilitas || [] }),
+                    postData('/master/room-type-amenity/room-type-amenity-assign', { kode_tipe_kamar: savedKode, kode_amenity: input.kode_amenity || [] })
+                ]);
+            } catch (assignError) {
+                console.error(assignError);
+                showError(toast, 'Tipe Kamar tersimpan, namun gagal menyimpan assignment fasilitas/amenity');
+            }
 
             showSuccess(toast, res.message || 'Berhasil Menyimpan Data Tipe Kamar');
             formik.resetForm();
@@ -254,6 +314,46 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                     min={1}
                                     max={1000}
                                     suffix=" m²"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Fasilitas & Amenity */}
+                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
+                            <div className="flex flex-column gap-1 w-full">
+                                <label htmlFor="kode_fasilitas" className="font-semibold text-sm">
+                                    Fasilitas Tersedia
+                                </label>
+                                <MultiSelect
+                                    id="kode_fasilitas"
+                                    name="kode_fasilitas"
+                                    value={formik?.values.kode_fasilitas}
+                                    options={fasilitasList}
+                                    onChange={formik?.handleChange}
+                                    optionLabel="name"
+                                    optionValue="kode_fasilitas"
+                                    placeholder="Pilih Fasilitas"
+                                    display="chip"
+                                    filter
+                                    className="w-full"
+                                />
+                            </div>
+                            <div className="flex flex-column gap-1 w-full">
+                                <label htmlFor="kode_amenity" className="font-semibold text-sm">
+                                    Amenity Tersedia
+                                </label>
+                                <MultiSelect
+                                    id="kode_amenity"
+                                    name="kode_amenity"
+                                    value={formik?.values.kode_amenity}
+                                    options={amenityList}
+                                    onChange={formik?.handleChange}
+                                    optionLabel="name"
+                                    optionValue="kode_amenity"
+                                    placeholder="Pilih Amenity"
+                                    display="chip"
+                                    filter
+                                    className="w-full"
                                 />
                             </div>
                         </div>

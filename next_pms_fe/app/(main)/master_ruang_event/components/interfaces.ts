@@ -44,6 +44,7 @@ export interface initValue {
     luas_sqm: number;
     layout_support: string;
     is_active: number;
+    kode_fasilitas?: string[];
 }
 
 export interface State {

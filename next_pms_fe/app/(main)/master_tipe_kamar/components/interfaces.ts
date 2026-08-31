@@ -35,6 +35,8 @@ export interface initValue {
     luas_m2: number | null;
     deskripsi: string;
     is_active: number;
+    kode_fasilitas?: string[];
+    kode_amenity?: string[];
 }
 
 export interface State {
