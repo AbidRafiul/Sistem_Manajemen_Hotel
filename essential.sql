@@ -1,8 +1,9 @@
--- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
---
--- Host: 127.0.0.1    Database: hotel_pms
--- ------------------------------------------------------
--- Server version	8.0.30
+﻿-- ========================================================
+-- Project: Intern Standart v2
+-- Date Dump: 2026-08-31
+-- Database: hotel_pms
+-- ========================================================
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,11 +15,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `access_token`
---
-
 DROP TABLE IF EXISTS `access_token`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -30,13 +26,8 @@ CREATE TABLE `access_token` (
   `expires_at` datetime DEFAULT NULL,
   `datetime` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `config`
---
-
 DROP TABLE IF EXISTS `config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -50,11 +41,6 @@ CREATE TABLE `config` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `log`
---
-
 DROP TABLE IF EXISTS `log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -71,13 +57,8 @@ CREATE TABLE `log` (
   `datetime` datetime DEFAULT NULL,
   `datetime_eng` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=263 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=328 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `log_perubahan`
---
-
 DROP TABLE IF EXISTS `log_perubahan`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -96,13 +77,8 @@ CREATE TABLE `log_perubahan` (
   PRIMARY KEY (`id`),
   KEY `idx_log_perubahan_tabel_ref` (`nama_tabel`,`kode_referensi`),
   KEY `idx_log_perubahan_created_at` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=284 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=482 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_amenity`
---
-
 DROP TABLE IF EXISTS `mst_amenity`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -120,13 +96,8 @@ CREATE TABLE `mst_amenity` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_amenity`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_bed_type`
---
-
 DROP TABLE IF EXISTS `mst_bed_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -143,13 +114,8 @@ CREATE TABLE `mst_bed_type` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_bed_type`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_cabang`
---
-
 DROP TABLE IF EXISTS `mst_cabang`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -159,15 +125,10 @@ CREATE TABLE `mst_cabang` (
   `nama_hotel` varchar(150) NOT NULL,
   `logo_url` varchar(255) DEFAULT NULL,
   `alamat` text,
-  `npwp` varchar(30) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `website` varchar(100) DEFAULT NULL,
   `telepon` varchar(30) DEFAULT NULL,
   `waktu_checkin` time NOT NULL DEFAULT '14:00:00',
   `waktu_checkout` time NOT NULL DEFAULT '12:00:00',
-  `mata_uang` varchar(10) NOT NULL DEFAULT 'IDR',
   `zona_waktu` varchar(50) NOT NULL DEFAULT 'Asia/Jakarta',
-  `business_date` date DEFAULT NULL,
   `is_pkp` tinyint(1) NOT NULL DEFAULT '0',
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -179,13 +140,8 @@ CREATE TABLE `mst_cabang` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_cabang`),
   UNIQUE KEY `uq_hotel_tenant_code` (`kode_cabang`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_cashier_counter`
---
-
 DROP TABLE IF EXISTS `mst_cashier_counter`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -206,11 +162,6 @@ CREATE TABLE `mst_cashier_counter` (
   UNIQUE KEY `uq_counter` (`kode_cabang`,`kode_counter`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_channel_rate_mapping`
---
-
 DROP TABLE IF EXISTS `mst_channel_rate_mapping`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -235,11 +186,6 @@ CREATE TABLE `mst_channel_rate_mapping` (
   CONSTRAINT `fk_channel_map_rate_plan` FOREIGN KEY (`kode_rate_plan`) REFERENCES `mst_paket_harga` (`kode_paket_harga`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_corporate_account`
---
-
 DROP TABLE IF EXISTS `mst_corporate_account`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -266,19 +212,14 @@ CREATE TABLE `mst_corporate_account` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_corporate`),
   UNIQUE KEY `uq_corp_account` (`kode_cabang`,`kode_corporate`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_currency_rate`
---
-
 DROP TABLE IF EXISTS `mst_currency_rate`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `mst_currency_rate` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `kode` varchar(50) NOT NULL,
+  `kode_currency_rate` varchar(50) NOT NULL,
   `from_currency` varchar(10) NOT NULL,
   `to_currency` varchar(10) NOT NULL,
   `rate` decimal(18,6) NOT NULL,
@@ -287,15 +228,10 @@ CREATE TABLE `mst_currency_rate` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `kode` (`kode`),
-  UNIQUE KEY `uq_currency_rate` (`from_currency`,`to_currency`,`effective_date`)
+  UNIQUE KEY `uq_currency_rate` (`from_currency`,`to_currency`,`effective_date`),
+  UNIQUE KEY `uq_kode` (`kode_currency_rate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_document_type`
---
-
 DROP TABLE IF EXISTS `mst_document_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -310,11 +246,6 @@ CREATE TABLE `mst_document_type` (
   UNIQUE KEY `kode` (`kode_document_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_fasilitas`
---
-
 DROP TABLE IF EXISTS `mst_fasilitas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -335,11 +266,6 @@ CREATE TABLE `mst_fasilitas` (
   UNIQUE KEY `uq_fasilitas` (`kode_cabang`,`kode_fasilitas`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_fiscal_document_setup`
---
-
 DROP TABLE IF EXISTS `mst_fiscal_document_setup`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -363,11 +289,6 @@ CREATE TABLE `mst_fiscal_document_setup` (
   UNIQUE KEY `uq_fiscal_setup` (`kode_cabang`,`doc_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_gedung`
---
-
 DROP TABLE IF EXISTS `mst_gedung`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -387,13 +308,8 @@ CREATE TABLE `mst_gedung` (
   UNIQUE KEY `kode` (`kode_gedung`),
   UNIQUE KEY `uq_building` (`kode_cabang`,`kode_gedung`),
   CONSTRAINT `fk_building_hotel` FOREIGN KEY (`kode_cabang`) REFERENCES `mst_cabang` (`kode_cabang`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_guest`
---
-
 DROP TABLE IF EXISTS `mst_guest`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -429,11 +345,29 @@ CREATE TABLE `mst_guest` (
   CONSTRAINT `fk_guest_fav_room_type` FOREIGN KEY (`kode_favorite_room_type`) REFERENCES `mst_tipe_kamar` (`kode_tipe_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_holiday`
---
-
+DROP TABLE IF EXISTS `mst_harga_ruang_event`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mst_harga_ruang_event` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `kode_harga_ruang_event` varchar(255) NOT NULL,
+  `kode_ruang_event` varchar(255) NOT NULL,
+  `tipe_sewa` enum('per_jam','half_day','full_day') NOT NULL,
+  `kode_musim` varchar(255) DEFAULT NULL,
+  `harga` decimal(18,2) NOT NULL,
+  `created_at` datetime NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  `updated_at` datetime NOT NULL,
+  `updated_by` varchar(255) DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted_by` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kode_harga_ruang_event` (`kode_harga_ruang_event`),
+  KEY `fk_hre_ruang` (`kode_ruang_event`),
+  CONSTRAINT `fk_hre_ruang` FOREIGN KEY (`kode_ruang_event`) REFERENCES `mst_ruang_event` (`kode_ruang_event`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `mst_holiday`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -452,11 +386,6 @@ CREATE TABLE `mst_holiday` (
   UNIQUE KEY `uq_holiday` (`kode_cabang`,`holiday_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_kamar`
---
-
 DROP TABLE IF EXISTS `mst_kamar`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -466,13 +395,11 @@ CREATE TABLE `mst_kamar` (
   `kode_gedung` varchar(50) DEFAULT NULL,
   `kode_lantai` varchar(50) NOT NULL,
   `kode_tipe_kamar` varchar(50) NOT NULL,
-  `kode_bed_type` varchar(50) DEFAULT NULL,
   `kode_kamar` varchar(50) NOT NULL,
   `nomor_kamar` varchar(20) NOT NULL,
   `tipe_pemandangan` varchar(50) DEFAULT NULL,
   `catatan` text,
   `boleh_merokok` tinyint(1) NOT NULL DEFAULT '0',
-  `status_kamar` enum('vacant_clean','vacant_dirty','occupied','out_of_order','maintenance','inspection','cleaning','blocked') NOT NULL DEFAULT 'vacant_clean',
   `occupancy_status` enum('vacant','occupied','blocked') NOT NULL DEFAULT 'vacant',
   `housekeeping_status` enum('clean','dirty','inspection','maintenance') NOT NULL DEFAULT 'clean',
   `created_by` bigint DEFAULT NULL,
@@ -487,18 +414,11 @@ CREATE TABLE `mst_kamar` (
   UNIQUE KEY `uq_room` (`kode_cabang`,`kode_kamar`),
   KEY `fk_room_floor` (`kode_lantai`),
   KEY `fk_room_room_type` (`kode_tipe_kamar`),
-  KEY `fk_room_bed_type` (`kode_bed_type`),
-  CONSTRAINT `fk_room_bed_type` FOREIGN KEY (`kode_bed_type`) REFERENCES `mst_bed_type` (`kode_bed_type`),
   CONSTRAINT `fk_room_floor` FOREIGN KEY (`kode_lantai`) REFERENCES `mst_lantai` (`kode_lantai`),
   CONSTRAINT `fk_room_hotel` FOREIGN KEY (`kode_cabang`) REFERENCES `mst_cabang` (`kode_cabang`),
   CONSTRAINT `fk_room_room_type` FOREIGN KEY (`kode_tipe_kamar`) REFERENCES `mst_tipe_kamar` (`kode_tipe_kamar`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_lantai`
---
-
 DROP TABLE IF EXISTS `mst_lantai`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -507,7 +427,7 @@ CREATE TABLE `mst_lantai` (
   `kode_gedung` varchar(50) NOT NULL,
   `kode_lantai` varchar(50) NOT NULL,
   `nama_lantai` varchar(100) NOT NULL,
-  `nomor_lantai` int NOT NULL,
+  `nomor_lantai` int NOT NULL DEFAULT '1',
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_by` bigint DEFAULT NULL,
@@ -519,13 +439,8 @@ CREATE TABLE `mst_lantai` (
   UNIQUE KEY `kode` (`kode_lantai`),
   UNIQUE KEY `uq_floor` (`kode_gedung`,`kode_lantai`),
   CONSTRAINT `fk_floor_building` FOREIGN KEY (`kode_gedung`) REFERENCES `mst_gedung` (`kode_gedung`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_musim`
---
-
 DROP TABLE IF EXISTS `mst_musim`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -536,7 +451,7 @@ CREATE TABLE `mst_musim` (
   `nama_musim` varchar(50) NOT NULL,
   `tanggal_mulai` date DEFAULT NULL,
   `tanggal_selesai` date DEFAULT NULL,
-  `hari_berlaku` varchar(20) DEFAULT NULL,
+  `hari_berlaku` varchar(150) DEFAULT NULL,
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_by` bigint DEFAULT NULL,
@@ -547,13 +462,8 @@ CREATE TABLE `mst_musim` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_musim`),
   UNIQUE KEY `uq_season` (`kode_cabang`,`kode_musim`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_navigation`
---
-
 DROP TABLE IF EXISTS `mst_navigation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -565,13 +475,8 @@ CREATE TABLE `mst_navigation` (
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_notification_setup`
---
-
 DROP TABLE IF EXISTS `mst_notification_setup`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -595,11 +500,6 @@ CREATE TABLE `mst_notification_setup` (
   UNIQUE KEY `uq_notif_setup` (`kode_cabang`,`event_code`,`channel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_paket_harga`
---
-
 DROP TABLE IF EXISTS `mst_paket_harga`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -609,7 +509,7 @@ CREATE TABLE `mst_paket_harga` (
   `kode_template` varchar(50) DEFAULT NULL,
   `kode_paket_harga` varchar(50) NOT NULL,
   `nama_paket` varchar(100) NOT NULL,
-  `tipe_paket` enum('bar','promo','corporate','ota','travel_agent') NOT NULL DEFAULT 'bar',
+  `tipe_paket` varchar(50) NOT NULL DEFAULT 'RO',
   `dapat_di_refund` tinyint(1) NOT NULL DEFAULT '1',
   `termasuk_sarapan` tinyint(1) NOT NULL DEFAULT '0',
   `minimal_malam` int NOT NULL DEFAULT '1',
@@ -621,18 +521,15 @@ CREATE TABLE `mst_paket_harga` (
   `deleted_by` bigint DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `tipe_markup` enum('nominal','persen') NOT NULL DEFAULT 'nominal',
+  `nilai_markup` decimal(15,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_paket_harga`),
   UNIQUE KEY `uq_rate_plan` (`kode_cabang`,`kode_paket_harga`),
   KEY `fk_rate_plan_template` (`kode_template`),
   CONSTRAINT `fk_rate_plan_template` FOREIGN KEY (`kode_template`) REFERENCES `mst_rate_plan_template` (`kode_harga_template`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_rate_plan_price`
---
-
 DROP TABLE IF EXISTS `mst_rate_plan_price`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -661,13 +558,8 @@ CREATE TABLE `mst_rate_plan_price` (
   CONSTRAINT `fk_rpp_rate_plan` FOREIGN KEY (`kode_rate_plan`) REFERENCES `mst_paket_harga` (`kode_paket_harga`),
   CONSTRAINT `fk_rpp_room_type` FOREIGN KEY (`kode_tipe_kamar`) REFERENCES `mst_tipe_kamar` (`kode_tipe_kamar`),
   CONSTRAINT `fk_rpp_season` FOREIGN KEY (`kode_season`) REFERENCES `mst_musim` (`kode_musim`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_rate_plan_template`
---
-
 DROP TABLE IF EXISTS `mst_rate_plan_template`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -688,11 +580,6 @@ CREATE TABLE `mst_rate_plan_template` (
   UNIQUE KEY `uq_rate_template` (`kode_harga_template`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_room_block`
---
-
 DROP TABLE IF EXISTS `mst_room_block`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -720,11 +607,6 @@ CREATE TABLE `mst_room_block` (
   CONSTRAINT `fk_room_block_corp` FOREIGN KEY (`kode_corporate_account`) REFERENCES `mst_corporate_account` (`kode_corporate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_room_type_amenity`
---
-
 DROP TABLE IF EXISTS `mst_room_type_amenity`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -739,13 +621,69 @@ CREATE TABLE `mst_room_type_amenity` (
   KEY `fk_rta_amenity` (`kode_amenity`),
   CONSTRAINT `fk_rta_amenity` FOREIGN KEY (`kode_amenity`) REFERENCES `mst_amenity` (`kode_amenity`),
   CONSTRAINT `fk_rta_room_type` FOREIGN KEY (`kode_tipe_kamar`) REFERENCES `mst_tipe_kamar` (`kode_tipe_kamar`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `mst_room_type_fasilitas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mst_room_type_fasilitas` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `kode_tipe_kamar` varchar(255) NOT NULL,
+  `kode_fasilitas` varchar(255) NOT NULL,
+  `created_at` datetime NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_rtf_tipe_kamar` (`kode_tipe_kamar`),
+  KEY `fk_rtf_fasilitas` (`kode_fasilitas`),
+  CONSTRAINT `fk_rtf_fasilitas` FOREIGN KEY (`kode_fasilitas`) REFERENCES `mst_fasilitas` (`kode_fasilitas`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_rtf_tipe_kamar` FOREIGN KEY (`kode_tipe_kamar`) REFERENCES `mst_tipe_kamar` (`kode_tipe_kamar`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_tax`
---
-
+DROP TABLE IF EXISTS `mst_ruang_event`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mst_ruang_event` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `kode_ruang_event` varchar(255) NOT NULL,
+  `kode_cabang` varchar(255) NOT NULL,
+  `kode_gedung` varchar(100) DEFAULT NULL,
+  `kode_lantai` varchar(100) DEFAULT NULL,
+  `kode_tipe_ruang_event` varchar(255) NOT NULL,
+  `nama_ruang` varchar(255) NOT NULL,
+  `kapasitas_orang` int DEFAULT NULL,
+  `luas_sqm` int DEFAULT NULL,
+  `layout_support` text,
+  `created_at` datetime NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  `updated_at` datetime NOT NULL,
+  `updated_by` varchar(255) DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted_by` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kode_ruang_event` (`kode_ruang_event`),
+  KEY `fk_re_cabang` (`kode_cabang`),
+  KEY `fk_re_tipe` (`kode_tipe_ruang_event`),
+  CONSTRAINT `fk_re_cabang` FOREIGN KEY (`kode_cabang`) REFERENCES `mst_cabang` (`kode_cabang`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_re_tipe` FOREIGN KEY (`kode_tipe_ruang_event`) REFERENCES `mst_tipe_ruang_event` (`kode_tipe_ruang_event`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `mst_ruang_event_fasilitas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mst_ruang_event_fasilitas` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `kode_ruang_event` varchar(255) NOT NULL,
+  `kode_fasilitas` varchar(255) NOT NULL,
+  `created_at` datetime NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_ref_ruang` (`kode_ruang_event`),
+  KEY `fk_ref_fasilitas` (`kode_fasilitas`),
+  CONSTRAINT `fk_ref_fasilitas` FOREIGN KEY (`kode_fasilitas`) REFERENCES `mst_fasilitas` (`kode_fasilitas`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_ref_ruang` FOREIGN KEY (`kode_ruang_event`) REFERENCES `mst_ruang_event` (`kode_ruang_event`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `mst_tax`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -767,13 +705,8 @@ CREATE TABLE `mst_tax` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_pajak`),
   UNIQUE KEY `uq_tax` (`kode_cabang`,`kode_pajak`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_tipe_kamar`
---
-
 DROP TABLE IF EXISTS `mst_tipe_kamar`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -795,17 +728,54 @@ CREATE TABLE `mst_tipe_kamar` (
   `deleted_by` bigint DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `kode_bed_type` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_tipe_kamar`),
   UNIQUE KEY `uq_room_type` (`kode_cabang`,`kode_tipe_kamar`),
-  CONSTRAINT `fk_room_type_hotel` FOREIGN KEY (`kode_cabang`) REFERENCES `mst_cabang` (`kode_cabang`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `fk_tipe_kamar_bed` (`kode_bed_type`),
+  CONSTRAINT `fk_room_type_hotel` FOREIGN KEY (`kode_cabang`) REFERENCES `mst_cabang` (`kode_cabang`),
+  CONSTRAINT `fk_tipe_kamar_bed` FOREIGN KEY (`kode_bed_type`) REFERENCES `mst_bed_type` (`kode_bed_type`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_voucher`
---
-
+DROP TABLE IF EXISTS `mst_tipe_ruang_event`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mst_tipe_ruang_event` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `kode_tipe_ruang_event` varchar(255) NOT NULL,
+  `nama_tipe` varchar(255) NOT NULL,
+  `created_at` datetime NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  `updated_at` datetime NOT NULL,
+  `updated_by` varchar(255) DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted_by` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kode_tipe_ruang_event` (`kode_tipe_ruang_event`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `mst_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mst_user` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_code` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fullname` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telp` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `role` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('0','1') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
+  `tz` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UTC',
+  `created_at` datetime DEFAULT NULL,
+  `created_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uq_user_code` (`user_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `mst_voucher`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -830,11 +800,6 @@ CREATE TABLE `mst_voucher` (
   UNIQUE KEY `uq_voucher` (`kode_cabang`,`kode_voucher`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `sys_format_penomoran`
---
-
 DROP TABLE IF EXISTS `sys_format_penomoran`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -850,11 +815,6 @@ CREATE TABLE `sys_format_penomoran` (
   PRIMARY KEY (`kode_format`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_audit_log`
---
-
 DROP TABLE IF EXISTS `trx_audit_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -876,11 +836,6 @@ CREATE TABLE `trx_audit_log` (
   KEY `fk_audit_hotel` (`kode_cabang`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_cashier_shift`
---
-
 DROP TABLE IF EXISTS `trx_cashier_shift`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -889,7 +844,7 @@ CREATE TABLE `trx_cashier_shift` (
   `kode_cashier_shift` varchar(50) NOT NULL,
   `kode_cabang` varchar(50) NOT NULL,
   `kode_cashier_counter` varchar(50) NOT NULL,
-  `user_id` bigint unsigned NOT NULL,
+  `user_id` bigint NOT NULL,
   `opening_cash` decimal(14,2) NOT NULL DEFAULT '0.00',
   `closing_cash` decimal(14,2) DEFAULT NULL,
   `system_cash` decimal(14,2) DEFAULT NULL,
@@ -911,11 +866,6 @@ CREATE TABLE `trx_cashier_shift` (
   CONSTRAINT `fk_shift_user` FOREIGN KEY (`user_id`) REFERENCES `mst_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_checkin`
---
-
 DROP TABLE IF EXISTS `trx_checkin`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -941,11 +891,6 @@ CREATE TABLE `trx_checkin` (
   CONSTRAINT `fk_checkin_res_room` FOREIGN KEY (`kode_reservation_room`) REFERENCES `trx_reservation_room` (`kode_reservasi_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_checkout`
---
-
 DROP TABLE IF EXISTS `trx_checkout`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -970,11 +915,6 @@ CREATE TABLE `trx_checkout` (
   CONSTRAINT `fk_checkout_res_room` FOREIGN KEY (`kode_reservation_room`) REFERENCES `trx_reservation_room` (`kode_reservasi_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_extend_stay`
---
-
 DROP TABLE IF EXISTS `trx_extend_stay`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -992,11 +932,6 @@ CREATE TABLE `trx_extend_stay` (
   CONSTRAINT `fk_extend_res_room` FOREIGN KEY (`kode_reservation_room`) REFERENCES `trx_reservation_room` (`kode_reservasi_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_fiscal_document`
---
-
 DROP TABLE IF EXISTS `trx_fiscal_document`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1021,11 +956,6 @@ CREATE TABLE `trx_fiscal_document` (
   CONSTRAINT `fk_fiscal_doc_folio` FOREIGN KEY (`kode_folio`) REFERENCES `trx_folio` (`kode_folio`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_folio`
---
-
 DROP TABLE IF EXISTS `trx_folio`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1058,11 +988,6 @@ CREATE TABLE `trx_folio` (
   CONSTRAINT `fk_folio_reservation` FOREIGN KEY (`kode_reservation`) REFERENCES `trx_reservation` (`kode_reservasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_folio_charge`
---
-
 DROP TABLE IF EXISTS `trx_folio_charge`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1089,11 +1014,6 @@ CREATE TABLE `trx_folio_charge` (
   CONSTRAINT `fk_folio_charge_folio` FOREIGN KEY (`kode_folio`) REFERENCES `trx_folio` (`kode_folio`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_folio_split`
---
-
 DROP TABLE IF EXISTS `trx_folio_split`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1114,11 +1034,6 @@ CREATE TABLE `trx_folio_split` (
   CONSTRAINT `fk_split_parent` FOREIGN KEY (`kode_parent_folio`) REFERENCES `trx_folio` (`kode_folio`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_guest_document`
---
-
 DROP TABLE IF EXISTS `trx_guest_document`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1143,11 +1058,6 @@ CREATE TABLE `trx_guest_document` (
   CONSTRAINT `fk_guest_doc_type` FOREIGN KEY (`kode_document_type`) REFERENCES `mst_document_type` (`kode_document_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_guest_feedback`
---
-
 DROP TABLE IF EXISTS `trx_guest_feedback`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1173,11 +1083,6 @@ CREATE TABLE `trx_guest_feedback` (
   CONSTRAINT `fk_feedback_reservation` FOREIGN KEY (`kode_reservation`) REFERENCES `trx_reservation` (`kode_reservasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_housekeeping_task`
---
-
 DROP TABLE IF EXISTS `trx_housekeeping_task`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1207,11 +1112,6 @@ CREATE TABLE `trx_housekeeping_task` (
   CONSTRAINT `fk_hk_task_room` FOREIGN KEY (`kode_kamar`) REFERENCES `mst_kamar` (`kode_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_journal_reference`
---
-
 DROP TABLE IF EXISTS `trx_journal_reference`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1229,11 +1129,6 @@ CREATE TABLE `trx_journal_reference` (
   KEY `fk_journal_ref_hotel` (`kode_cabang`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_laundry_order`
---
-
 DROP TABLE IF EXISTS `trx_laundry_order`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1260,11 +1155,6 @@ CREATE TABLE `trx_laundry_order` (
   CONSTRAINT `fk_laundry_res_room` FOREIGN KEY (`kode_reservation_room`) REFERENCES `trx_reservation_room` (`kode_reservasi_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_lost_and_found`
---
-
 DROP TABLE IF EXISTS `trx_lost_and_found`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1290,11 +1180,6 @@ CREATE TABLE `trx_lost_and_found` (
   CONSTRAINT `fk_lnf_room` FOREIGN KEY (`kode_kamar`) REFERENCES `mst_kamar` (`kode_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_maintenance_ticket`
---
-
 DROP TABLE IF EXISTS `trx_maintenance_ticket`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1321,11 +1206,6 @@ CREATE TABLE `trx_maintenance_ticket` (
   CONSTRAINT `fk_maintenance_room` FOREIGN KEY (`kode_kamar`) REFERENCES `mst_kamar` (`kode_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_minibar_consumption`
---
-
 DROP TABLE IF EXISTS `trx_minibar_consumption`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1353,11 +1233,6 @@ CREATE TABLE `trx_minibar_consumption` (
   CONSTRAINT `fk_minibar_res_room` FOREIGN KEY (`kode_reservation_room`) REFERENCES `trx_reservation_room` (`kode_reservasi_room`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_night_audit`
---
-
 DROP TABLE IF EXISTS `trx_night_audit`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1380,11 +1255,6 @@ CREATE TABLE `trx_night_audit` (
   UNIQUE KEY `uq_night_audit` (`kode_cabang`,`business_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_notification_log`
---
-
 DROP TABLE IF EXISTS `trx_notification_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1405,11 +1275,6 @@ CREATE TABLE `trx_notification_log` (
   KEY `fk_notif_log_hotel` (`kode_cabang`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_payment`
---
-
 DROP TABLE IF EXISTS `trx_payment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1437,11 +1302,6 @@ CREATE TABLE `trx_payment` (
   CONSTRAINT `fk_payment_voucher` FOREIGN KEY (`kode_voucher`) REFERENCES `mst_voucher` (`kode_voucher`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_refund`
---
-
 DROP TABLE IF EXISTS `trx_refund`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1468,11 +1328,38 @@ CREATE TABLE `trx_refund` (
   CONSTRAINT `fk_refund_payment` FOREIGN KEY (`kode_payment`) REFERENCES `trx_payment` (`kode_payment`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_reservation`
---
-
+DROP TABLE IF EXISTS `trx_reservasi_event`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `trx_reservasi_event` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `kode_reservasi_event` varchar(255) NOT NULL,
+  `kode_ruang_event` varchar(255) NOT NULL,
+  `kode_cabang` varchar(255) NOT NULL,
+  `kode_tamu` varchar(255) NOT NULL,
+  `kode_corporate` varchar(255) DEFAULT NULL,
+  `kode_reservasi_kamar` varchar(255) DEFAULT NULL,
+  `tgl_mulai` date NOT NULL,
+  `tgl_selesai` date NOT NULL,
+  `jam_mulai` time NOT NULL,
+  `jam_selesai` time NOT NULL,
+  `jumlah_tamu` int NOT NULL,
+  `status_event` varchar(50) NOT NULL,
+  `created_at` datetime NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  `updated_at` datetime NOT NULL,
+  `updated_by` varchar(255) DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted_by` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kode_reservasi_event` (`kode_reservasi_event`),
+  KEY `fk_tre_ruang` (`kode_ruang_event`),
+  KEY `fk_tre_cabang` (`kode_cabang`),
+  CONSTRAINT `fk_tre_cabang` FOREIGN KEY (`kode_cabang`) REFERENCES `mst_cabang` (`kode_cabang`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_tre_ruang` FOREIGN KEY (`kode_ruang_event`) REFERENCES `mst_ruang_event` (`kode_ruang_event`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `trx_reservation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1515,11 +1402,6 @@ CREATE TABLE `trx_reservation` (
   CONSTRAINT `fk_reservation_room_block` FOREIGN KEY (`kode_room_block`) REFERENCES `mst_room_block` (`kode_room_block`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_reservation_room`
---
-
 DROP TABLE IF EXISTS `trx_reservation_room`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1548,18 +1430,12 @@ CREATE TABLE `trx_reservation_room` (
   KEY `fk_res_room_room_type` (`kode_tipe_kamar`),
   KEY `fk_res_room_rate_plan` (`kode_rate_plan`),
   KEY `fk_res_room_kamar` (`kode_kamar`),
-  CONSTRAINT `fk_res_room_kamar` FOREIGN KEY (`kode_kamar`) REFERENCES `mst_kamar` (`kode_kamar`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_res_room_rate_plan` FOREIGN KEY (`kode_rate_plan`) REFERENCES `mst_paket_harga` (`kode_paket_harga`),
   CONSTRAINT `fk_res_room_reservation` FOREIGN KEY (`kode_reservation`) REFERENCES `trx_reservation` (`kode_reservasi`),
   CONSTRAINT `fk_res_room_room` FOREIGN KEY (`kode_kamar`) REFERENCES `mst_kamar` (`kode_kamar`),
   CONSTRAINT `fk_res_room_room_type` FOREIGN KEY (`kode_tipe_kamar`) REFERENCES `mst_tipe_kamar` (`kode_tipe_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_reservation_status_log`
---
-
 DROP TABLE IF EXISTS `trx_reservation_status_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1578,11 +1454,6 @@ CREATE TABLE `trx_reservation_status_log` (
   CONSTRAINT `fk_res_status_log_reservation` FOREIGN KEY (`kode_reservation`) REFERENCES `trx_reservation` (`kode_reservasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_room_move`
---
-
 DROP TABLE IF EXISTS `trx_room_move`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1605,11 +1476,6 @@ CREATE TABLE `trx_room_move` (
   CONSTRAINT `fk_room_move_to` FOREIGN KEY (`kode_to_room`) REFERENCES `mst_kamar` (`kode_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `trx_room_status_log`
---
-
 DROP TABLE IF EXISTS `trx_room_status_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1627,38 +1493,6 @@ CREATE TABLE `trx_room_status_log` (
   CONSTRAINT `fk_room_status_log_room` FOREIGN KEY (`kode_kamar`) REFERENCES `mst_kamar` (`kode_kamar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `mst_user`
---
-
-DROP TABLE IF EXISTS `mst_user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `mst_user` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_code` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `fullname` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `telp` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `role` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `password` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `status` enum('0','1') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
-  `tz` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UTC',
-  `created_at` datetime DEFAULT NULL,
-  `created_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `updated_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `updated_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uq_user_code` (`user_code`),
-  CONSTRAINT `chk_status` CHECK ((`status` in (_utf8mb4'0',_utf8mb4'1')))
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `user_navigation`
---
-
 DROP TABLE IF EXISTS `user_navigation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1671,7 +1505,7 @@ CREATE TABLE `user_navigation` (
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uq_user_navigation_uniqueid` (`user_code`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -1683,81 +1517,3 @@ CREATE TABLE `user_navigation` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-19 10:40:59
--- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
---
--- Host: 127.0.0.1    Database: hotel_pms
--- ------------------------------------------------------
--- Server version	8.0.30
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Dumping data for table `mst_user`
---
-
-LOCK TABLES `mst_user` WRITE;
-/*!40000 ALTER TABLE `mst_user` DISABLE KEYS */;
-INSERT INTO `mst_user` VALUES (7,'USR000000','superadmin@admin.com','Superadmin','08100000000','superadmin','5e7bd870d5c8563803be2973dd4403ef50c918d3b728f22787c9514d0f379f94d7f6bbb7e8b0a8cc338a6a18bd399aa8e5888a28b5f91452ad55fd6e2cf0b58c','1','UTC','2026-08-14 07:31:36',NULL,NULL,'2026-08-14 07:52:07');
-/*!40000 ALTER TABLE `mst_user` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `mst_navigation`
---
-
-LOCK TABLES `mst_navigation` WRITE;
-/*!40000 ALTER TABLE `mst_navigation` DISABLE KEYS */;
-INSERT INTO `mst_navigation` VALUES (7,'[{\"label\":\"Utama\",\"items\":[{\"label\":\"Dashboard\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/dashboard\"}]},{\"label\":\"MASTER & SETUP CABANG\",\"icon\":\"pi pi-fw pi-cog\",\"items\":[{\"label\":\"Master Cabang\",\"icon\":\"pi pi-fw pi-building\",\"to\":\"/master_cabang\"},{\"label\":\"Master Gedung\",\"icon\":\"pi pi-fw pi-th-large\",\"to\":\"/master_gedung\"},{\"label\":\"Master Lantai\",\"icon\":\"pi pi-fw pi-bars\",\"to\":\"/master_lantai\"},{\"label\":\"Tipe Kamar\",\"icon\":\"pi pi-fw pi-tag\",\"to\":\"/master_tipe_kamar\"},{\"label\":\"Master Kamar\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/master_kamar\"},{\"label\":\"Bed Type\",\"icon\":\"pi pi-fw pi-inbox\",\"to\":\"/master_bed_type\"},{\"label\":\"Fasilitas & Amenity\",\"icon\":\"pi pi-fw pi-star\",\"to\":\"/master_amenity\"},{\"label\":\"Rate Plan (Paket Harga)\",\"icon\":\"pi pi-fw pi-dollar\",\"to\":\"/master_rate_plan\"},{\"label\":\"Season & Pricing\",\"icon\":\"pi pi-fw pi-calendar\",\"to\":\"/master_season\"},{\"label\":\"Pajak & Service Charge\",\"icon\":\"pi pi-fw pi-percentage\",\"to\":\"/master_pajak\"},{\"label\":\"Corporate / Travel Agent\",\"icon\":\"pi pi-fw pi-briefcase\",\"to\":\"/master_corporate\"},{\"label\":\"User & Role Management\",\"icon\":\"pi pi-fw pi-users\",\"to\":\"/setup/users\"},{\"label\":\"Konfigurasi Perusahaan\",\"icon\":\"pi pi-fw pi-sliders-h\",\"to\":\"/setup/config\"}]},{\"label\":\"Contoh & Template\",\"icon\":\"pi pi-fw pi-bookmark\",\"items\":[{\"label\":\"Contoh Form Upload\",\"icon\":\"pi pi-fw pi-upload\",\"to\":\"/contoh_form_upload\"},{\"label\":\"Contoh Laporan\",\"icon\":\"pi pi-fw pi-file\",\"to\":\"/contoh_laporan\"},{\"label\":\"Contoh Popup\",\"icon\":\"pi pi-fw pi-window-maximize\",\"to\":\"/contoh_popup\"},{\"label\":\"Contoh Tabview\",\"icon\":\"pi pi-fw pi-folder\",\"to\":\"/contoh_tabview\"},{\"label\":\"Contoh Trx Cetak Nota\",\"icon\":\"pi pi-fw pi-print\",\"to\":\"/contoh_trx_cetak_nota\"}]}]','superadmin','UTC','2026-08-14 07:31:36','2026-08-14 07:52:07'),(8,'[{\"label\":\"Utama\",\"items\":[{\"label\":\"Dashboard\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/dashboard\"}]},{\"label\":\"MASTER & SETUP CABANG\",\"icon\":\"pi pi-fw pi-cog\",\"items\":[{\"label\":\"Master Cabang\",\"icon\":\"pi pi-fw pi-building\",\"to\":\"/master_cabang\"},{\"label\":\"Master Gedung\",\"icon\":\"pi pi-fw pi-th-large\",\"to\":\"/master_gedung\"},{\"label\":\"Master Lantai\",\"icon\":\"pi pi-fw pi-bars\",\"to\":\"/master_lantai\"},{\"label\":\"Tipe Kamar\",\"icon\":\"pi pi-fw pi-tag\",\"to\":\"/master_tipe_kamar\"},{\"label\":\"Master Kamar\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/master_kamar\"},{\"label\":\"Bed Type\",\"icon\":\"pi pi-fw pi-inbox\",\"to\":\"/master_bed_type\"},{\"label\":\"Fasilitas & Amenity\",\"icon\":\"pi pi-fw pi-star\",\"to\":\"/master_amenity\"},{\"label\":\"Rate Plan (Paket Harga)\",\"icon\":\"pi pi-fw pi-dollar\",\"to\":\"/master_rate_plan\"},{\"label\":\"Season & Pricing\",\"icon\":\"pi pi-fw pi-calendar\",\"to\":\"/master_season\"},{\"label\":\"Pajak & Service Charge\",\"icon\":\"pi pi-fw pi-percentage\",\"to\":\"/master_pajak\"},{\"label\":\"Corporate / Travel Agent\",\"icon\":\"pi pi-fw pi-briefcase\",\"to\":\"/master_corporate\"},{\"label\":\"User & Role Management\",\"icon\":\"pi pi-fw pi-users\",\"to\":\"/setup/users\"},{\"label\":\"Konfigurasi Perusahaan\",\"icon\":\"pi pi-fw pi-sliders-h\",\"to\":\"/setup/config\"}]},{\"label\":\"Contoh & Template\",\"icon\":\"pi pi-fw pi-bookmark\",\"items\":[{\"label\":\"Contoh Form Upload\",\"icon\":\"pi pi-fw pi-upload\",\"to\":\"/contoh_form_upload\"},{\"label\":\"Contoh Laporan\",\"icon\":\"pi pi-fw pi-file\",\"to\":\"/contoh_laporan\"},{\"label\":\"Contoh Popup\",\"icon\":\"pi pi-fw pi-window-maximize\",\"to\":\"/contoh_popup\"},{\"label\":\"Contoh Tabview\",\"icon\":\"pi pi-fw pi-folder\",\"to\":\"/contoh_tabview\"},{\"label\":\"Contoh Trx Cetak Nota\",\"icon\":\"pi pi-fw pi-print\",\"to\":\"/contoh_trx_cetak_nota\"}]}]','admin','UTC','2026-08-14 07:31:36','2026-08-14 07:52:07'),(9,'[{\"label\":\"Utama\",\"items\":[{\"label\":\"Dashboard\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/dashboard\"}]},{\"label\":\"MASTER & SETUP CABANG\",\"icon\":\"pi pi-fw pi-cog\",\"items\":[{\"label\":\"Master Cabang\",\"icon\":\"pi pi-fw pi-building\",\"to\":\"/master_cabang\"},{\"label\":\"Master Gedung\",\"icon\":\"pi pi-fw pi-th-large\",\"to\":\"/master_gedung\"},{\"label\":\"Master Lantai\",\"icon\":\"pi pi-fw pi-bars\",\"to\":\"/master_lantai\"},{\"label\":\"Tipe Kamar\",\"icon\":\"pi pi-fw pi-tag\",\"to\":\"/master_tipe_kamar\"},{\"label\":\"Master Kamar\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/master_kamar\"},{\"label\":\"Bed Type\",\"icon\":\"pi pi-fw pi-inbox\",\"to\":\"/master_bed_type\"},{\"label\":\"Fasilitas & Amenity\",\"icon\":\"pi pi-fw pi-star\",\"to\":\"/master_amenity\"},{\"label\":\"Rate Plan (Paket Harga)\",\"icon\":\"pi pi-fw pi-dollar\",\"to\":\"/master_rate_plan\"},{\"label\":\"Season & Pricing\",\"icon\":\"pi pi-fw pi-calendar\",\"to\":\"/master_season\"},{\"label\":\"Pajak & Service Charge\",\"icon\":\"pi pi-fw pi-percentage\",\"to\":\"/master_pajak\"},{\"label\":\"Corporate / Travel Agent\",\"icon\":\"pi pi-fw pi-briefcase\",\"to\":\"/master_corporate\"},{\"label\":\"User & Role Management\",\"icon\":\"pi pi-fw pi-users\",\"to\":\"/setup/users\"},{\"label\":\"Konfigurasi Perusahaan\",\"icon\":\"pi pi-fw pi-sliders-h\",\"to\":\"/setup/config\"}]},{\"label\":\"Contoh & Template\",\"icon\":\"pi pi-fw pi-bookmark\",\"items\":[{\"label\":\"Contoh Form Upload\",\"icon\":\"pi pi-fw pi-upload\",\"to\":\"/contoh_form_upload\"},{\"label\":\"Contoh Laporan\",\"icon\":\"pi pi-fw pi-file\",\"to\":\"/contoh_laporan\"},{\"label\":\"Contoh Popup\",\"icon\":\"pi pi-fw pi-window-maximize\",\"to\":\"/contoh_popup\"},{\"label\":\"Contoh Tabview\",\"icon\":\"pi pi-fw pi-folder\",\"to\":\"/contoh_tabview\"},{\"label\":\"Contoh Trx Cetak Nota\",\"icon\":\"pi pi-fw pi-print\",\"to\":\"/contoh_trx_cetak_nota\"}]}]','master','UTC','2026-08-14 07:31:36','2026-08-14 07:52:07');
-/*!40000 ALTER TABLE `mst_navigation` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `user_navigation`
---
-
-LOCK TABLES `user_navigation` WRITE;
-/*!40000 ALTER TABLE `user_navigation` DISABLE KEYS */;
-INSERT INTO `user_navigation` VALUES (4,'USR000000','[{\"label\":\"Utama\",\"items\":[{\"label\":\"Dashboard\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/dashboard\"}]},{\"label\":\"MASTER & SETUP CABANG\",\"icon\":\"pi pi-fw pi-cog\",\"items\":[{\"label\":\"Master Cabang\",\"icon\":\"pi pi-fw pi-building\",\"to\":\"/master_cabang\"},{\"label\":\"Master Gedung\",\"icon\":\"pi pi-fw pi-th-large\",\"to\":\"/master_gedung\"},{\"label\":\"Master Lantai\",\"icon\":\"pi pi-fw pi-bars\",\"to\":\"/master_lantai\"},{\"label\":\"Tipe Kamar\",\"icon\":\"pi pi-fw pi-tag\",\"to\":\"/master_tipe_kamar\"},{\"label\":\"Master Kamar\",\"icon\":\"pi pi-fw pi-home\",\"to\":\"/master_kamar\"},{\"label\":\"Bed Type\",\"icon\":\"pi pi-fw pi-inbox\",\"to\":\"/master_bed_type\"},{\"label\":\"Fasilitas & Amenity\",\"icon\":\"pi pi-fw pi-star\",\"to\":\"/master_amenity\"},{\"label\":\"Rate Plan (Paket Harga)\",\"icon\":\"pi pi-fw pi-dollar\",\"to\":\"/master_rate_plan\"},{\"label\":\"Season & Pricing\",\"icon\":\"pi pi-fw pi-calendar\",\"to\":\"/master_season\"},{\"label\":\"Pajak & Service Charge\",\"icon\":\"pi pi-fw pi-percentage\",\"to\":\"/master_pajak\"},{\"label\":\"Corporate / Travel Agent\",\"icon\":\"pi pi-fw pi-briefcase\",\"to\":\"/master_corporate\"},{\"label\":\"User & Role Management\",\"icon\":\"pi pi-fw pi-users\",\"to\":\"/setup/users\"},{\"label\":\"Konfigurasi Perusahaan\",\"icon\":\"pi pi-fw pi-sliders-h\",\"to\":\"/setup/config\"}]},{\"label\":\"Contoh & Template\",\"icon\":\"pi pi-fw pi-bookmark\",\"items\":[{\"label\":\"Contoh Form Upload\",\"icon\":\"pi pi-fw pi-upload\",\"to\":\"/contoh_form_upload\"},{\"label\":\"Contoh Laporan\",\"icon\":\"pi pi-fw pi-file\",\"to\":\"/contoh_laporan\"},{\"label\":\"Contoh Popup\",\"icon\":\"pi pi-fw pi-window-maximize\",\"to\":\"/contoh_popup\"},{\"label\":\"Contoh Tabview\",\"icon\":\"pi pi-fw pi-folder\",\"to\":\"/contoh_tabview\"},{\"label\":\"Contoh Trx Cetak Nota\",\"icon\":\"pi pi-fw pi-print\",\"to\":\"/contoh_trx_cetak_nota\"}]}]','UTC','2026-08-14 07:31:36','2026-08-14 07:52:07');
-/*!40000 ALTER TABLE `user_navigation` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `config`
---
-
-LOCK TABLES `config` WRITE;
-/*!40000 ALTER TABLE `config` DISABLE KEYS */;
-INSERT INTO `config` VALUES (7,'msNamaPerusahaan','Hotel Grand Marstech','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(8,'msSubNamaPerusahaan','Marstech Group','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(9,'msAlamatPerusahaan','Jl. Teknologi No. 1, Jakarta','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(10,'msKotaPerusahaan','Jakarta','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(11,'msTeleponPerusahaan','021-1234567','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(12,'msNamaPimpinan','Direktur Utama','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(13,'msLogoPerusahaan','','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(14,'msCatatanKasir','Terima kasih atas kunjungan Anda','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(15,'msPPN','11','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(16,'nominalPoint','10000','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07'),(17,'msVideoDisplay','','Asia/Jakarta','2026-08-14 07:52:07','2026-08-14 07:52:07');
-/*!40000 ALTER TABLE `config` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `sys_format_penomoran`
---
-
-LOCK TABLES `sys_format_penomoran` WRITE;
-/*!40000 ALTER TABLE `sys_format_penomoran` DISABLE KEYS */;
-INSERT INTO `sys_format_penomoran` VALUES ('FMT-BEDTYPE','mst_bedtype','BED',4,1,1,'2026-08-14 08:11:33','2026-08-14 08:11:33'),('FMT-GEDUNG','mst_gedung','GED',4,1,1,'2026-08-14 08:05:32','2026-08-14 08:05:32'),('FMT-LANTAI','mst_lantai','LAN',4,1,1,'2026-08-14 08:08:39','2026-08-14 08:08:39');
-/*!40000 ALTER TABLE `sys_format_penomoran` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2026-08-19 10:40:59
