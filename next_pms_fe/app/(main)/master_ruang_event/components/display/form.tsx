@@ -7,11 +7,49 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
 import { classNames } from 'primereact/utils';
+import { MultiSelect } from 'primereact/multiselect';
 import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { apiEndpointCreate, apiEndpointDelete, apiEndpointUpdate, apiEndpointGet } from '../endpoints';
+import { useEffect, useState } from 'react';
 
 const Form = ({ getData, toast, state, setState, formik }: FormProps) => {
+    const [fasilitasList, setFasilitasList] = useState([]);
+
+    const fetchFasilitas = async (keyword = '') => {
+        try {
+            const res = await postData('/master/fasilitas/fasilitas-data', { perPage: 1000, keyword });
+            setFasilitasList(res.data.data);
+        } catch (error) { console.error(error); }
+    };
+
+    useEffect(() => {
+        fetchFasilitas();
+    }, []);
+
+    useEffect(() => {
+        const fetchAssigned = async () => {
+            if (state.edit && formik.values.kode_ruang_event) {
+                setState(p => ({ ...p, load: true }));
+                try {
+                    const resFas = await postData('/master/ruang-event-fasilitas/ruang-event-fasilitas-data', { kode_ruang_event: formik.values.kode_ruang_event });
+                    const assignedFas = resFas.data.data.map((f: any) => f.kode_fasilitas);
+                    formik.setFieldValue('kode_fasilitas', assignedFas);
+                } catch(e) {
+                    console.error("Gagal mengambil data fasilitas assigned", e);
+                } finally {
+                    setState(p => ({ ...p, load: false }));
+                }
+            } else if (state.add) {
+                formik.setFieldValue('kode_fasilitas', []);
+            }
+        };
+        if (state.add || state.edit) {
+            fetchAssigned();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.add, state.edit]);
+
     const isFormFieldInvalid = (name: string) => !!(formik.touched[name as keyof typeof formik.touched] && formik.errors[name as keyof typeof formik.errors]);
 
     const getFormErrorMessage = (name: string) => {
@@ -28,6 +66,18 @@ const Form = ({ getData, toast, state, setState, formik }: FormProps) => {
         try {
             const apiEndpoint = state.edit ? apiEndpointUpdate : apiEndpointCreate;
             const res = await postData(apiEndpoint, formik.values);
+            const savedKode = state.edit ? formik.values.kode_ruang_event : res.data?.data?.kode_ruang_event;
+
+            try {
+                await postData('/master/ruang-event-fasilitas/ruang-event-fasilitas-assign', { 
+                    kode_ruang_event: savedKode, 
+                    kode_fasilitas: formik.values.kode_fasilitas || [] 
+                });
+            } catch (assignError) {
+                console.error(assignError);
+                showError(toast, 'Ruang Event tersimpan, namun gagal menyimpan assignment fasilitas');
+            }
+
             showSuccess(toast, res.data?.message || 'Berhasil menyimpan data');
             setState((p) => ({ ...p, add: false, edit: false }));
             getData(apiEndpointGet);
@@ -191,6 +241,23 @@ const Form = ({ getData, toast, state, setState, formik }: FormProps) => {
                         value={formik.values.layout_support}
                         onChange={formik.handleChange}
                         placeholder="Theater, U-Shape, Classroom"
+                    />
+                </div>
+
+                <div className="field">
+                    <label htmlFor="kode_fasilitas">Fasilitas Tersedia</label>
+                    <MultiSelect
+                        id="kode_fasilitas"
+                        name="kode_fasilitas"
+                        value={formik.values.kode_fasilitas}
+                        options={fasilitasList}
+                        onChange={formik.handleChange}
+                        optionLabel="name"
+                        optionValue="kode_fasilitas"
+                        placeholder="Pilih Fasilitas"
+                        display="chip"
+                        filter
+                        className="w-full"
                     />
                 </div>
 

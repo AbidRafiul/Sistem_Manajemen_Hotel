@@ -66,7 +66,8 @@ const Page = () => {
             kapasitas_orang: 0,
             luas_sqm: 0,
             layout_support: '',
-            is_active: 1
+            is_active: 1,
+            kode_fasilitas: []
         },
         validate: (data: initValue) => {
             let errors: Record<string, string> = {};
