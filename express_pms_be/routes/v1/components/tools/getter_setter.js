@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file getter_setter.js
  * @description File untuk helper getter dan setter
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

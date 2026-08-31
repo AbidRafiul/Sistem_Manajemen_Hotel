@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file user_update.js
  * @description File untuk mengupdate data user
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
