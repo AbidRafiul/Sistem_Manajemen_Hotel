@@ -186,7 +186,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_tipe_kamar" header="Kode Tipe" align="center" sortable style={{ minWidth: '8rem' }}></Column>
+                    <Column field="kode_tipe_kamar" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="cabang_name" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Tipe Kamar" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="harga_default" header="Harga Default" align="right" sortable style={{ minWidth: '10rem' }} body={(rowData) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rowData.harga_default)}></Column>

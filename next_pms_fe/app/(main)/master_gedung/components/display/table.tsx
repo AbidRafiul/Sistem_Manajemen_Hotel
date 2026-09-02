@@ -207,7 +207,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_gedung" header="Kode Gedung" align="center" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="kode_gedung" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="cabang_name" header="Nama Cabang" sortable style={{ minWidth: '16rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="nama_gedung" header="Nama Gedung" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>

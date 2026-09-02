@@ -229,7 +229,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_kamar" header="Kode Kamar" align="center" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="kode_kamar" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="nomor_kamar" header="Nomor Kamar" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="room_type_name" header="Tipe Kamar" sortable style={{ minWidth: '14rem' }} body={(rowData) => rowData.room_type_name || rowData.kode_tipe_kamar}></Column>
                     <Column field="floor_name" header="Lantai" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.floor_name || rowData.kode_lantai}></Column>

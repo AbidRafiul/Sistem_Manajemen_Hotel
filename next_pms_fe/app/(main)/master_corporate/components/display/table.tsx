@@ -190,7 +190,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_corporate" header="Kode Corporate" align="center" sortable style={{ minWidth: '11rem' }}></Column>
+                    <Column field="kode_corporate" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Corporate" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="account_type" header="Tipe Akun" sortable style={{ minWidth: '10rem' }}></Column>

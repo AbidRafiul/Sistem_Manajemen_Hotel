@@ -174,7 +174,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_amenity" header="Kode" align="center" sortable style={{ minWidth: '8rem' }}></Column>
+                    <Column field="kode_amenity" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="name" header="Nama Amenity" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="icon" header="Icon" align="center" style={{ minWidth: '10rem' }} body={(rowData) => rowData.icon || '-'}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>

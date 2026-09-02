@@ -187,7 +187,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_pajak" header="Kode Pajak" align="center" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="kode_pajak" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Pajak" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="tax_type" header="Tipe Pajak" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.tax_type === 'service_charge' ? 'Service Charge' : 'Tax'}></Column>

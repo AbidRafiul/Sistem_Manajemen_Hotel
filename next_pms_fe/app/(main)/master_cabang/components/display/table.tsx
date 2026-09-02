@@ -195,7 +195,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
-                    <Column field="kode_cabang" header="Kode" align="center" sortable style={{ minWidth: '8rem' }}></Column>
+                    <Column field="kode_cabang" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="name" header="Nama Cabang" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="address" header="Alamat" style={{ minWidth: '18rem' }} body={(rowData) => rowData.address || '-'}></Column>
                     <Column field="telepon" header="Telepon" style={{ minWidth: '10rem' }} body={(rowData) => rowData.telepon || '-'}></Column>
