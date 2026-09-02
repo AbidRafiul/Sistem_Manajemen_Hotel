@@ -9,10 +9,10 @@ export async function seed(knex) {
       ]
     },
     {
-      label: "Master & Setup Hotel",
+      label: "MASTER & SETUP CABANG",
       icon: "pi pi-fw pi-cog",
       items: [
-        { label: "Master Hotel", icon: "pi pi-fw pi-building", to: "/master_hotel" },
+        { label: "Master Cabang", icon: "pi pi-fw pi-building", to: "/master_cabang" },
         { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
         { label: "Master Lantai", icon: "pi pi-fw pi-bars", to: "/master_lantai" },
         { label: "Tipe Kamar", icon: "pi pi-fw pi-tag", to: "/master_tipe_kamar" },
@@ -24,11 +24,12 @@ export async function seed(knex) {
         { label: "Ruang Event", icon: "pi pi-fw pi-ticket", to: "/master_ruang_event" },
         { label: "Harga Ruang Event", icon: "pi pi-fw pi-money-bill", to: "/master_harga_ruang_event" },
         { label: "Rate Plan (Paket Harga)", icon: "pi pi-fw pi-dollar", to: "/master_rate_plan" },
-        { label: "Rate Plan Price (Harga Kamar)", icon: "pi pi-fw pi-money-bill", to: "/master_rate_plan_price" },
+        { label: "Master Harga Kamar", icon: "pi pi-fw pi-money-bill", to: "/master_rate_plan_price" },
         { label: "Season & Pricing", icon: "pi pi-fw pi-calendar", to: "/master_season" },
         { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" },
         { label: "Corporate / Travel Agent", icon: "pi pi-fw pi-briefcase", to: "/master_corporate" },
         { label: "User & Role Management", icon: "pi pi-fw pi-users", to: "/setup/users" },
+        { label: "Master Navigasi", icon: "pi pi-fw pi-sitemap", to: "/setup/navigation" },
         { label: "Konfigurasi Perusahaan", icon: "pi pi-fw pi-sliders-h", to: "/setup/config" }
       ]
     },
