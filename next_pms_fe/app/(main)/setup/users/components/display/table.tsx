@@ -34,6 +34,8 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import postData from "@/lib/axios/postData";
 import { showError } from "@/lib/tools/generalTools";
+import StatusIndicator from "@/app/components/status/StatusIndicator";
+import StatusLegend from "@/app/components/status/StatusLegend";
 
 const Table = ({
     state,
@@ -48,6 +50,10 @@ const Table = ({
 }: TableProps) => {
 
     const op = useRef<OverlayPanel>(null);
+
+    const statusBodyTemplate = (rowData: TableData) => (
+        <StatusIndicator status={rowData.status} />
+    );
 
     // Handler Print yang mengirimkan state filter aktif ke API untuk mengambil keseluruhan data laporan
     const handlePrint = async () => {
@@ -329,6 +335,8 @@ const Table = ({
                     </div> */}
                 </div>
 
+                <StatusLegend />
+
                 <DataTable
                     value={state.data}
                     paginator
@@ -350,22 +358,12 @@ const Table = ({
                     rowHover
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
+                    <Column field="status" header="Status" align="center" body={statusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                     <Column field="user_code" header="Unique ID" className="font-semibold text-800" style={{ width: '130px' }}></Column>
                     <Column field="fullname" header="Name" className="font-medium text-900"></Column>
                     <Column field="username" header="Username" className="font-medium"></Column>
                     <Column field="telp" header="Phone" style={{ width: '150px' }}></Column>
                     <Column field="role" body={roleBodyTemplate} header="Role" style={{ width: '130px' }}></Column>
-                    <Column field="status" body={(rowData) => {
-                        const isActive = rowData.status === '1';
-                        return (
-                            <Tag
-                                value={isActive ? "Active" : "Inactive"}
-                                severity={isActive ? "success" : "danger"}
-                                className="text-xs font-semibold px-2 py-1"
-                                rounded
-                            />
-                        );
-                    }} header="Status" style={{ width: '110px' }}></Column>
                     <Column field="created_at" sortable body={rowData => formatDateSystem(rowData.created_at)} header="Datetime" style={{ width: '150px' }}></Column>
                     <Column headerStyle={{ textAlign: 'center' }} header="Action" body={actionBodyTemplate} style={{ width: '120px' }}></Column>
                 </DataTable>

@@ -13,13 +13,15 @@ import { Tag } from 'primereact/tag';
 import Form from './form';
 import { apiEndpointGet } from '../endpoints';
 import { useRef } from 'react';
+import StatusIndicator from '@/app/components/status/StatusIndicator';
+import StatusLegend from '@/app/components/status/StatusLegend';
 
 const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const headerTemplate = (
         <div className="flex flex-wrap align-items-center justify-content-between gap-2">
-            <span className="text-xl font-bold">Daftar Pajak & Layanan</span>
+            <span className="text-xl font-bold">Daftar Pajak</span>
 
             <div className="flex align-items-center gap-2 ml-auto w-full md:w-auto">
                 <span className="p-input-icon-left w-full md:w-20rem">
@@ -74,8 +76,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kode_cabang: rowData.kode_cabang || '',
                         name: rowData.name || '',
                         tax_type: rowData.tax_type || 'tax',
-                        percentage: rowData.percentage !== undefined ? rowData.percentage : 0,
-                        is_compounding: rowData.is_compounding !== undefined ? rowData.is_compounding : 0,
+                        percentage: rowData.percentage || 0,
+                        is_compounding: rowData.is_compounding || 0,
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
                     });
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
@@ -94,10 +96,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const activeStatusBodyTemplate = (rowData: TableData) => (
-        <Tag
-            value={rowData.is_active === 1 ? 'Aktif' : 'Non-Aktif'}
-            severity={rowData.is_active === 1 ? 'success' : 'danger'}
-        />
+        <StatusIndicator status={rowData.is_active} />
     );
 
     const compoundingBodyTemplate = (rowData: TableData) => (
@@ -161,6 +160,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
 
+                <StatusLegend />
+
                 <DataTable
                     value={state.data}
                     scrollable
@@ -185,13 +186,13 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data pajak"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
                     <Column field="kode_pajak" header="Kode Pajak" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Pajak" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="tax_type" header="Tipe Pajak" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.tax_type === 'service_charge' ? 'Service Charge' : 'Tax'}></Column>
                     <Column field="percentage" header="Persentase (%)" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="is_compounding" header="Compounding" align="center" body={compoundingBodyTemplate} style={{ minWidth: '8rem' }}></Column>
-                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
