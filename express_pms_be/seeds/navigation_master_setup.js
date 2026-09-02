@@ -9,24 +9,58 @@ export async function seed(knex) {
       ]
     },
     {
-      label: "Master & Setup Hotel",
+      label: "MASTER & SETUP CABANG",
       icon: "pi pi-fw pi-cog",
       items: [
-        { label: "Master Hotel", icon: "pi pi-fw pi-building", to: "/master_hotel" },
-        { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
-        { label: "Master Lantai", icon: "pi pi-fw pi-bars", to: "/master_lantai" },
-        { label: "Tipe Kamar", icon: "pi pi-fw pi-tag", to: "/master_tipe_kamar" },
-        { label: "Master Kamar", icon: "pi pi-fw pi-home", to: "/master_kamar" },
-        { label: "Bed Type", icon: "pi pi-fw pi-inbox", to: "/master_bed_type" },
-        { label: "Fasilitas & Amenity", icon: "pi pi-fw pi-star", to: "/master_amenity" },
-        { label: "Master Fasilitas", icon: "pi pi-fw pi-verified", to: "/master_fasilitas" },
-        { label: "Tipe Ruang Event", icon: "pi pi-fw pi-tags", to: "/master_tipe_ruang_event" },
-        { label: "Rate Plan (Paket Harga)", icon: "pi pi-fw pi-dollar", to: "/master_rate_plan" },
-        { label: "Season & Pricing", icon: "pi pi-fw pi-calendar", to: "/master_season" },
-        { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" },
-        { label: "Corporate / Travel Agent", icon: "pi pi-fw pi-briefcase", to: "/master_corporate" },
-        { label: "User & Role Management", icon: "pi pi-fw pi-users", to: "/setup/users" },
-        { label: "Konfigurasi Perusahaan", icon: "pi pi-fw pi-sliders-h", to: "/setup/config" }
+        {
+          label: "Data Master Hotel",
+          icon: "pi pi-fw pi-building",
+          items: [
+            { label: "Master Cabang", icon: "pi pi-fw pi-building", to: "/master_cabang" },
+            { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
+            { label: "Master Lantai", icon: "pi pi-fw pi-bars", to: "/master_lantai" },
+            { label: "Corporate / Travel Agent", icon: "pi pi-fw pi-briefcase", to: "/master_corporate" },
+            { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" }
+          ]
+        },
+        {
+          label: "Kamar & Fasilitas",
+          icon: "pi pi-fw pi-home",
+          items: [
+            { label: "Tipe Kamar", icon: "pi pi-fw pi-tag", to: "/master_tipe_kamar" },
+            { label: "Master Kamar", icon: "pi pi-fw pi-home", to: "/master_kamar" },
+            { label: "Bed Type", icon: "pi pi-fw pi-inbox", to: "/master_bed_type" },
+            { label: "Fasilitas & Amenity", icon: "pi pi-fw pi-star", to: "/master_amenity" },
+            { label: "Master Fasilitas", icon: "pi pi-fw pi-verified", to: "/master_fasilitas" }
+          ]
+        },
+        {
+          label: "Ruang Event",
+          icon: "pi pi-fw pi-ticket",
+          items: [
+            { label: "Tipe Ruang Event", "icon": "pi pi-fw pi-tags", "to": "/master_tipe_ruang_event" },
+            { label: "Master Ruang Event", "icon": "pi pi-fw pi-ticket", "to": "/master_ruang_event" },
+            { label: "Harga Ruang Event", "icon": "pi pi-fw pi-money-bill", "to": "/master_harga_ruang_event" }
+          ]
+        },
+        {
+          label: "Harga & Season",
+          icon: "pi pi-fw pi-dollar",
+          items: [
+            { label: "Rate Plan (Paket Harga)", icon: "pi pi-fw pi-dollar", to: "/master_rate_plan" },
+            { label: "Master Harga Kamar", icon: "pi pi-fw pi-money-bill", to: "/master_rate_plan_price" },
+            { label: "Season & Pricing", icon: "pi pi-fw pi-calendar", to: "/master_season" }
+          ]
+        },
+        {
+          label: "Konfigurasi Sistem",
+          icon: "pi pi-fw pi-sliders-h",
+          items: [
+            { label: "User & Role Management", icon: "pi pi-fw pi-users", to: "/setup/users" },
+            { label: "Master Navigasi", icon: "pi pi-fw pi-sitemap", to: "/setup/navigation" },
+            { label: "Konfigurasi Perusahaan", icon: "pi pi-fw pi-sliders-h", to: "/setup/config" }
+          ]
+        }
       ]
     },
     {

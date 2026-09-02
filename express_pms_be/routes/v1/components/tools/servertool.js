@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file servertool.js
  * @description File untuk helper server tools
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file user_data.js
  * @description File untuk menampilkan data user
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

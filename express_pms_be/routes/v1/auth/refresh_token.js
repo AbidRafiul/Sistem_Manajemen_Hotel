@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file refresh_token.js
  * @description File untuk get token ulang jika ada token yang anomali tpi sesi masih jalan
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

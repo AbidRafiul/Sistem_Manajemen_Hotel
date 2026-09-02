@@ -21,34 +21,58 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   try {
     const cValidation = await validatePayload(
-      { 
+      {
         kode_tipe_kamar: Joi.string().required().label("Kode Tipe Kamar"),
-        kode_fasilitas: Joi.array().items(Joi.string()).label("Fasilitas") 
+        kode_fasilitas: Joi.array().items(Joi.string()).label("Fasilitas"),
       },
-      { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi", "array.base": "{#label} harus berupa array" },
-      oPayload, { allowUnknown: true }
+      {
+        "string.base": "{#label} harus berupa teks",
+        "any.required": "{#label} wajib diisi",
+        "array.base": "{#label} harus berupa array",
+      },
+      oPayload,
+      { allowUnknown: true }
     );
-    if (cValidation) return res.status(422).json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
-    
+    if (cValidation)
+      return res
+        .status(422)
+        .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+
     await DB.transaction(async (trx) => {
       // Delete existing
       await trx("mst_room_type_fasilitas").where("kode_tipe_kamar", oPayload.kode_tipe_kamar).del();
-      
+
       // Insert new
       if (oPayload.kode_fasilitas && oPayload.kode_fasilitas.length > 0) {
-        const insertData = oPayload.kode_fasilitas.map(f => ({
+        const insertData = oPayload.kode_fasilitas.map((f) => ({
           kode_tipe_kamar: oPayload.kode_tipe_kamar,
           kode_fasilitas: f,
           created_at: formatDateSystem(),
-          created_by: req.auth?.user_id || 1
+          created_by: req.auth?.user_id || 1,
         }));
         await trx("mst_room_type_fasilitas").insert(insertData);
       }
     });
-    return res.status(200).json({ status: status.SUKSES, message: "Fasilitas berhasil disimpan ke Tipe Kamar", datetime: formatDateSystem() });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Fasilitas berhasil disimpan ke Tipe Kamar",
+        datetime: formatDateSystem(),
+      });
   } catch (error) {
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/room_type_fasilitas/room_type_fasilitas_assign.js", func: "assign", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/room_type_fasilitas/room_type_fasilitas_assign.js",
+      func: "assign",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

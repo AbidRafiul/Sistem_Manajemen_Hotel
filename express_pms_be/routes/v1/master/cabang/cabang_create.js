@@ -1,4 +1,3 @@
-
 import express from "express";
 import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
@@ -22,12 +21,18 @@ router.post("/", async (req, res) => {
     check_out_time: Joi.string().optional().allow("", null).label("Waktu Check-Out"),
     timezone: Joi.string().optional().allow("", null).label("Timezone"),
     is_pkp: Joi.number().valid(0, 1).optional().default(0).label("PKP"),
-    is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif")
+    is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
   }).unknown(true);
 
   const { error } = schema.validate(oPayload);
   if (error) {
-    return res.status(400).json({ status: status.BAD_REQUEST, message: error.details[0].message, datetime: formatDateSystem() });
+    return res
+      .status(400)
+      .json({
+        status: status.BAD_REQUEST,
+        message: error.details[0].message,
+        datetime: formatDateSystem(),
+      });
   }
 
   try {
@@ -44,15 +49,31 @@ router.post("/", async (req, res) => {
         is_pkp: oPayload.is_pkp ?? 0,
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
         created_at: DB.fn.now(),
-        updated_at: DB.fn.now()
+        updated_at: DB.fn.now(),
       };
       await trx("mst_cabang").insert(dataToInsert);
     });
 
-    return res.status(200).json({ status: status.SUKSES, message: "Data berhasil disimpan", datetime: formatDateSystem() });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data berhasil disimpan",
+        datetime: formatDateSystem(),
+      });
   } catch (error) {
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/cabang/cabang_create.js", func: "post", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/cabang/cabang_create.js",
+      func: "post",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

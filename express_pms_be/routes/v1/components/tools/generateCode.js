@@ -37,7 +37,7 @@ export const generateSequence = async (kode_penomoran, trx = DB) => {
         await trx("sys_format_penomoran").insert(record);
     }
 
-    const nextNumber = record.nomor_terakhir + 1;
+    const nextNumber = parseInt(record.nomor_terakhir || 0, 10) + 1;
     
     // Update nomor terakhir ke database
     await trx("sys_format_penomoran")

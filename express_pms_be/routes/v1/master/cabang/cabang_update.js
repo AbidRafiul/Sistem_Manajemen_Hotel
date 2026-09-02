@@ -1,4 +1,3 @@
-
 import express from "express";
 import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
@@ -21,18 +20,33 @@ router.post("/", async (req, res) => {
     check_out_time: Joi.string().optional().allow("", null).label("Waktu Check-Out"),
     timezone: Joi.string().optional().allow("", null).label("Timezone"),
     is_pkp: Joi.number().valid(0, 1).optional().default(0).label("PKP"),
-    is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif")
+    is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
   }).unknown(true);
 
   const { error } = schema.validate(oPayload);
   if (error) {
-    return res.status(400).json({ status: status.BAD_REQUEST, message: error.details[0].message, datetime: formatDateSystem() });
+    return res
+      .status(400)
+      .json({
+        status: status.BAD_REQUEST,
+        message: error.details[0].message,
+        datetime: formatDateSystem(),
+      });
   }
 
   try {
-    const existing = await DB("mst_cabang").where("kode_cabang", oPayload.kode_cabang).whereNull("deleted_at").first();
+    const existing = await DB("mst_cabang")
+      .where("kode_cabang", oPayload.kode_cabang)
+      .whereNull("deleted_at")
+      .first();
     if (!existing) {
-      return res.status(404).json({ status: status.BAD_REQUEST, message: "Data tidak ditemukan", datetime: formatDateSystem() });
+      return res
+        .status(404)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Data tidak ditemukan",
+          datetime: formatDateSystem(),
+        });
     }
 
     await DB.transaction(async (trx) => {
@@ -45,15 +59,31 @@ router.post("/", async (req, res) => {
         zona_waktu: oPayload.timezone || "Asia/Jakarta",
         is_pkp: oPayload.is_pkp ?? 0,
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
-        updated_at: DB.fn.now()
+        updated_at: DB.fn.now(),
       };
       await trx("mst_cabang").where("kode_cabang", oPayload.kode_cabang).update(dataToUpdate);
     });
 
-    return res.status(200).json({ status: status.SUKSES, message: "Data berhasil diperbarui", datetime: formatDateSystem() });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data berhasil diperbarui",
+        datetime: formatDateSystem(),
+      });
   } catch (error) {
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/cabang/cabang_update.js", func: "post", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/cabang/cabang_update.js",
+      func: "post",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

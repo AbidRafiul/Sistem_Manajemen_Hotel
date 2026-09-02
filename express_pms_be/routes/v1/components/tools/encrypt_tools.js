@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file encrypt_tools.js
  * @description File untuk tools enkripsi dan dekripsi
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

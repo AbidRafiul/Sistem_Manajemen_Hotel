@@ -113,7 +113,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     return (
         <>
             <div className="card">
-                <div className="flex justify-content-between items-start mb-6">
+                <div className="flex justify-content-between align-items-start mb-4">
                     <div className="flex flex-column">
                         <h3 className="text-2xl font-semibold flex align-items-center gap-2">
                             <i className="pi pi-tags text-blue-600 text-3xl"></i>Master Rate Plan
@@ -122,7 +122,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     </div>
                 </div>
 
-                <div className="flex flex-row flex-wrap items-center gap-2 mb-4">
+                <div className="flex flex-row flex-wrap align-items-center gap-2 mb-3">
                     <Button
                         size="small"
                         label="Baru"
@@ -194,8 +194,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data rate plan"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
-                    <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
-                    <Column field="kode_paket_harga" header="Kode Rate Plan" align="center" sortable style={{ minWidth: '11rem' }}></Column>
+                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
+                    <Column field="kode_paket_harga" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Rate Plan" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="tipe_paket" header="Tipe Paket" align="center" sortable style={{ minWidth: '10rem' }}></Column>

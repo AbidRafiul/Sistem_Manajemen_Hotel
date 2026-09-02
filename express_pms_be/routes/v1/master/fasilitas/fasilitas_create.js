@@ -21,17 +21,47 @@ router.post("/", async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
   try {
-    if (!oPayload || Object.keys(oPayload).length < 1) return res.status(400).json({ status: status.BAD_REQUEST, message: "Invalid request body", datetime: formatDateSystem() });
+    if (!oPayload || Object.keys(oPayload).length < 1)
+      return res
+        .status(400)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Invalid request body",
+          datetime: formatDateSystem(),
+        });
     const cValidation = await validatePayload(
-      { kode_cabang: Joi.string().required().label("Kode Cabang"), name: Joi.string().min(2).max(100).required().label("Nama Fasilitas"), is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif") },
-      { "string.base": "{#label} harus berupa teks", "string.empty": "{#label} tidak boleh kosong", "string.min": "{#label} minimal {#limit} karakter", "string.max": "{#label} maksimal {#limit} karakter", "any.required": "{#label} wajib diisi", "number.base": "{#label} harus berupa angka" },
-      oPayload, { table: "mst_fasilitas", allowUnknown: true }
+      {
+        kode_cabang: Joi.string().required().label("Kode Cabang"),
+        name: Joi.string().min(2).max(100).required().label("Nama Fasilitas"),
+        is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
+      },
+      {
+        "string.base": "{#label} harus berupa teks",
+        "string.empty": "{#label} tidak boleh kosong",
+        "string.min": "{#label} minimal {#limit} karakter",
+        "string.max": "{#label} maksimal {#limit} karakter",
+        "any.required": "{#label} wajib diisi",
+        "number.base": "{#label} harus berupa angka",
+      },
+      oPayload,
+      { table: "mst_fasilitas", allowUnknown: true }
     );
-    if (cValidation) return res.status(422).json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+    if (cValidation)
+      return res
+        .status(422)
+        .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
     let cUniqueCode = "";
     await DB.transaction(async (trx) => {
       cUniqueCode = await generateSequence("FMT-FASILITAS", trx);
-      const oData = { kode_cabang: oPayload.kode_cabang, kode_fasilitas: cUniqueCode, name: oPayload.name, is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1, created_by: req.auth?.user_id || 1, created_at: formatDateSystem(), updated_at: formatDateSystem() };
+      const oData = {
+        kode_cabang: oPayload.kode_cabang,
+        kode_fasilitas: cUniqueCode,
+        name: oPayload.name,
+        is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
+        created_by: req.auth?.user_id || 1,
+        created_at: formatDateSystem(),
+        updated_at: formatDateSystem(),
+      };
 
       const existingData = await trx("mst_fasilitas").where("kode_fasilitas", cUniqueCode).first();
       if (existingData) {
@@ -39,15 +69,50 @@ router.post("/", async (req, res) => {
       }
 
       await trx("mst_fasilitas").insert(oData);
-      await ChangesLog({ description: "Tambah Master Fasilitas", tableName: "mst_fasilitas", referenceCode: cUniqueCode, action: "CREATE", dataBefore: null, dataAfter: oData, user: username, tz: oPayload.tz || "UTC" }, trx);
+      await ChangesLog(
+        {
+          description: "Tambah Master Fasilitas",
+          tableName: "mst_fasilitas",
+          referenceCode: cUniqueCode,
+          action: "CREATE",
+          dataBefore: null,
+          dataAfter: oData,
+          user: username,
+          tz: oPayload.tz || "UTC",
+        },
+        trx
+      );
     });
-    return res.status(200).json({ status: status.SUKSES, message: "Data Master Fasilitas berhasil dibuat", datetime: formatDateSystem(), data: { kode_fasilitas: cUniqueCode } });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data Master Fasilitas berhasil dibuat",
+        datetime: formatDateSystem(),
+        data: { kode_fasilitas: cUniqueCode },
+      });
   } catch (error) {
     if (error.message === "DUPLICATE_CODE") {
-      return res.status(400).json({ status: status.BAD_REQUEST, message: "Kode sudah digunakan, silakan coba lagi.", datetime: formatDateSystem() });
+      return res
+        .status(400)
+        .json({
+          status: status.BAD_REQUEST,
+          message: "Kode sudah digunakan, silakan coba lagi.",
+          datetime: formatDateSystem(),
+        });
     }
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/fasilitas/fasilitas_create.js", func: "create", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/fasilitas/fasilitas_create.js",
+      func: "create",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

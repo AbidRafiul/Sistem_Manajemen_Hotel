@@ -20,7 +20,17 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
-  const sortField = ["kode_ruang_event","nama_ruang","kode_cabang","kode_tipe_ruang_event","is_active","created_at","updated_at"].includes(oPayload.sortField) ? oPayload.sortField : "updated_at";
+  const sortField = [
+    "kode_ruang_event",
+    "nama_ruang",
+    "kode_cabang",
+    "kode_tipe_ruang_event",
+    "is_active",
+    "created_at",
+    "updated_at",
+  ].includes(oPayload.sortField)
+    ? oPayload.sortField
+    : "updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
   try {
     const baseQuery = DB("mst_ruang_event as re")
@@ -28,26 +38,77 @@ router.post("/", async (req, res) => {
       .join("mst_tipe_ruang_event as tre", "re.kode_tipe_ruang_event", "tre.kode_tipe_ruang_event")
       .leftJoin("mst_gedung as g", "re.kode_gedung", "g.kode_gedung")
       .leftJoin("mst_lantai as l", "re.kode_lantai", "l.kode_lantai")
-      .whereNull("re.deleted_at").modify(qb => {
-      if (oPayload.kode_cabang) qb.where("re.kode_cabang", oPayload.kode_cabang);
-      if (oPayload.kode_tipe_ruang_event) qb.where("re.kode_tipe_ruang_event", oPayload.kode_tipe_ruang_event);
-      if (keyword) qb.where(function() { this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw("LOWER(re.kode_ruang_event) LIKE ?", [`%${keyword.toLowerCase()}%`]); });
-    });
-    const selectFields = ["re.id","re.kode_ruang_event","re.kode_cabang","c.nama_hotel as cabang_name","re.kode_gedung","g.nama_gedung","re.kode_lantai","l.nama_lantai","re.kode_tipe_ruang_event","tre.nama_tipe as tipe_ruang_name","re.nama_ruang","re.kapasitas_orang","re.luas_sqm","re.layout_support","re.is_active","re.created_at","re.updated_at"];
-    let vaData = [], totalRecords = 0;
+      .whereNull("re.deleted_at")
+      .modify((qb) => {
+        if (oPayload.kode_cabang) qb.where("re.kode_cabang", oPayload.kode_cabang);
+        if (oPayload.kode_tipe_ruang_event)
+          qb.where("re.kode_tipe_ruang_event", oPayload.kode_tipe_ruang_event);
+        if (keyword)
+          qb.where(function () {
+            this.whereRaw("LOWER(re.nama_ruang) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw(
+              "LOWER(re.kode_ruang_event) LIKE ?",
+              [`%${keyword.toLowerCase()}%`]
+            );
+          });
+      });
+    const selectFields = [
+      "re.id",
+      "re.kode_ruang_event",
+      "re.kode_cabang",
+      "c.nama_hotel as cabang_name",
+      "re.kode_gedung",
+      "g.nama_gedung",
+      "re.kode_lantai",
+      "l.nama_lantai",
+      "re.kode_tipe_ruang_event",
+      "tre.nama_tipe as tipe_ruang_name",
+      "re.nama_ruang",
+      "re.kapasitas_orang",
+      "re.luas_sqm",
+      "re.layout_support",
+      "re.is_active",
+      "re.created_at",
+      "re.updated_at",
+    ];
+    let vaData = [],
+      totalRecords = 0;
     if (hasPagination) {
-      const page = parseInt(oPayload.page) || 1, perPage = parseInt(oPayload.perPage) || 10;
+      const page = parseInt(oPayload.page) || 1,
+        perPage = parseInt(oPayload.perPage) || 10;
       const count = await baseQuery.clone().count("re.id as total").first();
       totalRecords = parseInt(count.total || 0);
-      vaData = await baseQuery.clone().select(selectFields).orderBy(`re.${sortField}`, sortOrder).limit(perPage).offset((page - 1) * perPage);
+      vaData = await baseQuery
+        .clone()
+        .select(selectFields)
+        .orderBy(`re.${sortField}`, sortOrder)
+        .limit(perPage)
+        .offset((page - 1) * perPage);
     } else {
       vaData = await baseQuery.clone().select(selectFields).orderBy(`re.${sortField}`, sortOrder);
       totalRecords = vaData.length;
     }
-    return res.status(200).json({ status: status.SUKSES, message: "Data ditemukan", datetime: formatDateSystem(), data: vaData, total_data: totalRecords });
+    return res
+      .status(200)
+      .json({
+        status: status.SUKSES,
+        message: "Data ditemukan",
+        datetime: formatDateSystem(),
+        data: vaData,
+        total_data: totalRecords,
+      });
   } catch (error) {
-    const oResult = { status: status.BAD_REQUEST, message: "Sistem sedang maintenance harap tunggu sebentar", datetime: formatDateSystem() };
-    Logging(error, { file: "master/ruang_event/ruang_event_data.js", func: "get", request: oPayload, response: oResult, user: username });
+    const oResult = {
+      status: status.BAD_REQUEST,
+      message: "Sistem sedang maintenance harap tunggu sebentar",
+      datetime: formatDateSystem(),
+    };
+    Logging(error, {
+      file: "master/ruang_event/ruang_event_data.js",
+      func: "get",
+      request: oPayload,
+      response: oResult,
+      user: username,
+    });
     return res.status(500).json(oResult);
   }
 });

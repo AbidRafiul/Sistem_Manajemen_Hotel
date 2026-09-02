@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file get_db_config.js
  * @description File untuk mendapatkan konfigurasi database
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

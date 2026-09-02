@@ -114,7 +114,7 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
 
     return (
         <div className="card">
-            <div className="flex justify-content-between items-start mb-6">
+            <div className="flex justify-content-between align-items-start mb-4">
                 <div className="flex flex-column">
                     <h3 className="text-2xl font-semibold flex align-items-center gap-2">
                         <i className="pi pi-money-bill text-blue-600 text-3xl"></i>Master Harga Kamar
@@ -123,7 +123,7 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
                 </div>
             </div>
 
-            <div className="flex flex-row flex-wrap items-center gap-2 mb-4">
+            <div className="flex flex-row flex-wrap align-items-center gap-2 mb-3">
                 <Button
                     size="small"
                     label="Baru"
@@ -192,7 +192,7 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
                 currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data harga"
             >
                 <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
-                <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
+                <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                 <Column field="tipe_kamar_name" header="Tipe Kamar" sortable style={{ minWidth: '12rem' }}></Column>
                 <Column field="rate_plan_name" header="Rate Plan" sortable style={{ minWidth: '12rem' }}></Column>
                 <Column field="season_name" header="Musim" body={(r) => r.season_name || 'Reguler'} sortable style={{ minWidth: '8rem' }}></Column>
