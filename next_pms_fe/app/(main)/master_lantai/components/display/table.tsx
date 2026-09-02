@@ -101,7 +101,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     return (
         <>
             <div className="card">
-                <div className="flex justify-content-between items-start mb-6">
+                <div className="flex justify-content-between align-items-start mb-4">
                     <div className="flex flex-column">
                         <h3 className="text-2xl font-semibold flex align-items-center gap-2">
                             <i className="pi pi-list text-blue-600 text-3xl"></i>Master Lantai
@@ -110,7 +110,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     </div>
                 </div>
 
-                <div className="flex flex-row flex-wrap items-center gap-2 mb-4">
+                <div className="flex flex-row flex-wrap align-items-center gap-2 mb-3">
                     <Button
                         size="small"
                         label="Baru"
@@ -176,7 +176,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data lantai"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
-                    <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
+                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                     <Column field="kode_lantai" header="Kode Lantai" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="building_name" header="Nama Gedung" sortable style={{ minWidth: '16rem' }} body={(rowData) => rowData.building_name || rowData.kode_gedung}></Column>
                     <Column field="name" header="Nama Lantai" sortable style={{ minWidth: '16rem' }}></Column>
