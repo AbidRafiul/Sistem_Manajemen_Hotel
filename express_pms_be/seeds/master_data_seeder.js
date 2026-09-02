@@ -6,6 +6,9 @@ export async function seed(knex) {
   // Clean up existing data to avoid unique constraint errors
   // Order matters due to foreign key relationships
   await knex.raw('SET FOREIGN_KEY_CHECKS = 0;');
+  await knex("mst_room_type_amenity").del();
+  await knex("mst_room_type_fasilitas").del();
+  await knex("mst_rate_plan_price").del();
   await knex("mst_kamar").del();
   await knex("mst_paket_harga").del();
   await knex("mst_tipe_kamar").del();
