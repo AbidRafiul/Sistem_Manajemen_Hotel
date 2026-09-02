@@ -11,6 +11,8 @@ import { apiEndpointDelete, apiEndpointGet } from '../endpoints';
 import { initValue } from '../interfaces';
 import Form from './form';
 import { useRef } from 'react';
+import StatusIndicator from '@/app/components/status/StatusIndicator';
+import StatusLegend from '@/app/components/status/StatusLegend';
 
 const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -107,10 +109,7 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
     };
 
     const activeStatusBodyTemplate = (rowData: any) => (
-        <Tag
-            value={rowData.is_active === 1 ? 'Aktif' : 'Non-Aktif'}
-            severity={rowData.is_active === 1 ? 'success' : 'danger'}
-        />
+        <StatusIndicator status={rowData.is_active} />
     );
 
     return (
@@ -168,6 +167,8 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
                 <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
             </div>
 
+            <StatusLegend />
+
             <DataTable
                 value={state.data}
                 scrollable
@@ -191,6 +192,7 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
                 currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data harga"
             >
                 <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
+                <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
                 <Column field="tipe_kamar_name" header="Tipe Kamar" sortable style={{ minWidth: '12rem' }}></Column>
                 <Column field="rate_plan_name" header="Rate Plan" sortable style={{ minWidth: '12rem' }}></Column>
                 <Column field="season_name" header="Musim" body={(r) => r.season_name || 'Reguler'} sortable style={{ minWidth: '8rem' }}></Column>
@@ -198,7 +200,6 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
                 <Column field="extra_bed_price" header="Extra Bed" body={(r) => r.extra_bed_price ? `Rp ${Number(r.extra_bed_price).toLocaleString('id-ID')}` : '-'} sortable align="right" style={{ minWidth: '10rem' }}></Column>
                 <Column field="valid_from" header="Berlaku Mulai" body={(r) => r.valid_from ? new Date(r.valid_from).toLocaleDateString('id-ID') : '-'} sortable style={{ minWidth: '10rem' }}></Column>
                 <Column field="valid_to" header="Berlaku Sampai" body={(r) => r.valid_to ? new Date(r.valid_to).toLocaleDateString('id-ID') : 'Selamanya'} sortable style={{ minWidth: '10rem' }}></Column>
-                <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} sortable style={{ minWidth: '8rem' }}></Column>
                 <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" exportable={false} style={{ minWidth: '8rem' }}></Column>
             </DataTable>
 

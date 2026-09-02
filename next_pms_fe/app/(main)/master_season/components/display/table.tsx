@@ -13,6 +13,8 @@ import { Tag } from 'primereact/tag';
 import Form from './form';
 import { apiEndpointGet } from '../endpoints';
 import { useRef } from 'react';
+import StatusIndicator from '@/app/components/status/StatusIndicator';
+import StatusLegend from '@/app/components/status/StatusLegend';
 
 const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,8 +75,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kode_musim: rowData.kode_musim || '',
                         kode_cabang: rowData.kode_cabang || '',
                         nama_musim: rowData.nama_musim || '',
-                        tanggal_mulai: rowData.tanggal_mulai ? new Date(rowData.tanggal_mulai).toISOString().split('T')[0] : '',
-                        tanggal_selesai: rowData.tanggal_selesai ? new Date(rowData.tanggal_selesai).toISOString().split('T')[0] : '',
+                        tanggal_mulai: rowData.tanggal_mulai || '',
+                        tanggal_selesai: rowData.tanggal_selesai || '',
                         hari_berlaku: rowData.hari_berlaku || '',
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
                     });
@@ -94,10 +96,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const activeStatusBodyTemplate = (rowData: TableData) => (
-        <Tag
-            value={rowData.is_active === 1 ? 'Aktif' : 'Non-Aktif'}
-            severity={rowData.is_active === 1 ? 'success' : 'danger'}
-        />
+        <StatusIndicator status={rowData.is_active} />
     );
 
     const dateBodyTemplate = (dateString: string) => {
@@ -161,6 +160,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
 
+                <StatusLegend />
+
                 <DataTable
                     value={state.data}
                     scrollable
@@ -185,13 +186,13 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data season"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                     <Column field="kode_musim" header="Kode Season" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="nama_musim" header="Nama Season" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="tanggal_mulai" header="Tgl Mulai" align="center" body={(rowData) => dateBodyTemplate(rowData.tanggal_mulai)} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="tanggal_selesai" header="Tgl Selesai" align="center" body={(rowData) => dateBodyTemplate(rowData.tanggal_selesai)} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="hari_berlaku" header="Hari Berlaku" sortable style={{ minWidth: '12rem' }}></Column>
-                    <Column field="is_active" header="Status Aktif" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>

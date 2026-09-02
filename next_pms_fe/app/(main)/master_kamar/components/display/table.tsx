@@ -15,6 +15,8 @@ import { apiEndpointGet } from '../endpoints';
 import { useEffect, useRef, useState } from 'react';
 import { Dropdown } from 'primereact/dropdown';
 import postData from '@/lib/axios/postData';
+import StatusIndicator from '@/app/components/status/StatusIndicator';
+import StatusLegend from '@/app/components/status/StatusLegend';
 
 const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -130,29 +132,17 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const activeStatusBodyTemplate = (rowData: TableData) => (
-        <Tag
-            value={rowData.is_active === 1 ? 'Aktif' : 'Non-Aktif'}
-            severity={rowData.is_active === 1 ? 'success' : 'danger'}
-        />
+        <StatusIndicator status={rowData.is_active} />
     );
 
     const occupancyStatusBodyTemplate = (rowData: TableData) => {
         const s = rowData.occupancy_status || '';
-        let sev: 'success' | 'info' | 'warning' | 'danger' | null = 'info';
-        if (s.toLowerCase() === 'vacant') sev = 'success';
-        if (s.toLowerCase() === 'occupied') sev = 'danger';
-        
-        return <Tag value={s} severity={sev} />;
+        return <StatusIndicator status={s} label={s.toUpperCase()} />;
     };
 
     const housekeepingStatusBodyTemplate = (rowData: TableData) => {
         const s = rowData.housekeeping_status || '';
-        let sev: 'success' | 'info' | 'warning' | 'danger' | null = 'info';
-        if (s.toLowerCase() === 'clean') sev = 'success';
-        if (s.toLowerCase() === 'dirty') sev = 'warning';
-        if (s.toLowerCase() === 'out_of_order') sev = 'danger';
-        
-        return <Tag value={s} severity={sev} />;
+        return <StatusIndicator status={s} label={s.toUpperCase()} />;
     };
 
     return (
@@ -212,6 +202,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
 
+                <StatusLegend />
+
                 <DataTable
                     value={state.data}
                     scrollable
@@ -236,6 +228,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data kamar"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
                     <Column field="kode_kamar" header="Kode Kamar" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="nomor_kamar" header="Nomor Kamar" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="room_type_name" header="Tipe Kamar" sortable style={{ minWidth: '14rem' }} body={(rowData) => rowData.room_type_name || rowData.kode_tipe_kamar}></Column>
@@ -243,7 +236,6 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="tipe_view" header="View" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="occupancy_status" header="Occupancy" align="center" body={occupancyStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
                     <Column field="housekeeping_status" header="Housekeeping" align="center" body={housekeepingStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
-                    <Column field="is_active" header="Status Aktif" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
