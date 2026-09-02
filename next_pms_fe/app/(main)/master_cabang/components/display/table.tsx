@@ -13,6 +13,8 @@ import { Tag } from 'primereact/tag';
 import Form from './form';
 import { apiEndpointGet } from '../endpoints';
 import { useRef } from 'react';
+import StatusIndicator from '@/app/components/status/StatusIndicator';
+import StatusLegend from '@/app/components/status/StatusLegend';
 
 const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -99,10 +101,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const activeStatusBodyTemplate = (rowData: TableData) => (
-        <Tag
-            value={rowData.is_active === 1 ? 'Aktif' : 'Non-Aktif'}
-            severity={rowData.is_active === 1 ? 'success' : 'danger'}
-        />
+        <StatusIndicator status={rowData.is_active} />
     );
 
     const pkpStatusBodyTemplate = (rowData: TableData) => (
@@ -169,6 +168,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
 
+                <StatusLegend />
+
                 <DataTable
                     value={state.data}
                     scrollable
@@ -193,6 +194,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data cabang"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="is_active" header="" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '4rem', width: '4rem' }}></Column>
                     <Column field="kode_cabang" header="Kode" align="center" sortable style={{ minWidth: '8rem' }}></Column>
                     <Column field="name" header="Nama Cabang" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="address" header="Alamat" style={{ minWidth: '18rem' }} body={(rowData) => rowData.address || '-'}></Column>
@@ -200,7 +202,6 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="check_in_time" header="Check-In" align="center" style={{ minWidth: '8rem' }}></Column>
                     <Column field="check_out_time" header="Check-Out" align="center" style={{ minWidth: '8rem' }}></Column>
                     <Column field="timezone" header="Zona Waktu" align="center" style={{ minWidth: '10rem' }}></Column>
-                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
