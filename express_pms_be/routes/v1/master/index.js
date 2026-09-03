@@ -18,6 +18,8 @@ import cabangCreate from "./cabang/cabang_create.js";
 import cabangUpdate from "./cabang/cabang_update.js";
 import cabangDelete from "./cabang/cabang_delete.js";
 
+import cashierShiftDropdown from "./cashier_shift/cashier_shift_dropdown.js";
+
 import bedTypeData from "./bed_type/bed_type_data.js";
 import bedTypeCreate from "./bed_type/bed_type_create.js";
 import bedTypeUpdate from "./bed_type/bed_type_update.js";
@@ -212,5 +214,8 @@ router.use("/harga-ruang-event/harga-ruang-event-data", hargaRuangEventData);
 router.use("/harga-ruang-event/harga-ruang-event-create", hargaRuangEventCreate);
 router.use("/harga-ruang-event/harga-ruang-event-update", hargaRuangEventUpdate);
 router.use("/harga-ruang-event/harga-ruang-event-delete", hargaRuangEventDelete);
+
+// Cashier Shift Dropdown (shift yang sedang open)
+router.use("/cashier-shift/dropdown", cashierShiftDropdown);
 
 export default router;
