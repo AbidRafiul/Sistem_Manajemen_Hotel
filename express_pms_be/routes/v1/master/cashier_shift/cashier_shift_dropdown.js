@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
   try {
     // Ambil shift kasir yang statusnya 'open' untuk cabang yang dipilih
     const baseQuery = DB("trx_cashier_shift as cs")
-      .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_cashier_counter")
+      .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_counter")
       .where("cs.status", "open")
       .modify((qb) => {
         if (oPayload.kode_cabang) {
@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
       "cs.kode_cashier_shift",
       "cs.kode_cabang",
       "cs.kode_cashier_counter",
-      "cc.nama_counter as nama_shift",
+      "cc.name as nama_shift",
       "cs.user_id",
       "cs.opening_cash",
       "cs.opened_at",
