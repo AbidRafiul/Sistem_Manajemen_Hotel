@@ -1,21 +1,18 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file rate_plan_price_hitung.js
- * @description Endpoint hitung harga kamar final
+ * @file guest_search.js
+ * @description Endpoint untuk mencari data tamu
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
- * @created 2026-08-28
- * @contributors - Fadil
- * @lastModified Fadil (2026-08-28)
- * @version 1.0.1
+ * @created 2026-09-03
+ * @version 1.0.0
  */
 import express from "express";
-import { status } from "../../components/tools/general.js";
+import { status } from "../../../components/tools/general.js";
 import Joi from "joi";
-import DB from "../../../../core/config/knex.js";
-import { Logging, validatePayload } from "../../components/tools/servertool.js";
-import { formatDateSystem } from "../../components/tools/date_tools.js";
-import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
+import DB from "../../../../../core/config/knex.js";
+import { Logging, validatePayload } from "../../../components/tools/servertool.js";
+import { formatDateSystem } from "../../../components/tools/date_tools.js";
 
 const router = express.Router();
 
@@ -35,10 +32,8 @@ router.post("/", async (req, res) => {
     }
 
     const schema = {
-      kode_tipe_kamar: Joi.string().required().label("Kode Tipe Kamar"),
-      kode_rate_plan: Joi.string().required().label("Kode Rate Plan"),
-      kode_season: Joi.string().optional().allow(null, "").label("Kode Season"),
-      tanggal: Joi.date().iso().optional().allow(null, "").label("Tanggal"),
+      keyword: Joi.string().required().label("Keyword (ID/Telepon)"),
+      kode_cabang: Joi.string().required().label("Kode Cabang")
     };
 
     const cValidation = await validatePayload(
@@ -46,7 +41,6 @@ router.post("/", async (req, res) => {
       {
         "string.base": "{#label} harus berupa teks",
         "any.required": "{#label} wajib diisi",
-        "date.format": "{#label} format tanggal salah",
       },
       oPayload,
       { allowUnknown: true }
@@ -56,18 +50,30 @@ router.post("/", async (req, res) => {
         .status(422)
         .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
 
-    const finalPriceData = await hitungHargaKamar({
-      kode_tipe_kamar: oPayload.kode_tipe_kamar,
-      kode_rate_plan: oPayload.kode_rate_plan,
-      kode_season: oPayload.kode_season,
-      tanggal: oPayload.tanggal
-    }, DB);
+    const data = await DB("mst_guest")
+      .where("kode_cabang", oPayload.kode_cabang)
+      .andWhere(function () {
+        this.where("id_number", oPayload.keyword)
+            .orWhere("phone", oPayload.keyword)
+            .orWhere("kode_tamu", oPayload.keyword);
+      })
+      .whereNull("deleted_at")
+      .first();
+
+    if (!data) {
+      return res.status(200).json({
+        status: status.NOT_FOUND,
+        message: "Data tamu tidak ditemukan",
+        datetime: formatDateSystem(),
+        data: null
+      });
+    }
 
     return res.status(200).json({
       status: status.SUKSES,
-      message: "Harga berhasil dihitung",
+      message: "Data tamu ditemukan",
       datetime: formatDateSystem(),
-      data: finalPriceData
+      data: data,
     });
   } catch (error) {
     const oResult = {
@@ -76,8 +82,8 @@ router.post("/", async (req, res) => {
       datetime: formatDateSystem(),
     };
     Logging(error, {
-      file: "master/rate_plan_price/rate_plan_price_hitung.js",
-      func: "hitung",
+      file: "reservasi/guest/guest_search.js",
+      func: "search",
       request: oPayload,
       response: oResult,
       user: username,

@@ -523,5 +523,12 @@ export async function seed(knex) {
     { kode_format: "FMT-TIPEKAMAR",     nama_tabel: "mst_tipekamar",     prefix: "TIP", panjang_digit: 4, nomor_terakhir: 3, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
     { kode_format: "FMT-TIPERUANGEVENT",nama_tabel: "mst_tiperuangevent",prefix: "TIP", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
     { kode_format: "FMT-USR",           nama_tabel: "mst_usr",           prefix: "USR", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-TAMU",          nama_tabel: "mst_guest",         prefix: "TAM", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-RESERVASI",     nama_tabel: "trx_reservation",   prefix: "RSV", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-RESROOM",       nama_tabel: "trx_reservation_room", prefix: "RRO", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-CHECKIN",       nama_tabel: "trx_checkin",       prefix: "CHK", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-FOLIO",         nama_tabel: "trx_folio",         prefix: "FOL", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-FOLIOCHARGE",   nama_tabel: "trx_folio_charge",  prefix: "FCH", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
+    { kode_format: "FMT-PAYMENT",       nama_tabel: "trx_payment",       prefix: "PAY", panjang_digit: 4, nomor_terakhir: 0, is_active: 1, created_at: dDatetimeIso, updated_at: dDatetimeIso },
   ]);
 }
