@@ -25,9 +25,9 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
             setState(p => ({ ...p, tipeKamarLoad: true, ratePlanLoad: true, musimLoad: true }));
             try {
                 const [resTK, resRP, resM] = await Promise.all([
-                    postData(apiTipeKamarDropdown, {}).catch(() => ({ data: { data: [] } })),
-                    postData(apiRatePlanDropdown, {}).catch(() => ({ data: { data: [] } })),
-                    postData(apiMusimDropdown, {}).catch(() => ({ data: { data: [] } }))
+                    postData(apiTipeKamarDropdown, {}),
+                    postData(apiRatePlanDropdown, {}),
+                    postData(apiMusimDropdown, {})
                 ]);
                 setState(p => ({ 
                     ...p, 
@@ -35,6 +35,8 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                     ratePlanOptions: resRP.data.data,
                     musimOptions: resM.data.data
                 }));
+            } catch (e: any) {
+                showError(toast, "Gagal memuat opsi dropdown: " + (e?.response?.data?.message || e.message));
             } finally {
                 setState(p => ({ ...p, tipeKamarLoad: false, ratePlanLoad: false, musimLoad: false }));
             }

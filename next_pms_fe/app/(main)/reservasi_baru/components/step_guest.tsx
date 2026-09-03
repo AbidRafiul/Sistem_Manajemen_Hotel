@@ -25,7 +25,7 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                 const res = await postData(apiCabangDropdown, {});
                 setState(p => ({ ...p, cabangOptions: res.data.data }));
             } catch (e: any) {
-                // swallow error or default to empty
+                showError(toast, "Gagal memuat cabang: " + (e?.response?.data?.message || e.message));
             } finally {
                 setState(p => ({ ...p, cabangLoad: false }));
             }
