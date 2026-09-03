@@ -21,13 +21,14 @@ interface StepAvailabilityProps {
 const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, formik, toast }) => {
     
     useEffect(() => {
-        const getDropdowns = async () => {
+    const getDropdowns = async () => {
+            const kode_cabang = formik.values.kode_cabang;
             setState(p => ({ ...p, tipeKamarLoad: true, ratePlanLoad: true, musimLoad: true }));
             try {
                 const [resTK, resRP, resM] = await Promise.all([
-                    postData(apiTipeKamarDropdown, {}),
-                    postData(apiRatePlanDropdown, {}),
-                    postData(apiMusimDropdown, {})
+                    postData(apiTipeKamarDropdown, { kode_cabang }),
+                    postData(apiRatePlanDropdown, { kode_cabang }),
+                    postData(apiMusimDropdown, { kode_cabang })
                 ]);
                 setState(p => ({ 
                     ...p, 
@@ -43,7 +44,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
         };
         getDropdowns();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [formik.values.kode_cabang]);
 
     const handleNightsChange = (val: number | null) => {
         const nights = val || 1;
