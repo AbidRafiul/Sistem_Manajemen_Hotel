@@ -64,6 +64,13 @@ export async function seed(knex) {
       ]
     },
     {
+      label: "Reservasi",
+      icon: "pi pi-fw pi-calendar-plus",
+      items: [
+        { label: "Reservasi Baru", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" }
+      ]
+    },
+    {
       label: "Contoh & Template",
       icon: "pi pi-fw pi-bookmark",
       items: [
