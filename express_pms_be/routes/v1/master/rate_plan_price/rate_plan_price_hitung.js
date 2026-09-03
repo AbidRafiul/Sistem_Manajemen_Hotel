@@ -15,6 +15,7 @@ import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
 import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 
 const router = express.Router();
 
@@ -55,88 +56,18 @@ router.post("/", async (req, res) => {
         .status(422)
         .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
 
-    const targetDate = oPayload.tanggal
-      ? formatDateSystem(oPayload.tanggal, "yyyy-MM-dd")
-      : formatDateSystem(new Date(), "yyyy-MM-dd");
-    const season = oPayload.kode_season || null;
-
-    // 1. Cek mst_rate_plan_price untuk override
-    const overrideQuery = DB("mst_rate_plan_price")
-      .where("kode_tipe_kamar", oPayload.kode_tipe_kamar)
-      .where("kode_rate_plan", oPayload.kode_rate_plan)
-      .where("is_active", 1)
-      .whereNull("deleted_at")
-      .where("valid_from", "<=", targetDate)
-      .andWhere(function () {
-        this.where("valid_to", ">=", targetDate).orWhereNull("valid_to");
-      });
-
-    if (season) {
-      overrideQuery.where("kode_season", season);
-    } else {
-      overrideQuery.whereNull("kode_season");
-    }
-
-    const overrideData = await overrideQuery.first();
-
-    if (overrideData) {
-      return res.status(200).json({
-        status: status.SUKSES,
-        message: "Harga berhasil dihitung",
-        datetime: formatDateSystem(),
-        data: {
-          price: parseFloat(overrideData.price),
-          source: "override",
-          kode_harga_price: overrideData.kode_harga_price,
-        },
-      });
-    }
-
-    // 2. Kalau tidak ada override, hitung dari master
-    const tkData = await DB("mst_tipe_kamar")
-      .where("kode_tipe_kamar", oPayload.kode_tipe_kamar)
-      .whereNull("deleted_at")
-      .select("harga_default")
-      .first();
-
-    const rpData = await DB("mst_paket_harga")
-      .where("kode_paket_harga", oPayload.kode_rate_plan)
-      .whereNull("deleted_at")
-      .select("tipe_markup", "nilai_markup")
-      .first();
-
-    if (!tkData || !rpData) {
-      return res.status(404).json({
-        status: status.NOT_FOUND,
-        message: "Kombinasi Tipe Kamar dan Rate Plan tidak ditemukan",
-        datetime: formatDateSystem(),
-      });
-    }
-
-    const hargaDefault = parseFloat(tkData.harga_default || 0);
-    const nilaiMarkup = parseFloat(rpData.nilai_markup || 0);
-    const tipeMarkup = rpData.tipe_markup;
-
-    let computedPrice = hargaDefault;
-    if (tipeMarkup === "nominal") {
-      computedPrice += nilaiMarkup;
-    } else if (tipeMarkup === "persen") {
-      computedPrice += (hargaDefault * nilaiMarkup) / 100;
-    }
+    const finalPriceData = await hitungHargaKamar({
+      kode_tipe_kamar: oPayload.kode_tipe_kamar,
+      kode_rate_plan: oPayload.kode_rate_plan,
+      kode_season: oPayload.kode_season,
+      tanggal: oPayload.tanggal
+    }, DB);
 
     return res.status(200).json({
       status: status.SUKSES,
       message: "Harga berhasil dihitung",
       datetime: formatDateSystem(),
-      data: {
-        price: computedPrice,
-        source: "computed",
-        breakdown: {
-          harga_default: hargaDefault,
-          tipe_markup: tipeMarkup,
-          nilai_markup: nilaiMarkup,
-        },
-      },
+      data: finalPriceData
     });
   } catch (error) {
     const oResult = {
