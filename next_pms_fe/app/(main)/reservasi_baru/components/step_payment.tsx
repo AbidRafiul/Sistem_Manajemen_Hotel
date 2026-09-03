@@ -6,6 +6,7 @@ import { Button } from 'primereact/button';
 import { InputNumber } from 'primereact/inputnumber';
 import { Dropdown } from 'primereact/dropdown';
 import postData from '@/lib/axios/postData';
+import { showError } from '@/lib/tools/generalTools';
 import { apiCashierShiftDropdown } from './endpoints';
 
 interface StepPaymentProps {
@@ -21,17 +22,19 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
         const getCashierShift = async () => {
             setState(p => ({ ...p, cashierShiftLoad: true }));
             try {
-                const res = await postData(apiCashierShiftDropdown, {});
+                const res = await postData(apiCashierShiftDropdown, {
+                    kode_cabang: formik.values.kode_cabang
+                });
                 setState(p => ({ ...p, cashierShiftOptions: res.data.data }));
-            } catch (e) {
-                // optional
+            } catch (e: any) {
+                showError(toast, "Gagal memuat data shift kasir: " + (e?.response?.data?.message || e.message));
             } finally {
                 setState(p => ({ ...p, cashierShiftLoad: false }));
             }
         };
         getCashierShift();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [formik.values.kode_cabang]);
 
     const paymentMethods = [
         { label: 'Cash', value: 'cash' },

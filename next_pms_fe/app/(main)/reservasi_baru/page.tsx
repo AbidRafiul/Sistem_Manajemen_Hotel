@@ -1,7 +1,6 @@
 'use client';
 import { Toast } from 'primereact/toast';
 import { useEffect, useRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
 import { getTzUser } from '@/lib/tools/dateTools';
@@ -9,7 +8,6 @@ import FormWalkIn from './components/form_walk_in';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
-    const { data: session } = useSession();
 
     const [state, setState] = useState<ReservasiBaruState>({
         load: false,
