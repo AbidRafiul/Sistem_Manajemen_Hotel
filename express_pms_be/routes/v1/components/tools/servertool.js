@@ -307,14 +307,14 @@ export const ChangesLog = async (
     });
   } catch (err) {
     const oResult = {
-      status: status.BAD_REQUEST,
+      status: "99",
       message: "Sistem sedang maintenance harap tunggu sebentar",
       datetime: formatDateSystem(),
     };
 
     Logging(err, {
       file: "components/tools/servertool.js",
-      func: "create",
+      func: "ChangesLog",
       request: inputPayload,
       response: oResult,
       user: user,

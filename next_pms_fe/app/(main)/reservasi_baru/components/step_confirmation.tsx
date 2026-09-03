@@ -25,8 +25,8 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
         try {
             const payload = {
                 ...formik.values,
-                check_in_date: formatDateSystem(formik.values.check_in_date, 'yyyy-MM-dd'),
-                check_out_date: formatDateSystem(formik.values.check_out_date, 'yyyy-MM-dd')
+                check_in_date: formik.values.check_in_date ? formatDateSystem(formik.values.check_in_date, 'yyyy-MM-dd') : null,
+                check_out_date: formik.values.check_out_date ? formatDateSystem(formik.values.check_out_date, 'yyyy-MM-dd') : null
             };
             const res = await postData(apiWalkInSubmit, payload);
             showSuccess(toast, "Proses Walk-in berhasil!");
@@ -39,6 +39,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
     };
 
     const totalTagihan = (state.rateInfo?.price || 0) * formik.values.nights;
+    const selectedRoom = state.availableRooms.find(r => r.kode_kamar === formik.values.kode_kamar);
 
     if (state.submittedData) {
         return (
@@ -78,7 +79,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                             Check Out: <strong>{formik.values.check_out_date ? formatDateSystem(formik.values.check_out_date, 'dd-MM-yyyy') : '-'}</strong>
                         </p>
                         <p className="m-0 text-secondary">Malam: <strong>{formik.values.nights}</strong></p>
-                        <p className="m-0 text-secondary">Kamar: <strong>{formik.values.kode_kamar}</strong></p>
+                        <p className="m-0 text-secondary">Kamar: <strong>{selectedRoom?.nomor_kamar || formik.values.kode_kamar}</strong></p>
                     </div>
                 </div>
                 <div className="col-12">

@@ -8,12 +8,12 @@
  * @version 1.0.0
  */
 import express from "express";
-import { status } from "../../../components/tools/general.js";
+import { status } from "../../components/tools/general.js";
 import Joi from "joi";
-import DB from "../../../../../core/config/knex.js";
-import { Logging, ChangesLog, validatePayload } from "../../../components/tools/servertool.js";
-import { formatDateSystem } from "../../../components/tools/date_tools.js";
-import { generateSequence } from "../../../components/tools/generateCode.js";
+import DB from "../../../../core/config/knex.js";
+import { Logging, ChangesLog, validatePayload } from "../../components/tools/servertool.js";
+import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { generateSequence } from "../../components/tools/generateCode.js";
 
 const router = express.Router();
 
@@ -106,11 +106,12 @@ router.post("/", async (req, res) => {
       await trx("mst_guest").insert(objInsert);
 
       await ChangesLog({
-        table: "mst_guest",
-        id_data: insertedKodeTamu,
+        description: "Tamu baru dibuat",
+        tableName: "mst_guest",
+        referenceCode: insertedKodeTamu,
         action: "CREATE",
-        data_sesudah: objInsert,
-        data_sebelum: null,
+        dataAfter: objInsert,
+        dataBefore: null,
         user: username
       }, trx);
     });

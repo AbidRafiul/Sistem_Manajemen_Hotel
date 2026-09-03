@@ -21,13 +21,14 @@ interface StepAvailabilityProps {
 const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, formik, toast }) => {
     
     useEffect(() => {
-        const getDropdowns = async () => {
+    const getDropdowns = async () => {
+            const kode_cabang = formik.values.kode_cabang;
             setState(p => ({ ...p, tipeKamarLoad: true, ratePlanLoad: true, musimLoad: true }));
             try {
                 const [resTK, resRP, resM] = await Promise.all([
-                    postData(apiTipeKamarDropdown, {}).catch(() => ({ data: { data: [] } })),
-                    postData(apiRatePlanDropdown, {}).catch(() => ({ data: { data: [] } })),
-                    postData(apiMusimDropdown, {}).catch(() => ({ data: { data: [] } }))
+                    postData(apiTipeKamarDropdown, { kode_cabang }),
+                    postData(apiRatePlanDropdown, { kode_cabang }),
+                    postData(apiMusimDropdown, { kode_cabang })
                 ]);
                 setState(p => ({ 
                     ...p, 
@@ -35,13 +36,15 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                     ratePlanOptions: resRP.data.data,
                     musimOptions: resM.data.data
                 }));
+            } catch (e: any) {
+                showError(toast, "Gagal memuat opsi dropdown: " + (e?.response?.data?.message || e.message));
             } finally {
                 setState(p => ({ ...p, tipeKamarLoad: false, ratePlanLoad: false, musimLoad: false }));
             }
         };
         getDropdowns();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [formik.values.kode_cabang]);
 
     const handleNightsChange = (val: number | null) => {
         const nights = val || 1;
@@ -137,7 +140,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                 <label>Jumlah Malam (Nights)</label>
                 <InputNumber 
                     value={formik.values.nights} 
-                    onValueChange={(e) => handleNightsChange(e.value)} 
+                    onValueChange={(e) => handleNightsChange(e.value ?? null)} 
                     min={1} 
                     showButtons
                 />
@@ -162,7 +165,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         setState(p => ({...p, availableRooms: [], rateInfo: null}));
                         formik.setFieldValue('kode_kamar', '');
                     }}
-                    optionLabel="nama_tipe" 
+                    optionLabel="name" 
                     optionValue="kode_tipe_kamar"
                     placeholder="Pilih Tipe Kamar" 
                     disabled={state.tipeKamarLoad}
@@ -178,7 +181,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         formik.setFieldValue('kode_rate_plan', e.value);
                         setState(p => ({...p, availableRooms: [], rateInfo: null}));
                     }}
-                    optionLabel="nama_paket" 
+                    optionLabel="name" 
                     optionValue="kode_paket_harga"
                     placeholder="Pilih Rate Plan" 
                     disabled={state.ratePlanLoad}
@@ -194,7 +197,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         formik.setFieldValue('kode_season', e.value);
                         setState(p => ({...p, availableRooms: [], rateInfo: null}));
                     }}
-                    optionLabel="nama_musim" 
+                    optionLabel="name" 
                     optionValue="kode_musim"
                     placeholder="Pilih Season Override" 
                     disabled={state.musimLoad}

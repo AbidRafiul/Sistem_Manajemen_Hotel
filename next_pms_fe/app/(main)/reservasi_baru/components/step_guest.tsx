@@ -5,7 +5,7 @@ import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
-import postData, { postDataNoAuth } from '@/lib/axios/postData';
+import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { apiGuestSearch, apiGuestCreate, apiCabangDropdown } from './endpoints';
 
@@ -22,11 +22,10 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
         const getCabang = async () => {
             setState(p => ({ ...p, cabangLoad: true }));
             try {
-                // asumsi endpoint dropdown cabang ada
-                const res = await postData('/api/interceptor/master/cabang/dropdown', {});
+                const res = await postData(apiCabangDropdown, {});
                 setState(p => ({ ...p, cabangOptions: res.data.data }));
             } catch (e: any) {
-                // swallow error or default to empty
+                showError(toast, "Gagal memuat cabang: " + (e?.response?.data?.message || e.message));
             } finally {
                 setState(p => ({ ...p, cabangLoad: false }));
             }
@@ -56,17 +55,37 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                 showSuccess(toast, "Tamu ditemukan");
                 setState(p => ({ ...p, foundGuest: res.data.data }));
                 formik.setFieldValue('kode_guest', res.data.data.kode_tamu);
-                // Also set full_name to display
                 formik.setFieldValue('full_name', res.data.data.full_name);
             } else {
-                showError(toast, "Tamu tidak ditemukan, silakan isi data tamu baru");
-                setState(p => ({ ...p, isGuestNew: true }));
+                showError(toast, "Tamu tidak ditemukan. Gunakan tombol \"Tamu Baru\" untuk mendaftarkan.");
             }
         } catch (e: any) {
             showError(toast, e?.response?.data?.message || "Terjadi kesalahan");
         } finally {
             setState(p => ({ ...p, searchGuestLoad: false }));
         }
+    };
+
+    const handleNewGuest = () => {
+        if (!formik.values.kode_cabang) {
+            showError(toast, "Pilih cabang terlebih dahulu");
+            return;
+        }
+        // Reset guest-related fields and activate new guest form
+        setState(p => ({ ...p, isGuestNew: true, foundGuest: null }));
+        formik.setFieldValue('kode_guest', '');
+        formik.setFieldValue('keyword_guest', '');
+        formik.setFieldValue('full_name', '');
+        formik.setFieldValue('id_type', 'ktp');
+        formik.setFieldValue('id_number', '');
+        formik.setFieldValue('phone', '');
+        formik.setFieldValue('email', '');
+        formik.setFieldValue('nationality', '');
+    };
+
+    const handleCancelNewGuest = () => {
+        setState(p => ({ ...p, isGuestNew: false, foundGuest: null }));
+        formik.setFieldValue('kode_guest', '');
     };
 
     const handleNext = async () => {
@@ -112,7 +131,7 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     value={formik.values.kode_cabang} 
                     options={state.cabangOptions} 
                     onChange={(e) => formik.setFieldValue('kode_cabang', e.value)}
-                    optionLabel="nama_hotel" 
+                    optionLabel="name" 
                     optionValue="kode_cabang"
                     placeholder="Pilih Cabang" 
                     disabled={state.cabangLoad}
@@ -127,10 +146,27 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     <InputText 
                         value={formik.values.keyword_guest} 
                         onChange={(e) => formik.setFieldValue('keyword_guest', e.target.value)} 
-                        placeholder="Masukkan ID / Telepon"
+                        onKeyDown={(e) => e.key === 'Enter' && searchGuest()}
+                        placeholder="Masukkan ID / Telepon tamu lama..."
+                        disabled={state.isGuestNew}
                     />
-                    <Button icon="pi pi-search" onClick={searchGuest} loading={state.searchGuestLoad} />
+                    <Button 
+                        icon="pi pi-search" 
+                        tooltip="Cari tamu yang sudah terdaftar"
+                        onClick={searchGuest} 
+                        loading={state.searchGuestLoad}
+                        disabled={state.isGuestNew}
+                    />
+                    <Button 
+                        icon="pi pi-user-plus" 
+                        label="Tamu Baru"
+                        className="p-button-success"
+                        tooltip="Daftarkan tamu baru langsung"
+                        onClick={handleNewGuest}
+                        disabled={state.isGuestNew}
+                    />
                 </div>
+                <small className="text-color-secondary">Cari tamu lama dengan KTP/No.Telp, atau klik <b>Tamu Baru</b> untuk tamu pertama kali.</small>
                 {formik.errors.keyword_guest && formik.touched.keyword_guest && <small className="p-error">{formik.errors.keyword_guest}</small>}
             </div>
 
@@ -150,8 +186,14 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
 
             {state.isGuestNew && (
                 <div className="col-12 mt-3 grid p-3 border-round border-1 surface-border bg-blue-50">
-                    <div className="col-12">
-                        <h6>Form Tamu Baru</h6>
+                    <div className="col-12 flex justify-content-between align-items-center mb-2">
+                        <h6 className="m-0">Form Tamu Baru</h6>
+                        <Button 
+                            icon="pi pi-times" 
+                            label="Batal, kembali ke pencarian" 
+                            className="p-button-text p-button-sm p-button-danger"
+                            onClick={handleCancelNewGuest}
+                        />
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>Nama Lengkap</label>
