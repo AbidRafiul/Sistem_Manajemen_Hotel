@@ -106,11 +106,12 @@ router.post("/", async (req, res) => {
       await trx("mst_guest").insert(objInsert);
 
       await ChangesLog({
-        table: "mst_guest",
-        id_data: insertedKodeTamu,
+        description: "Tamu baru dibuat",
+        tableName: "mst_guest",
+        referenceCode: insertedKodeTamu,
         action: "CREATE",
-        data_sesudah: objInsert,
-        data_sebelum: null,
+        dataAfter: objInsert,
+        dataBefore: null,
         user: username
       }, trx);
     });
