@@ -162,7 +162,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         setState(p => ({...p, availableRooms: [], rateInfo: null}));
                         formik.setFieldValue('kode_kamar', '');
                     }}
-                    optionLabel="nama_tipe" 
+                    optionLabel="name" 
                     optionValue="kode_tipe_kamar"
                     placeholder="Pilih Tipe Kamar" 
                     disabled={state.tipeKamarLoad}
@@ -178,7 +178,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         formik.setFieldValue('kode_rate_plan', e.value);
                         setState(p => ({...p, availableRooms: [], rateInfo: null}));
                     }}
-                    optionLabel="nama_paket" 
+                    optionLabel="name" 
                     optionValue="kode_paket_harga"
                     placeholder="Pilih Rate Plan" 
                     disabled={state.ratePlanLoad}
@@ -194,7 +194,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         formik.setFieldValue('kode_season', e.value);
                         setState(p => ({...p, availableRooms: [], rateInfo: null}));
                     }}
-                    optionLabel="nama_musim" 
+                    optionLabel="name" 
                     optionValue="kode_musim"
                     placeholder="Pilih Season Override" 
                     disabled={state.musimLoad}

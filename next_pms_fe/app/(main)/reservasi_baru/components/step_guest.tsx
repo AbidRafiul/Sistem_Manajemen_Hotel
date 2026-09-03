@@ -22,8 +22,7 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
         const getCabang = async () => {
             setState(p => ({ ...p, cabangLoad: true }));
             try {
-                // asumsi endpoint dropdown cabang ada
-                const res = await postData('/api/interceptor/master/cabang/dropdown', {});
+                const res = await postData(apiCabangDropdown, {});
                 setState(p => ({ ...p, cabangOptions: res.data.data }));
             } catch (e: any) {
                 // swallow error or default to empty
@@ -112,7 +111,7 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     value={formik.values.kode_cabang} 
                     options={state.cabangOptions} 
                     onChange={(e) => formik.setFieldValue('kode_cabang', e.value)}
-                    optionLabel="nama_hotel" 
+                    optionLabel="name" 
                     optionValue="kode_cabang"
                     placeholder="Pilih Cabang" 
                     disabled={state.cabangLoad}
