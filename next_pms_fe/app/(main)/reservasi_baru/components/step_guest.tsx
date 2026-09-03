@@ -5,7 +5,7 @@ import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
-import postData, { postDataNoAuth } from '@/lib/axios/postData';
+import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { apiGuestSearch, apiGuestCreate, apiCabangDropdown } from './endpoints';
 

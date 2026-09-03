@@ -137,7 +137,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                 <label>Jumlah Malam (Nights)</label>
                 <InputNumber 
                     value={formik.values.nights} 
-                    onValueChange={(e) => handleNightsChange(e.value)} 
+                    onValueChange={(e) => handleNightsChange(e.value ?? null)} 
                     min={1} 
                     showButtons
                 />

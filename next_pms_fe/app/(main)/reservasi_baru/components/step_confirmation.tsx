@@ -25,8 +25,8 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
         try {
             const payload = {
                 ...formik.values,
-                check_in_date: formatDateSystem(formik.values.check_in_date, 'yyyy-MM-dd'),
-                check_out_date: formatDateSystem(formik.values.check_out_date, 'yyyy-MM-dd')
+                check_in_date: formik.values.check_in_date ? formatDateSystem(formik.values.check_in_date, 'yyyy-MM-dd') : null,
+                check_out_date: formik.values.check_out_date ? formatDateSystem(formik.values.check_out_date, 'yyyy-MM-dd') : null
             };
             const res = await postData(apiWalkInSubmit, payload);
             showSuccess(toast, "Proses Walk-in berhasil!");
