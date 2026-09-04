@@ -23,6 +23,7 @@ import Master from "./master/index.js";
 import Contoh from "./contoh/index.js";
 import Function from "./components/index.js";
 import Reservasi from "./reservasi/index.js";
+import Kasir from "./kasir/index.js";
 
 import {
   contextMiddleware,
@@ -66,6 +67,13 @@ router.use(
   "/reservasi",
   [validateAccessToken, contextMiddleware],
   Reservasi
+);
+
+// Kasir
+router.use(
+  "/kasir",
+  [validateAccessToken, contextMiddleware],
+  Kasir
 );
 
 export default router;
