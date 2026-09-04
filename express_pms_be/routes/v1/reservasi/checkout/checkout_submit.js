@@ -220,26 +220,26 @@ router.post("/", async (req, res) => {
             updated_at: formatDateSystem()
         });
 
-      // 11. Update trx_folio
-      await trx("trx_folio")
-        .where("kode_folio", folio.kode_folio)
-        .update({
-            status: 'closed',
-            tax_amount: totalTaxAmount,
-            service_charge_amount: totalServiceCharge,
-            grand_total: grandTotal,
-            closed_at: formatDateSystem(),
-            updated_by: user_id,
-            updated_at: formatDateSystem()
-        });
-
       // 12. Cek trx_reservation apakah semua checked_out
       const allRoomsInRes = await trx("trx_reservation_room")
         .where("kode_reservation", resRoom.kode_reservation);
         
-      const allCheckedOut = allRoomsInRes.every(r => r.status === 'checked_out' || r.kode_reservation_room === resRoom.kode_reservation_room); // including the one we just checked out
+      const allCheckedOut = allRoomsInRes.every(r => r.status === 'checked_out');
       
       if (allCheckedOut) {
+          // 11. Update trx_folio
+          await trx("trx_folio")
+            .where("kode_folio", folio.kode_folio)
+            .update({
+                status: 'closed',
+                tax_amount: totalTaxAmount,
+                service_charge_amount: totalServiceCharge,
+                grand_total: grandTotal,
+                closed_at: formatDateSystem(),
+                updated_by: user_id,
+                updated_at: formatDateSystem()
+            });
+
           await trx("trx_reservation")
             .where("kode_reservasi", resRoom.kode_reservation)
             .update({
