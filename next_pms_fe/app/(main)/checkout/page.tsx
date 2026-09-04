@@ -171,7 +171,7 @@ const CheckoutPage = () => {
                         <Column field="current_grand_total" header="Tagihan Smtr" body={(rowData) => formatCurrency(rowData.current_grand_total)}></Column>
                         <Column 
                             header="Check In" 
-                            body={(rowData) => formatDateSystem(rowData.check_in_at, "dd-MM-yyyy HH:mm")}
+                            body={(rowData) => formatDateSystem(rowData.check_in_date, "dd-MM-yyyy HH:mm")}
                         ></Column>
                     </DataTable>
                 </div>
@@ -195,7 +195,7 @@ const CheckoutPage = () => {
                                 </div>
                                 <div className="flex justify-content-between mb-2">
                                     <span className="text-secondary">Tamu</span>
-                                    <span className="font-bold">{selectedRoom.guest_title} {selectedRoom.guest_name}</span>
+                                    <span className="font-bold">{selectedRoom.guest_name}</span>
                                 </div>
                                 <div className="flex justify-content-between mb-2">
                                     <span className="text-secondary">Folio</span>
