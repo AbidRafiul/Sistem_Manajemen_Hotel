@@ -20,7 +20,8 @@ export async function seed(knex) {
             { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
             { label: "Master Lantai", icon: "pi pi-fw pi-bars", to: "/master_lantai" },
             { label: "Corporate / Travel Agent", icon: "pi pi-fw pi-briefcase", to: "/master_corporate" },
-            { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" }
+            { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" },
+            { label: "Master Cashier Counter", icon: "pi pi-fw pi-desktop", to: "/master_cashier_counter" }
           ]
         },
         {
@@ -64,10 +65,18 @@ export async function seed(knex) {
       ]
     },
     {
+      label: "Kasir",
+      icon: "pi pi-fw pi-wallet",
+      items: [
+        { label: "Shift Kasir", icon: "pi pi-fw pi-clock", to: "/kasir_shift" }
+      ]
+    },
+    {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
-        { label: "Reservasi Baru", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" }
+        { label: "Reservasi Baru", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
+        { label: "Checkout", icon: "pi pi-fw pi-sign-out", to: "/checkout" }
       ]
     },
     {

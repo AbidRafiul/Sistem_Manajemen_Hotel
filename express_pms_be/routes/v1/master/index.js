@@ -20,6 +20,11 @@ import cabangDelete from "./cabang/cabang_delete.js";
 
 import cashierShiftDropdown from "./cashier_shift/cashier_shift_dropdown.js";
 
+import cashierCounterData from "./cashier_counter/cashier_counter_data.js";
+import cashierCounterCreate from "./cashier_counter/cashier_counter_create.js";
+import cashierCounterUpdate from "./cashier_counter/cashier_counter_update.js";
+import cashierCounterDelete from "./cashier_counter/cashier_counter_delete.js";
+
 import bedTypeData from "./bed_type/bed_type_data.js";
 import bedTypeCreate from "./bed_type/bed_type_create.js";
 import bedTypeUpdate from "./bed_type/bed_type_update.js";
@@ -214,6 +219,12 @@ router.use("/harga-ruang-event/harga-ruang-event-data", hargaRuangEventData);
 router.use("/harga-ruang-event/harga-ruang-event-create", hargaRuangEventCreate);
 router.use("/harga-ruang-event/harga-ruang-event-update", hargaRuangEventUpdate);
 router.use("/harga-ruang-event/harga-ruang-event-delete", hargaRuangEventDelete);
+
+// Master Cashier Counter
+router.use("/cashier-counter/cashier-counter-data", cashierCounterData);
+router.use("/cashier-counter/cashier-counter-create", cashierCounterCreate);
+router.use("/cashier-counter/cashier-counter-update", cashierCounterUpdate);
+router.use("/cashier-counter/cashier-counter-delete", cashierCounterDelete);
 
 // Cashier Shift Dropdown (shift yang sedang open)
 router.use("/cashier-shift/dropdown", cashierShiftDropdown);
