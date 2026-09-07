@@ -38,7 +38,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const userId = req.user_id || 1;
+        const userId = req?.auth?.user_id || null;
 
         const result = await db.transaction(async (trx) => {
             // 1. Validasi Reservasi Room
@@ -63,8 +63,8 @@ router.post("/", async (req, res) => {
             if (resRoom.status === 'checked_in') {
                 throw new Error("Kamar ini sudah di-check-in");
             }
-            if (resRoom.status === 'cancelled' || resRoom.status === 'no_show') {
-                throw new Error(`Kamar tidak bisa di-check-in karena status reservasi: ${resRoom.status}`);
+            if (resRoom.res_status === 'cancelled' || resRoom.res_status === 'no_show') {
+                throw new Error(`Kamar tidak bisa di-check-in karena status reservasi: ${resRoom.res_status}`);
             }
 
             // 2. Cek Blacklist

@@ -30,3 +30,8 @@ Thumbs.db
 .idea/
 .agents/
 run_dev.sh
+.env
+test_scenario.js
+package-lock.json
+test_direct.js
+test_checkout.js
