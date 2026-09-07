@@ -51,6 +51,7 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
     if (kode_kamar_manual) {
         kamarAvailable = await trx("mst_kamar")
             .where("kode_kamar", kode_kamar_manual)
+            .where("kode_tipe_kamar", resRoom.kode_tipe_kamar)
             .where("occupancy_status", "vacant")
             .where("housekeeping_status", "clean")
             .where("is_active", 1)

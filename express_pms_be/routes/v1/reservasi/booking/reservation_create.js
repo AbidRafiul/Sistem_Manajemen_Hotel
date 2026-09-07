@@ -52,7 +52,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const userId = req.user_id || 1; 
+        const userId = req?.auth?.user_id || null; 
 
         // 1. Validasi Guest & Cabang
         const guest = await db('mst_guest').where('kode_tamu', oPayload.kode_guest).whereNull('deleted_at').first();
