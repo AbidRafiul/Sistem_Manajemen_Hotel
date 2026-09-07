@@ -19,7 +19,14 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { JWT } from 'next-auth/jwt';
 import { refreshToken } from '@/lib/tools/serverTools'; // Pastikan path import ini benar
 
+const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+if (!secret) {
+    console.warn("⚠️ PERINGATAN: AUTH_SECRET belum didefinisikan di environment variables (.env). NextAuth v5 sangat merekomendasikan penggunaan AUTH_SECRET.");
+}
+
 const authOptions: NextAuthConfig = {
+    secret: secret,
     providers: [
         CredentialsProvider({
             name: 'credentials',
@@ -88,8 +95,8 @@ const authOptions: NextAuthConfig = {
                     token.access_token_expires = Math.floor(Date.now() / 1000) + expireDurationInSeconds - 120;
 
                     delete token.error; // Hapus flag error jika sukses diperbarui
-                } catch (error) {
-                    console.error("Gagal melakukan refresh token:", error);
+                } catch (error: any) {
+                    console.warn("Gagal melakukan refresh token:", error?.response?.data?.message || error.message);
                     token.error = "AccessTokenExpired"; // Set error agar di-logout oleh interceptor
                 }
             }
