@@ -159,6 +159,8 @@ router.post("/", async (req, res) => {
       datetime: formatDateSystem(),
     });
   } catch (error) {
+    console.error("Login Error:", error);
+    
     const oResult = {
       status: status.BAD_REQUEST,
       message: "Sistem sedang maintenance harap tunggu sebentar",
