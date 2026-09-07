@@ -15,6 +15,7 @@ import { Logging, validatePayload, ChangesLog } from "../../components/tools/ser
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
+import { processCheckIn } from "../../components/tools/checkin_helper.js";
 
 const router = express.Router();
 
@@ -117,32 +118,15 @@ router.post("/", async (req, res) => {
         const ratePerNight = rateInfo.price;
         const totalRoomCharge = ratePerNight * computedNights;
 
-        // b. Assign & Row-Lock Kamar
-        const kamarAvailable = await trx("mst_kamar")
-            .where("kode_kamar", oPayload.kode_kamar)
-            .where("occupancy_status", "vacant")
-            .where("housekeeping_status", "clean")
-            .where("is_active", 1)
-            .whereNull("deleted_at")
-            .forUpdate()
-            .first();
-        
-        if (!kamarAvailable) {
-            throw new Error("Kamar sudah tidak tersedia atau belum bersih. Silakan pilih kamar lain.");
-        }
-
-        // c. Generate IDs
+        // b. Generate IDs
         const noReservasi = await generateSequence("FMT-RESERVASI", trx);
         const noResRoom = await generateSequence("FMT-RESROOM", trx);
-        const noCheckin = await generateSequence("FMT-CHECKIN", trx);
-        const noFolio = await generateSequence("FMT-FOLIO", trx);
-        const noFolioCharge = await generateSequence("FMT-FOLIOCHARGE", trx);
         
-        if (!noReservasi || !noResRoom || !noCheckin || !noFolio || !noFolioCharge) {
-            throw new Error("Gagal membuat nomor transaksi");
+        if (!noReservasi || !noResRoom) {
+            throw new Error("Gagal membuat nomor transaksi reservasi");
         }
 
-        // d. Insert trx_reservation
+        // c. Insert trx_reservation
         const tNow = formatDateSystem();
         await trx("trx_reservation").insert({
             kode_cabang: oPayload.kode_cabang,
@@ -151,14 +135,14 @@ router.post("/", async (req, res) => {
             check_in_date: formatDateSystem(checkinDate, "yyyy-MM-dd"),
             check_out_date: formatDateSystem(checkoutDate, "yyyy-MM-dd"),
             deposit_amount: oPayload.deposit_amount,
-            status: "checked_in",
+            status: "reserved", // akan di-update oleh processCheckIn
             source_channel: "walk_in",
             booking_type: "walk_in",
             created_by: userId,
             created_at: tNow
         });
 
-        // e. Insert trx_reservation_room
+        // d. Insert trx_reservation_room
         await trx("trx_reservation_room").insert({
             kode_reservasi_room: noResRoom,
             kode_reservation: noReservasi,
@@ -167,62 +151,27 @@ router.post("/", async (req, res) => {
             kode_kamar: oPayload.kode_kamar,
             rate_per_night: ratePerNight,
             nights: computedNights,
-            status: "checked_in",
+            status: "booked", // akan di-update oleh processCheckIn
             created_by: userId,
             created_at: tNow
         });
 
-        // f. Insert trx_checkin
-        await trx("trx_checkin").insert({
-            kode_checkin: noCheckin,
-            kode_reservation_room: noResRoom,
-            early_checkin: 0,
-            checkin_by: userId,
-            checkin_at: tNow,
-            created_by: userId,
-            created_at: tNow
+        // e. Proses Check-in
+        const checkinData = await processCheckIn({
+            kode_reservasi_room: noResRoom,
+            trx: trx,
+            userId: userId,
+            kode_kamar_manual: oPayload.kode_kamar
         });
 
-        // g. Insert trx_folio
-        await trx("trx_folio").insert({
-            kode_cabang: oPayload.kode_cabang,
-            kode_folio: noFolio,
-            kode_reservation: noReservasi,
-            folio_owner_type: "guest",
-            status: "open",
-            subtotal: totalRoomCharge,
-            tax_amount: 0,
-            service_charge_amount: 0,
-            grand_total: totalRoomCharge,
-            created_by: userId,
-            created_at: tNow
-        });
-
-        // h. Insert trx_folio_charge
-        await trx("trx_folio_charge").insert({
-            kode_folio_charge: noFolioCharge,
-            kode_folio: noFolio,
-            charge_type: "room",
-            description: `Room Charge (${computedNights} night/s)`,
-            qty: computedNights,
-            unit_price: ratePerNight,
-            amount: totalRoomCharge,
-            ref_source_type: "trx_reservation_room",
-            kode_ref_source: noResRoom,
-            posted_by: userId,
-            posted_at: tNow,
-            created_by: userId,
-            created_at: tNow
-        });
-
-        // i. Insert trx_payment (Deposit)
+        // f. Insert trx_payment (Deposit)
         if (oPayload.deposit_amount > 0) {
             const noPayment = await generateSequence("FMT-PAYMENT", trx);
             if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
 
             await trx("trx_payment").insert({
                 kode_payment: noPayment,
-                kode_folio: noFolio,
+                kode_folio: checkinData.kode_folio,
                 payment_method: oPayload.payment_method,
                 amount: oPayload.deposit_amount,
                 kode_cashier_shift: oPayload.kode_cashier_shift,
@@ -233,22 +182,13 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // j. Update Kamar (occupancy_status)
-        await trx("mst_kamar")
-            .where("kode_kamar", oPayload.kode_kamar)
-            .update({
-                occupancy_status: "occupied",
-                updated_at: tNow,
-                updated_by: userId
-            });
-
         reservationData = {
             kode_reservasi: noReservasi,
             kode_reservasi_room: noResRoom,
-            kode_folio: noFolio,
-            kode_checkin: noCheckin,
-            nights: computedNights,
-            total_charge: totalRoomCharge
+            kode_folio: checkinData.kode_folio,
+            kode_checkin: checkinData.kode_checkin,
+            nights: checkinData.nights,
+            total_charge: checkinData.total_charge
         };
     });
 

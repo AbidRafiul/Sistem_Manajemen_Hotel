@@ -15,7 +15,7 @@ export interface ReservasiBaruState {
     guestList: any[];
     guestListLoad: boolean;
 
-    // Availability / Packages
+    // Availability
     packagesLoad: boolean;
     packagesOptions: any[];
     rateInfo: any | null;
@@ -45,7 +45,6 @@ export interface initValue {
     nights: number;
     kode_tipe_kamar: string;
     kode_rate_plan: string;
-    kode_kamar: string;
 
     // Step 3: Payment
     deposit_amount: number;

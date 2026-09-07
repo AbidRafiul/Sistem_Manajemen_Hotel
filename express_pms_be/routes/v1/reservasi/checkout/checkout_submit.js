@@ -131,7 +131,7 @@ router.post("/", async (req, res) => {
               }
            }
 
-           const payCode = await generateSequence("FMT-PAY", trx);
+           const payCode = await generateSequence("FMT-PAYMENT", trx);
            await trx("trx_payment").insert({
                kode_payment: payCode,
                kode_folio: folio.kode_folio,

@@ -75,7 +75,9 @@ export async function seed(knex) {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
-        { label: "Reservasi Baru", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
+        { label: "Walk-In Check-in", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
+        { label: "Booking Reservasi", icon: "pi pi-fw pi-calendar", to: "/reservasi_booking" },
+        { label: "Kedatangan (Arrivals)", icon: "pi pi-fw pi-sign-in", to: "/reservasi_checkin" },
         { label: "Checkout", icon: "pi pi-fw pi-sign-out", to: "/checkout" }
       ]
     },
