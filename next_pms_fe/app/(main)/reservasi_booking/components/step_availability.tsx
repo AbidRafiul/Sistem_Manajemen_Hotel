@@ -9,7 +9,6 @@ import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { apiRoomPackages } from './endpoints';
 import { formatDateSystem } from '@/lib/tools/dateTools';
-import { Dropdown } from 'primereact/dropdown';
 import { Card } from 'primereact/card';
 
 interface StepAvailabilityProps {
@@ -21,7 +20,6 @@ interface StepAvailabilityProps {
 
 const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, formik, toast }) => {
 
-    // Initial search if dates are prefilled
     useEffect(() => {
         if (formik.values.kode_cabang && formik.values.check_in_date && formik.values.check_out_date) {
             searchPackages();
@@ -35,10 +33,8 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
             const outDate = new Date(formik.values.check_in_date);
             outDate.setDate(outDate.getDate() + nights);
             formik.setFieldValue('check_out_date', outDate);
-            // Reset selection
             formik.setFieldValue('kode_tipe_kamar', '');
             formik.setFieldValue('kode_rate_plan', '');
-            formik.setFieldValue('kode_kamar', '');
             setState(p => ({ ...p, rateInfo: null, packagesOptions: [] }));
         }
     };
@@ -49,10 +45,8 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
             const outDate = new Date(date);
             outDate.setDate(outDate.getDate() + formik.values.nights);
             formik.setFieldValue('check_out_date', outDate);
-            // Reset selection
             formik.setFieldValue('kode_tipe_kamar', '');
             formik.setFieldValue('kode_rate_plan', '');
-            formik.setFieldValue('kode_kamar', '');
             setState(p => ({ ...p, rateInfo: null, packagesOptions: [] }));
         }
     };
@@ -67,7 +61,6 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
         setState(p => ({ ...p, packagesLoad: true, packagesOptions: [], rateInfo: null }));
         formik.setFieldValue('kode_tipe_kamar', '');
         formik.setFieldValue('kode_rate_plan', '');
-        formik.setFieldValue('kode_kamar', '');
 
         try {
             const res = await postData(apiRoomPackages, {
@@ -97,13 +90,11 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
     const selectPackage = (tk: any, pkg: any) => {
         formik.setFieldValue('kode_tipe_kamar', tk.kode_tipe_kamar);
         formik.setFieldValue('kode_rate_plan', pkg.kode_rate_plan);
-        formik.setFieldValue('kode_kamar', '');
         setState(p => ({
             ...p,
             rateInfo: {
                 ...pkg,
-                nama_tipe: tk.nama_tipe,
-                available_rooms: tk.available_rooms || []
+                nama_tipe: tk.nama_tipe
             }
         }));
         showSuccess(toast, `Dipilih: ${tk.nama_tipe} - ${pkg.nama_rate_plan}`);
@@ -204,32 +195,13 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
 
             {/* Summary Info (jika sudah milih) */}
             {state.rateInfo && (
-                <div className="col-12 mt-4 p-3 border-round border-1 surface-border bg-yellow-50 flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between">
+                <div className="col-12 mt-4 p-3 border-round border-1 surface-border bg-yellow-50 flex flex-column md:flex-row align-items-center justify-content-between">
                     <div>
                         <h6 className="m-0 mb-1">Paket Terpilih</h6>
                         <p className="m-0 text-sm">
                             <strong>{state.rateInfo.nama_tipe}</strong> - {state.rateInfo.nama_rate_plan} <br/>
                             Total ({formik.values.nights} malam): <strong>Rp {(state.rateInfo.total_price).toLocaleString('id-ID')}</strong><br/>
                         </p>
-                    </div>
-                    
-                    <div className="mt-3 md:mt-0 md:ml-4 flex-grow-1 max-w-20rem">
-                        <label className="font-bold text-sm block mb-1">Pilih Kamar <span className="text-red-500">*</span></label>
-                        <Dropdown 
-                            value={formik.values.kode_kamar} 
-                            options={state.rateInfo.available_rooms} 
-                            onChange={(e) => formik.setFieldValue('kode_kamar', e.value)}
-                            optionLabel="nomor_kamar" 
-                            optionValue="kode_kamar"
-                            placeholder="Pilih Kamar" 
-                            className={`w-full ${formik.errors.kode_kamar && formik.touched.kode_kamar ? 'p-invalid' : ''}`}
-                            itemTemplate={(option) => (
-                                <div>
-                                    {option.nomor_kamar} <small className="text-secondary">({option.tipe_pemandangan})</small>
-                                </div>
-                            )}
-                        />
-                        {formik.errors.kode_kamar && formik.touched.kode_kamar && <small className="p-error block mt-1">{formik.errors.kode_kamar}</small>}
                     </div>
                 </div>
             )}

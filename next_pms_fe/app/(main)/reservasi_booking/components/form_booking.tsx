@@ -14,16 +14,16 @@ import { Divider } from 'primereact/divider';
 import { Tag } from 'primereact/tag';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 
-interface FormWalkInProps {
+interface FormBookingProps {
     state: ReservasiBaruState;
     setState: React.Dispatch<React.SetStateAction<ReservasiBaruState>>;
     formik: FormikProps<initValue>;
     toast: React.RefObject<Toast>;
 }
 
-const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast }) => {
+const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toast }) => {
     const hasGuest = !!(formik.values.kode_guest || (state.foundGuest && !state.isGuestNew));
-    const hasRoom = !!(formik.values.kode_tipe_kamar && formik.values.kode_rate_plan && formik.values.kode_kamar);
+    const hasRoom = !!(formik.values.kode_tipe_kamar && formik.values.kode_rate_plan);
     const hasPaymentSetup = formik.values.deposit_amount === 0 || !!(formik.values.deposit_amount > 0 && formik.values.payment_method);
 
     const totalTagihan = (state.rateInfo?.price_per_night || 0) * formik.values.nights;
@@ -38,7 +38,7 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
 
     const getTabForField = (fieldName: string): number => {
         if (['kode_cabang', 'keyword_guest', 'full_name', 'id_number', 'phone'].includes(fieldName)) return 0;
-        if (['check_in_date', 'check_out_date', 'kode_tipe_kamar', 'kode_rate_plan', 'kode_kamar'].includes(fieldName)) return 1;
+        if (['check_in_date', 'check_out_date', 'kode_tipe_kamar', 'kode_rate_plan'].includes(fieldName)) return 1;
         if (['payment_method', 'kode_cashier_shift'].includes(fieldName)) return 2;
         return 0;
     };
@@ -51,10 +51,10 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                         <div className="flex flex-column">
                             <h3 className="text-2xl font-semibold flex align-items-center gap-2">
                                 <i className="pi pi-users text-blue-600 text-3xl"></i>
-                                Reservasi Baru (Walk-In)
+                                Booking Reservasi
                             </h3>
                             <p className="text-gray-500">
-                                Isi form di bawah ini untuk membuat reservasi tamu walk-in.
+                                Isi form di bawah ini untuk membuat reservasi tamu (booking).
                             </p>
                         </div>
                     </div>
@@ -136,8 +136,8 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                             <i className="pi pi-receipt" style={{ color: '#fff', fontSize: 16 }} />
                         </div>
                         <div>
-                            <div className="font-bold text-base">Ringkasan Walk-in</div>
-                            <div className="text-xs text-color-secondary">Reservasi Langsung</div>
+                            <div className="font-bold text-base">Ringkasan Booking</div>
+                            <div className="text-xs text-color-secondary">Reservasi Di Muka</div>
                         </div>
                     </div>
 
@@ -273,4 +273,4 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
     );
 };
 
-export default FormWalkIn;
+export default FormBooking;

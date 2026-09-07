@@ -45,26 +45,24 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
 
 
 
-    const totalTagihan = (state.rateInfo?.price_per_night || 0) * formik.values.nights;
-
     return (
         <div className="p-fluid formgrid grid">
-            <div className="col-12 mb-3">
-                <div className="p-3 bg-blue-50 border-round">
-                    <h6 className="m-0">Ringkasan Tagihan Kamar</h6>
-                    <p className="m-0 mt-2 text-xl font-bold">Rp {totalTagihan.toLocaleString('id-ID')}</p>
-                </div>
+            <div className="col-12 mt-3 mb-4 p-3 border-round border-1 surface-border bg-blue-50">
+                <h6 className="m-0 mb-2 text-blue-700">Total Biaya Kamar (Perkiraan)</h6>
+                <p className="m-0 text-xl font-bold text-blue-800">
+                    Rp {((state.rateInfo?.price_per_night || 0) * formik.values.nights).toLocaleString('id-ID')}
+                </p>
+                <small className="text-blue-600">Deposit opsional. Isi jika tamu membayar DP.</small>
             </div>
 
-            <div className="field col-12 md:col-4">
-                <label>Deposit Awal (Opsional)</label>
+            <div className="field col-12 md:col-6">
+                <label>Nominal Deposit (Opsional)</label>
                 <InputNumber 
                     value={formik.values.deposit_amount} 
-                    onValueChange={(e) => formik.setFieldValue('deposit_amount', e.value || 0)} 
+                    onValueChange={(e) => formik.setFieldValue('deposit_amount', e.value ?? 0)} 
                     mode="currency" 
                     currency="IDR" 
-                    locale="id-ID"
-                    min={0}
+                    locale="id-ID" 
                 />
             </div>
 

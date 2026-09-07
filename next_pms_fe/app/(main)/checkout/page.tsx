@@ -129,25 +129,36 @@ const CheckoutPage = () => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(val));
     };
 
+    const headerTemplate = (
+        <div className="flex flex-wrap align-items-center justify-content-between gap-3">
+            <div className="flex align-items-center flex-wrap gap-2 w-full">
+                <span className="p-input-icon-left w-full">
+                    <IconField iconPosition="left">
+                        <InputIcon className="pi pi-search" />
+                        <InputText
+                            value={searchKeyword}
+                            className="w-full text-sm"
+                            placeholder="Cari No Kamar atau Nama Tamu..."
+                            onChange={handleSearchChange}
+                        />
+                    </IconField>
+                </span>
+            </div>
+        </div>
+    );
+
     return (
         <div className="grid">
             <Toast ref={toast} />
             <div className="col-12 md:col-7">
                 <div className="card">
-                    <h5>Cari Kamar Checkout</h5>
-                    
-                    <div className="mb-4">
-                        <span className="p-input-icon-left w-full">
-                            <IconField iconPosition="left">
-                                <InputIcon className="pi pi-search" />
-                                <InputText
-                                    value={searchKeyword}
-                                    className="w-full"
-                                    placeholder="Cari No Kamar atau Nama Tamu..."
-                                    onChange={handleSearchChange}
-                                />
-                            </IconField>
-                        </span>
+                    <div className="flex justify-content-between items-start mb-4">
+                        <div className="flex flex-column">
+                            <h3 className="text-2xl font-semibold flex align-items-center gap-2">
+                                <i className="pi pi-sign-out text-blue-600 text-3xl"></i>Checkout Tamu
+                            </h3>
+                            <p className="text-gray-500">Pilih kamar yang akan di-checkout dan selesaikan pembayaran tagihan.</p>
+                        </div>
                     </div>
 
                     <DataTable
@@ -158,20 +169,21 @@ const CheckoutPage = () => {
                         selection={selectedRoom}
                         onSelectionChange={(e) => {
                             setSelectedRoom(e.value);
-                            setPaymentAmount(null); // reset form when selecting another room
+                            setPaymentAmount(null);
                         }}
                         dataKey="kode_reservasi_room"
                         paginator
                         rows={10}
-                        stripedRows
+                        stripedRows={false}
                         className="p-datatable-sm"
+                        header={headerTemplate}
                     >
                         <Column field="kode_kamar" header="Kamar" style={{ width: '15%' }}></Column>
                         <Column field="guest_name" header="Nama Tamu" style={{ width: '35%' }}></Column>
                         <Column field="current_grand_total" header="Tagihan Smtr" body={(rowData) => formatCurrency(rowData.current_grand_total)}></Column>
                         <Column 
                             header="Check In" 
-                            body={(rowData) => formatDateSystem(rowData.check_in_at, "dd-MM-yyyy HH:mm")}
+                            body={(rowData) => formatDateSystem(rowData.check_in_date, "dd-MM-yyyy HH:mm")}
                         ></Column>
                     </DataTable>
                 </div>
@@ -195,7 +207,7 @@ const CheckoutPage = () => {
                                 </div>
                                 <div className="flex justify-content-between mb-2">
                                     <span className="text-secondary">Tamu</span>
-                                    <span className="font-bold">{selectedRoom.guest_title} {selectedRoom.guest_name}</span>
+                                    <span className="font-bold">{selectedRoom.guest_name}</span>
                                 </div>
                                 <div className="flex justify-content-between mb-2">
                                     <span className="text-secondary">Folio</span>

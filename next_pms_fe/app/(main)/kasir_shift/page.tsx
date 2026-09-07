@@ -7,7 +7,6 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
 import { useFormik } from 'formik';
 import postData from '@/lib/axios/postData';
-import postDataNoAuth from '@/lib/axios/postDataNoAuth';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import { 

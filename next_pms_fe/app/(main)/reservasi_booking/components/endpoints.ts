@@ -1,9 +1,9 @@
-export const apiCheckAvailability = '/reservasi/kamar/availability';
+export const apiAvailabilityRange = '/reservasi/kamar/availability-range';
 export const apiRoomPackages = '/reservasi/kamar/room-packages';
 export const apiGuestSearch = '/reservasi/guest/guest-search';
 export const apiGuestList = '/reservasi/guest/guest-list';
 export const apiGuestCreate = '/reservasi/guest/guest-create';
-export const apiWalkInSubmit = '/reservasi/walk-in/walk-in-submit';
+export const apiSubmitBooking = '/reservasi/booking/reservation-create';
 
 // Dropdowns
 export const apiTipeKamarDropdown = '/master/tipe-kamar/tipe-kamar-data';

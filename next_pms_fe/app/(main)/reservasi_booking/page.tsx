@@ -3,8 +3,7 @@ import { Toast } from 'primereact/toast';
 import { useEffect, useRef, useState } from 'react';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
-import { getTzUser } from '@/lib/tools/dateTools';
-import FormWalkIn from './components/form_walk_in';
+import FormBooking from './components/form_booking';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
@@ -46,7 +45,6 @@ const Page = () => {
             nights: 1,
             kode_tipe_kamar: '',
             kode_rate_plan: '',
-            kode_kamar: '',
             deposit_amount: 0,
             payment_method: '',
             kode_cashier_shift: ''
@@ -69,7 +67,6 @@ const Page = () => {
                 if (!data.check_out_date) errors.check_out_date = 'Tanggal Check Out wajib diisi';
                 if (!data.kode_tipe_kamar) errors.kode_tipe_kamar = 'Tipe Kamar wajib dipilih';
                 if (!data.kode_rate_plan) errors.kode_rate_plan = 'Rate Plan wajib dipilih';
-                if (!data.kode_kamar) errors.kode_kamar = 'Kamar wajib dipilih';
                 if (!state.rateInfo) errors.kode_tipe_kamar = 'Pilih paket kamar yang tersedia';
             } else if (state.activeStep === 2) {
                 if (data.deposit_amount > 0) {
@@ -87,7 +84,7 @@ const Page = () => {
     return (
         <div className="p-0">
             <Toast ref={toast} position="top-right" />
-            <FormWalkIn state={state} setState={setState} formik={formik} toast={toast} />
+            <FormBooking state={state} setState={setState} formik={formik} toast={toast} />
         </div>
     );
 };

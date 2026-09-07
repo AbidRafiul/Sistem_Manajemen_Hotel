@@ -73,7 +73,7 @@ router.post("/", async (req, res) => {
       // Keamanan opsional: pastikan shift ini milik user yang sedang login, atau berhak (misal admin bisa nutup paksa).
       // Untuk sederhananya kita asumsikan user_id match.
       if (existingShift.user_id !== user_id) {
-        // Bisa dilewati kalau role admin
+        throw new Error("Anda tidak berhak menutup shift milik user lain");
       }
 
       // 2. Hitung total cash dari payment (jika ada deposit, dll yang masuk ke trx_payment dgn cash)
@@ -127,7 +127,7 @@ router.post("/", async (req, res) => {
     
     return res.status(500).json({
       status: status.GAGAL,
-      message: ["Shift tidak ditemukan", "Shift ini sudah ditutup sebelumnya"].includes(error.message) ? error.message : "Terjadi kesalahan sistem.",
+      message: ["Shift tidak ditemukan", "Shift ini sudah ditutup sebelumnya", "Anda tidak berhak menutup shift milik user lain"].includes(error.message) ? error.message : "Terjadi kesalahan sistem.",
       datetime: formatDateSystem(),
       data: null,
     });
