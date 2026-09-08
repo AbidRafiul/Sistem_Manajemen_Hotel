@@ -61,7 +61,7 @@ const routeMiddleware = async (searchUrl: string) => {
 
     // console.log('ini ses', session)
 
-    if (!session?.user) {
+    if (!session?.user || session?.error === 'AccessTokenExpired') {
         return '99';
     }
 

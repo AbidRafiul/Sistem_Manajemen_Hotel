@@ -11,7 +11,7 @@ export async function middleware(req: NextRequest) {
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   });
 
-  const isLoggedIn = !!token;
+  const isLoggedIn = !!token && token.error !== "AccessTokenExpired";
 
   const publicPaths = ['/auth/login', '/auth/register'];
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
@@ -33,12 +33,22 @@ export async function middleware(req: NextRequest) {
 
   // 2. Kondisi jika user belum login
   if (!isLoggedIn) {
+    let response;
+    
     if (isPublicPath) {
-      return NextResponse.next();
+      response = NextResponse.next();
+    } else {
+      // Blokir akses ke rute terproteksi lainnya dan arahkan ke halaman login
+      response = NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
-    // Blokir akses ke rute terproteksi lainnya dan arahkan ke halaman login
-    return NextResponse.redirect(new URL("/auth/login", req.url));
+    // Jika token ada di browser tapi invalid (misal error kadaluarsa), paksa hapus cookie-nya
+    if (token) {
+      const cookieName = process.env.NODE_ENV === 'production' ? `__Secure-next-auth.session-token` : `next-auth.session-token`;
+      response.cookies.delete(cookieName);
+    }
+
+    return response;
   }
 
   return NextResponse.next();
