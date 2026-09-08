@@ -137,12 +137,12 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
 
     const tableHeader = () => {
         return (
-            <div className="flex justify-content-between align-items-center">
-                <span className="p-input-icon-left w-full md:w-auto">
+            <div className="flex flex-wrap justify-content-between align-items-center gap-2">
+                <span className="p-input-icon-left w-full md:w-20rem">
                     <i className="pi pi-search" />
                     <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Cari nama, No KTP/Telp..." className="w-full" />
                 </span>
-                <Button label="Tamu Baru" icon="pi pi-user-plus" severity="success" onClick={handleNewGuest} />
+                <Button label="Tamu Baru" icon="pi pi-user-plus" severity="success" onClick={handleNewGuest} className="w-full md:w-auto" />
             </div>
         );
     };
