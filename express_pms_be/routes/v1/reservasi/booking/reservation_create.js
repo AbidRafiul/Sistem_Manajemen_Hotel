@@ -14,6 +14,7 @@ import { status } from "../../components/tools/general.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
+import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
 
 import express from "express";
 
@@ -81,25 +82,14 @@ router.post("/", async (req, res) => {
             const checkinDateStr = formatDateSystem(cin, "yyyy-MM-dd");
             const checkoutDateStr = formatDateSystem(cout, "yyyy-MM-dd");
             
-            const totalKamarResult = await trx('mst_kamar')
-                .where('kode_tipe_kamar', oPayload.kode_tipe_kamar)
-                .where('kode_cabang', oPayload.kode_cabang)
-                .where('is_active', 1)
-                .whereNull('deleted_at')
-                .count('* as total');
-            const totalKamar = parseInt(totalKamarResult[0].total) || 0;
+            const { available_count } = await hitungKetersediaanTipeKamar({
+                kode_cabang: oPayload.kode_cabang,
+                kode_tipe_kamar: oPayload.kode_tipe_kamar,
+                check_in_date: cin,
+                check_out_date: cout
+            }, trx);
 
-            const overlapResult = await trx('trx_reservation_room as rr')
-                .join('trx_reservation as r', 'rr.kode_reservation', 'r.kode_reservasi')
-                .where('rr.kode_tipe_kamar', oPayload.kode_tipe_kamar)
-                .whereIn('rr.status', ['booked', 'reserved', 'confirmed', 'checked_in'])
-                .whereIn('r.status', ['reserved', 'confirmed', 'checked_in'])
-                .where('r.check_in_date', '<', checkoutDateStr)
-                .where('r.check_out_date', '>', checkinDateStr)
-                .count('* as terpakai');
-            const terpakai = parseInt(overlapResult[0].terpakai) || 0;
-
-            if (totalKamar - terpakai <= 0) {
+            if (available_count <= 0) {
                 throw new Error("Tipe kamar ini sudah penuh pada rentang tanggal tersebut.");
             }
 

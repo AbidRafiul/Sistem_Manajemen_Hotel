@@ -13,6 +13,7 @@ import DB from "../../../../core/config/knex.js";
 import { status } from "../../components/tools/general.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
 
 import express from "express";
 
@@ -44,38 +45,23 @@ router.post("/", async (req, res) => {
         const checkoutDateStr = formatDateSystem(oPayload.check_out_date, "yyyy-MM-dd");
 
         const result = await db.transaction(async (trx) => {
-            // 1. Total Kamar Aktif untuk tipe dan cabang ini
-            const totalKamarResult = await trx('mst_kamar')
-                .where('kode_tipe_kamar', oPayload.kode_tipe_kamar)
-                .where('kode_cabang', oPayload.kode_cabang)
-                .where('is_active', 1)
-                .whereNull('deleted_at')
-                .count('* as total');
-            
-            const totalKamar = parseInt(totalKamarResult[0].total) || 0;
+            const cin = new Date(oPayload.check_in_date);
+            const cout = new Date(oPayload.check_out_date);
 
-            if (totalKamar === 0) {
+            const { available_count, total } = await hitungKetersediaanTipeKamar({
+                kode_cabang: oPayload.kode_cabang,
+                kode_tipe_kamar: oPayload.kode_tipe_kamar,
+                check_in_date: cin,
+                check_out_date: cout
+            }, trx);
+
+            if (total === 0) {
                 return { available_count: 0, price_preview: null };
             }
-
-            // 2. Kamar yang overlap / sudah terpakai
-            const overlapResult = await trx('trx_reservation_room as rr')
-                .join('trx_reservation as r', 'rr.kode_reservation', 'r.kode_reservasi')
-                .where('rr.kode_tipe_kamar', oPayload.kode_tipe_kamar)
-                .whereIn('rr.status', ['booked', 'reserved', 'confirmed', 'checked_in'])
-                .whereIn('r.status', ['reserved', 'confirmed', 'checked_in'])
-                .where('r.check_in_date', '<', checkoutDateStr)
-                .where('r.check_out_date', '>', checkinDateStr)
-                .count('* as terpakai');
-
-            const terpakai = parseInt(overlapResult[0].terpakai) || 0;
-            const available_count = Math.max(0, totalKamar - terpakai);
 
             // 3. Price Preview (jika requested)
             let price_preview = null;
             if (oPayload.kode_rate_plan) {
-                const cin = new Date(oPayload.check_in_date);
-                const cout = new Date(oPayload.check_out_date);
                 const nights = Math.max(1, Math.round((cout - cin) / (1000 * 60 * 60 * 24)));
 
                 const rateInfo = await hitungHargaKamar({
