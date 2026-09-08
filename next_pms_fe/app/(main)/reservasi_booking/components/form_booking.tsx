@@ -238,9 +238,9 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                             className="flex justify-content-between mt-2 pt-2"
                             style={{ borderTop: '2px solid var(--primary-color)' }}
                         >
-                            <span className="font-bold">Total Tagihan</span>
+                            <span className="font-bold">{formik.values.deposit_amount > 0 ? 'Sisa Tagihan' : 'Total Tagihan'}</span>
                             <span className="font-bold text-primary text-lg">
-                                Rp {totalTagihan.toLocaleString('id-ID')}
+                                Rp {Math.max(0, totalTagihan - (formik.values.deposit_amount || 0)).toLocaleString('id-ID')}
                             </span>
                         </div>
                     </div>
