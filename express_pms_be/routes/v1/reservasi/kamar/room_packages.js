@@ -68,8 +68,7 @@ router.post("/", async (req, res) => {
             const mstKamar = await trx('mst_kamar')
                 .where('kode_cabang', oPayload.kode_cabang)
                 .where('is_active', 1)
-                .where('occupancy_status', 'vacant')
-                .where('housekeeping_status', 'clean')
+                .where('occupancy_status', '!=', 'blocked')
                 .whereNull('deleted_at')
                 .select('kode_kamar', 'nomor_kamar', 'kode_tipe_kamar', 'tipe_pemandangan');
 
