@@ -13,6 +13,7 @@ import DB from "../../../../core/config/knex.js";
 import { status } from "../../components/tools/general.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
 
 import express from "express";
 
@@ -61,37 +62,7 @@ router.post("/", async (req, res) => {
                 .whereNull('deleted_at')
                 .select('kode_paket_harga as kode_rate_plan', 'nama_paket as nama_rate_plan', 'tipe_markup', 'nilai_markup');
 
-            // 3. Hitung ketersediaan kamar secara bulk
-            // 3a. Total kamar per tipe
-            const totalKamarResult = await trx('mst_kamar')
-                .where('kode_cabang', oPayload.kode_cabang)
-                .where('is_active', 1)
-                .whereNull('deleted_at')
-                .select('kode_tipe_kamar')
-                .count('* as total')
-                .groupBy('kode_tipe_kamar');
-            
-            const totalKamarMap = {};
-            totalKamarResult.forEach(row => {
-                totalKamarMap[row.kode_tipe_kamar] = parseInt(row.total) || 0;
-            });
-
-            // 3b. Kamar yang terpakai per tipe
-            const terpakaiResult = await trx('trx_reservation_room as rr')
-                .join('trx_reservation as r', 'rr.kode_reservation', 'r.kode_reservasi')
-                .whereIn('rr.status', ['booked', 'reserved', 'confirmed', 'checked_in'])
-                .whereIn('r.status', ['reserved', 'confirmed', 'checked_in'])
-                .where('r.check_in_date', '<', checkoutDateStr)
-                .where('r.check_out_date', '>', checkinDateStr)
-                .where('r.kode_cabang', oPayload.kode_cabang)
-                .select('rr.kode_tipe_kamar', 'rr.kode_kamar');
-
-            const terpakaiMap = {};
-            const terpakaiKamarIds = [];
-            terpakaiResult.forEach(row => {
-                terpakaiMap[row.kode_tipe_kamar] = (terpakaiMap[row.kode_tipe_kamar] || 0) + 1;
-                if (row.kode_kamar) terpakaiKamarIds.push(row.kode_kamar);
-            });
+            // Bulk logic dihapus, dipindah ke helper dalam loop
 
             // Ambil detail fisik kamar
             const mstKamar = await trx('mst_kamar')
@@ -106,14 +77,19 @@ router.post("/", async (req, res) => {
 
             // 4. Generate kombinasi (Tipe Kamar x Rate Plan)
             for (const tk of tipeKamars) {
-                const total = totalKamarMap[tk.kode_tipe_kamar] || 0;
-                const terpakai = terpakaiMap[tk.kode_tipe_kamar] || 0;
-                const available_count = Math.max(0, total - terpakai);
+                const ketersediaan = await hitungKetersediaanTipeKamar({
+                    kode_cabang: oPayload.kode_cabang,
+                    kode_tipe_kamar: tk.kode_tipe_kamar,
+                    check_in_date: cin,
+                    check_out_date: cout
+                }, trx);
+                
+                const available_count = ketersediaan.available_count;
                 
                 // Cari fisik kamar yang tersedia
                 const available_rooms = mstKamar.filter(k => 
                     k.kode_tipe_kamar === tk.kode_tipe_kamar && 
-                    !terpakaiKamarIds.includes(k.kode_kamar)
+                    !ketersediaan.terpakai_kamar_ids.includes(k.kode_kamar)
                 );
 
                 // Buat item master Tipe Kamar

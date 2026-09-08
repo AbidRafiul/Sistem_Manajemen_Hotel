@@ -27,9 +27,9 @@ router.post("/", async (req, res) => {
     let query = DB("trx_reservation_room as rr")
       .select(
         "rr.kode_reservasi_room",
-        "rr.kode_reservasi_room",
         "rr.kode_reservation",
         "rr.kode_kamar",
+        "mk.nomor_kamar",
         "g.full_name as guest_name",
         "r.check_in_date",
         "r.check_out_date",
@@ -39,12 +39,14 @@ router.post("/", async (req, res) => {
       .join("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
       .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
       .join("trx_folio as f", "rr.kode_reservation", "f.kode_reservation")
+      .join("mst_kamar as mk", "rr.kode_kamar", "mk.kode_kamar")
       .where("rr.status", "checked_in");
 
     if (oPayload.keyword) {
       const kw = `%${oPayload.keyword}%`;
       query.andWhere((q) => {
         q.where("rr.kode_kamar", "like", kw)
+          .orWhere("mk.nomor_kamar", "like", kw)
           .orWhere("g.full_name", "like", kw)
           .orWhere("rr.kode_reservasi_room", "like", kw)
           .orWhere("r.kode_reservasi", "like", kw);

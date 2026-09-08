@@ -178,7 +178,7 @@ const CheckoutPage = () => {
                         className="p-datatable-sm"
                         header={headerTemplate}
                     >
-                        <Column field="kode_kamar" header="Kamar" style={{ width: '15%' }}></Column>
+                        <Column field="nomor_kamar" header="Kamar" style={{ width: '15%' }}></Column>
                         <Column field="guest_name" header="Nama Tamu" style={{ width: '35%' }}></Column>
                         <Column field="current_grand_total" header="Tagihan Smtr" body={(rowData) => formatCurrency(rowData.current_grand_total)}></Column>
                         <Column 
@@ -203,7 +203,7 @@ const CheckoutPage = () => {
                             <div className="surface-100 p-3 border-round mb-2">
                                 <div className="flex justify-content-between mb-2">
                                     <span className="text-secondary">Kamar</span>
-                                    <span className="font-bold">{selectedRoom.kode_kamar}</span>
+                                    <span className="font-bold">{selectedRoom.nomor_kamar}</span>
                                 </div>
                                 <div className="flex justify-content-between mb-2">
                                     <span className="text-secondary">Tamu</span>
