@@ -61,6 +61,7 @@ router.post("/", async (req, res) => {
       "r.kode_lantai",
       "r.kode_tipe_kamar",
       "r.kode_kamar",
+      "r.nomor_kamar",
       "r.nomor_kamar as name",
       "r.tipe_pemandangan as tipe_view",
       "r.catatan",
