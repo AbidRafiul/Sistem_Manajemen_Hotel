@@ -145,11 +145,16 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         {state.packagesOptions.map((tk: any, i: number) => (
                             <div key={i} className="col-12 lg:col-6 xl:col-4">
                                 <Card className="h-full shadow-2 hover:shadow-4 transition-all transition-duration-200">
-                                    <div className="flex justify-content-between align-items-center mb-3">
+                                    <div className="flex justify-content-between align-items-start mb-1">
                                         <h5 className="m-0 text-primary">{tk.nama_tipe}</h5>
-                                        <span className={`badge ${tk.available_count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} px-2 py-1 border-round text-sm font-bold`}>
-                                            Sisa {tk.available_count}
-                                        </span>
+                                        <div className="flex flex-column align-items-end">
+                                            <span className={`badge ${tk.available_count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} px-2 py-1 border-round text-sm font-bold`}>
+                                                Sisa {tk.available_count}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right text-500 mb-3" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>
+                                        *Sisa kamar berlaku untuk semua paket harga di bawah ini
                                     </div>
                                     <div className="text-sm text-secondary mb-3 flex gap-3">
                                         <span><i className="pi pi-users mr-1"></i>{tk.kapasitas_dasar} Pax</span>

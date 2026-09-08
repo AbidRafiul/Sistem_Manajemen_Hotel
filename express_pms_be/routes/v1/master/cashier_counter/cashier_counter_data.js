@@ -80,8 +80,8 @@ router.post("/", async (req, res) => {
 
       const vaData = result.map((row) => ({
         ...row,
-        created_at: formatDateSystem(row.created_at),
-        updated_at: formatDateSystem(row.updated_at),
+        created_at: row.created_at ? formatDateSystem(row.created_at) : null,
+        updated_at: row.updated_at ? formatDateSystem(row.updated_at) : null,
       }));
 
       return res.status(200).json({
@@ -101,8 +101,8 @@ router.post("/", async (req, res) => {
 
       const vaData = result.map((row) => ({
         ...row,
-        created_at: formatDateSystem(row.created_at),
-        updated_at: formatDateSystem(row.updated_at),
+        created_at: row.created_at ? formatDateSystem(row.created_at) : null,
+        updated_at: row.updated_at ? formatDateSystem(row.updated_at) : null,
       }));
 
       return res.status(200).json({
