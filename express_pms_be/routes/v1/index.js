@@ -24,6 +24,7 @@ import Contoh from "./contoh/index.js";
 import Function from "./components/index.js";
 import Reservasi from "./reservasi/index.js";
 import Kasir from "./kasir/index.js";
+import Housekeeping from "./housekeeping/index.js";
 
 import {
   contextMiddleware,
@@ -74,6 +75,13 @@ router.use(
   "/kasir",
   [validateAccessToken, contextMiddleware],
   Kasir
+);
+
+// Housekeeping
+router.use(
+  "/housekeeping",
+  [validateAccessToken, contextMiddleware],
+  Housekeeping
 );
 
 export default router;

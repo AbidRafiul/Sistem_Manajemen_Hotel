@@ -37,7 +37,29 @@ export const generateSequence = async (kode_penomoran, trx = DB) => {
         await trx("sys_format_penomoran").insert(record);
     }
 
-    const nextNumber = parseInt(record.nomor_terakhir || 0, 10) + 1;
+    let nextNumber = parseInt(record.nomor_terakhir || 0, 10) + 1;
+
+    // Proteksi tabrakan data: pastikan candidateCode belum digunakan di tabel target
+    if (record.nama_tabel) {
+        const checkCol = record.nama_tabel === "mst_guest" ? "kode_tamu" 
+                      : record.nama_tabel === "trx_reservation_room" ? "kode_reservasi_room"
+                      : record.nama_tabel === "trx_reservation" ? "kode_reservasi"
+                      : `kode_${record.nama_tabel.replace(/^(mst_|trx_)/, "")}`;
+
+        try {
+            const hasCol = await trx.schema.hasColumn(record.nama_tabel, checkCol).catch(() => false);
+            if (hasCol) {
+                while (true) {
+                    const candidateCode = `${record.prefix}${String(nextNumber).padStart(record.panjang_digit, '0')}`;
+                    const exists = await trx(record.nama_tabel).where(checkCol, candidateCode).first();
+                    if (!exists) break;
+                    nextNumber++;
+                }
+            }
+        } catch (e) {
+            // fallback
+        }
+    }
     
     // Update nomor terakhir ke database
     await trx("sys_format_penomoran")
