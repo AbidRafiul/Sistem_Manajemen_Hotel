@@ -21,15 +21,13 @@ import { Toast } from "primereact/toast";
 import { useEffect, useRef, useState } from "react";
 import { showError, showSuccess } from "@/lib/tools/generalTools";
 import { useFormik } from "formik";
-import { initValue, NavState, State } from "./components/interfaces";
+import { initValue, State } from "./components/interfaces";
 import Table from "./components/display/table";
 import { FilterMatchMode } from "primereact/api";
 import Form from "./components/display/form";
 import { useSession } from "next-auth/react";
 import { DataRekap } from "@/types/print-tools";
 import Print from "./components/display/print";
-import { apiEndpointGetNavDataEdit, apiEndpointUpdateNav } from "./components/endpoints";
-import NavForm from "./components/display/navbar";
 
 const Page = () => {
     const toast = useRef<Toast>(null)
@@ -64,14 +62,6 @@ const Page = () => {
         judul1: 'Laporan USER',
         judul2: ''
     });
-
-    const [navBar, setNavBar] = useState<NavState>({
-        data: [],
-        menu: [],
-        user_code: "",
-        load: false,
-        show: false,
-    })
 
     const formik = useFormik({
         initialValues: {
@@ -158,57 +148,6 @@ const Page = () => {
         }
     }
 
-    const getNav = async (user_code: string) => {
-        setNavBar((p) => ({ ...p, load: true }));
-
-        try {
-            const headers = {
-                'X-Level': '1',
-            };
-            const vaData = await postData(apiEndpointGetNavDataEdit, { user_code: user_code }, headers);
-            let res = vaData.data;
-            console.log(res);
-            setNavBar((p) => ({
-                ...p,
-                data: JSON.parse(JSON.stringify(res.data)),
-                menu: JSON.parse(JSON.stringify(res.menu)),
-                user_code,
-                show: true
-            }));
-        } catch (error: any) {
-            console.log(error);
-            const e = error?.response?.data || error;
-            showError(toast, e?.message || 'Terjadi Kesalahan');
-        } finally {
-            setNavBar((p) => ({ ...p, load: false }));
-        }
-    };
-
-    const handleSaveNavbar = async () => {
-        setNavBar((p) => ({ ...p, load: true }));
-
-        try {
-            console.log(navBar.menu)
-            const res = await postData(
-                apiEndpointUpdateNav,
-                {
-                    user_code: navBar.user_code,
-                    menu: JSON.stringify(navBar.menu),
-                },
-
-            );
-            showSuccess(toast, res.data.message);
-            setNavBar((p) => ({ ...p, show: false, }));
-        } catch (error: any) {
-            console.log(error);
-            const e = error?.response?.data || error;
-            showError(toast, e?.message || 'Terjadi Kesalahan');
-        } finally {
-            setNavBar((p) => ({ ...p, load: false }));
-        }
-    }
-
-
     useEffect(() => {
         if (session) {
             setState((prev) => ({
@@ -218,25 +157,12 @@ const Page = () => {
         }
     }, [session]);
 
-
-
     return <>
         <div className="p-4">
             <Toast ref={toast} position="top-right" />
 
-            {/* <input
-                type="file"
-                ref={fileInputRef}
-                accept=".xlsx,.xls"
-                onChange={handleImport}
-                style={{ display: "none" }}
-            /> */}
-
-
-            <Table getNav={getNav} dataRekap={dataRekap} setDataRekap={setDataRekap} state={state} toast={toast} setState={setState} formik={formik} getData={getData} />
+            <Table dataRekap={dataRekap} setDataRekap={setDataRekap} state={state} toast={toast} setState={setState} formik={formik} getData={getData} />
             <Print dataRekap={dataRekap} setDataRekap={setDataRekap} state={state} toast={toast} setState={setState} formik={formik} getData={getData} />
-            <NavForm navBar={navBar} setNavBar={setNavBar} handleSaveNavbar={handleSaveNavbar} />
-
         </div>
     </>
 }

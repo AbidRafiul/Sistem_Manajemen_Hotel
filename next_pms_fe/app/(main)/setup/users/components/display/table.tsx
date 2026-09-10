@@ -43,10 +43,7 @@ const Table = ({
     formik,
     getData,
     toast,
-    setDataRekap,
-    setNavBar,
-    navBar,
-    getNav
+    setDataRekap
 }: TableProps) => {
 
     const op = useRef<OverlayPanel>(null);

@@ -121,20 +121,5 @@ export async function seed(knex) {
       });
     }
   }
-
-  // 2. Seed ke user_navigation untuk user_code USR000000 (superadmin default)
-  const existingUserNav = await knex("user_navigation").where("user_code", "USR000000").first();
-  if (existingUserNav) {
-    await knex("user_navigation").where("user_code", "USR000000").update({
-      menu: menuString,
-      updated_at: now
-    });
-  } else {
-    await knex("user_navigation").insert({
-      user_code: "USR000000",
-      menu: menuString,
-      created_at: now,
-      updated_at: now
-    });
-  }
 }
+

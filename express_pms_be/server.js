@@ -16,8 +16,20 @@
 
 
 import app from "./app.js";
+import DB from "./core/config/knex.js";
 
 const port = process.env.PORT || process.env.APP_PORT || 8010;
+
+// Cleanup deprecated user_navigation table if still present
+DB.schema.hasTable("user_navigation").then((exists) => {
+  if (exists) {
+    DB.schema.dropTable("user_navigation").then(() => {
+      console.log("✅ Deprecated table user_navigation dropped successfully.");
+    }).catch((err) => {
+      console.error("Warning: failed to drop user_navigation table:", err.message);
+    });
+  }
+}).catch(() => {});
 
 app
   .listen(port, () => {

@@ -58,10 +58,10 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // Cari menu di mst_navigation berdasarkan role
+        // Cari menu di mst_navigation berdasarkan role (case-insensitive)
         const oNavigation = await DB('mst_navigation')
             .select('menu')
-            .where('role', oUser.role)
+            .whereRaw('LOWER(role) = LOWER(?)', [oUser.role])
             .first();
 
         if (!oNavigation?.menu) {
