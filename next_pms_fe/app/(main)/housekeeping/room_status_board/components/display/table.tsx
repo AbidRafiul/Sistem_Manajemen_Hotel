@@ -185,6 +185,15 @@ const Table = ({ state, setState, toast, getData }: TableProps) => {
                         onClick={() => setState((p) => ({ ...p, cancelDialogVisible: true, selectedRoom: rowData }))}
                     />
                 )}
+
+                <Button 
+                    icon="pi pi-history" 
+                    size="small"
+                    outlined
+                    severity="secondary"
+                    tooltip="Riwayat Pembersihan"
+                    onClick={() => setState((p) => ({ ...p, historyDialogVisible: true, historyRoom: rowData }))}
+                />
             </div>
         );
     };
@@ -216,7 +225,14 @@ const Table = ({ state, setState, toast, getData }: TableProps) => {
                     />
                 </span>
             </div>
-            <div>
+            <div className="flex gap-2">
+                <Button 
+                    label="Riwayat Pembersihan" 
+                    icon="pi pi-history" 
+                    severity="info" 
+                    outlined
+                    onClick={() => setState((p) => ({ ...p, historyDialogVisible: true, historyRoom: null }))}
+                />
                 <ToggleButton 
                     checked={!!state.filters.ready_to_sell?.value} 
                     onChange={toggleReadyToSell} 

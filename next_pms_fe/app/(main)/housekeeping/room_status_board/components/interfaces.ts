@@ -28,6 +28,31 @@ export interface State {
     actionDialogVisible: boolean;
     cancelDialogVisible: boolean;
     selectedRoom: RoomStatusData | null;
+    historyDialogVisible?: boolean;
+    historyRoom?: RoomStatusData | null;
+}
+
+export interface HousekeepingHistoryItem {
+    id: number;
+    kode_housekeeping_task: string;
+    kode_cabang: string;
+    kode_kamar: string;
+    nomor_kamar: string;
+    nama_tipe_kamar: string;
+    task_type: string;
+    assigned_to: number;
+    assigned_to_name: string;
+    priority: string;
+    status: string;
+    started_at: string | null;
+    finished_at: string | null;
+    approved_at: string | null;
+    supervisor_id: number | null;
+    supervisor_name: string | null;
+    cancel_reason: string | null;
+    created_at: string;
+    updated_at: string;
+    duration_minutes: number | null;
 }
 
 export interface TableProps {
@@ -42,4 +67,11 @@ export interface ActionDialogProps {
     setState: React.Dispatch<React.SetStateAction<State>>;
     toast: RefObject<Toast>;
     getData: () => Promise<void>;
+}
+
+export interface HistoryDialogProps {
+    visible: boolean;
+    onHide: () => void;
+    kodeCabang: string;
+    selectedRoom?: RoomStatusData | null;
 }

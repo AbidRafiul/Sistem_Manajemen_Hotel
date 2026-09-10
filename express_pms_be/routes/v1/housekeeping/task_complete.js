@@ -50,12 +50,14 @@ const handleComplete = async (req, res) => {
       .first();
 
     await DB.transaction(async (trx) => {
-      // 1. Update status task menjadi finished
+      const tNow = formatDateSystem();
+      // 1. Update status task menjadi finished dan catat jam selesai pembersihan
       await trx("trx_housekeeping_task")
         .where("kode_housekeeping_task", id)
         .update({
           status: 'finished',
-          updated_at: formatDateSystem(),
+          finished_at: tNow,
+          updated_at: tNow,
           updated_by: user_id,
         });
 
@@ -64,9 +66,9 @@ const handleComplete = async (req, res) => {
           tableName: "trx_housekeeping_task",
           action: "UPDATE",
           referenceCode: existing.kode_housekeeping_task,
-          description: "Penyelesaian tugas pembersihan housekeeping",
+          description: `Penyelesaian tugas pembersihan housekeeping pada ${tNow}`,
           dataBefore: existing,
-          dataAfter: { ...existing, status: 'finished' },
+          dataAfter: { ...existing, status: 'finished', finished_at: tNow },
           user: user_id ? String(user_id) : "system",
         },
         trx

@@ -15,6 +15,7 @@ import Joi from "joi";
 import DB from "../../../core/config/knex.js";
 import { validatePayload, ChangesLog } from "../components/tools/servertool.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
+import { findIdleHousekeeper } from "../components/tools/housekeeping_helper.js";
 
 const router = express.Router();
 
@@ -26,11 +27,11 @@ const handleAssign = async (req, res) => {
   try {
     const cValidation = await validatePayload(
       {
-        assigned_to: Joi.number().required().label("Ditugaskan Kepada"),
+        assigned_to: Joi.number().optional().allow(null, "").label("Ditugaskan Kepada"),
+        auto_assign: Joi.boolean().optional().label("Auto Assign"),
       },
       {
         "number.base": "{#label} harus berupa angka",
-        "any.required": "{#label} wajib diisi",
       },
       oPayload,
       { allowUnknown: true }
@@ -80,11 +81,30 @@ const handleAssign = async (req, res) => {
         });
     }
 
+    let targetUserId = oPayload.assigned_to;
+    let targetUserName = "";
+
+    if (oPayload.auto_assign || !targetUserId) {
+        const idle = await findIdleHousekeeper(existing.kode_cabang, DB);
+        if (!idle) {
+            return res.status(400).json({
+                status: status.BAD_REQUEST,
+                message: "Tidak ada petugas housekeeping yang tersedia untuk ditugaskan otomatis.",
+                datetime: formatDateSystem(),
+            });
+        }
+        targetUserId = idle.id;
+        targetUserName = idle.fullname;
+    } else {
+        const staff = await DB("mst_user").where("id", targetUserId).first();
+        targetUserName = staff?.fullname || `ID ${targetUserId}`;
+    }
+
     await DB.transaction(async (trx) => {
       await trx("trx_housekeeping_task")
         .where("kode_housekeeping_task", id)
         .update({
-          assigned_to: oPayload.assigned_to,
+          assigned_to: targetUserId,
           updated_at: formatDateSystem(),
           updated_by: user_id,
         });
@@ -94,9 +114,9 @@ const handleAssign = async (req, res) => {
           tableName: "trx_housekeeping_task",
           action: "UPDATE",
           referenceCode: existing.kode_housekeeping_task,
-          description: "Penugasan petugas housekeeping",
+          description: `Penugasan petugas housekeeping kepada ${targetUserName}`,
           dataBefore: existing,
-          dataAfter: { ...existing, assigned_to: oPayload.assigned_to },
+          dataAfter: { ...existing, assigned_to: targetUserId },
           user: user_id ? String(user_id) : "system",
         },
         trx
@@ -105,8 +125,13 @@ const handleAssign = async (req, res) => {
 
     return res.status(200).json({
       status: status.SUKSES,
-      message: "Task berhasil di-assign",
+      message: `Task berhasil ditugaskan kepada ${targetUserName}`,
       datetime: formatDateSystem(),
+      data: {
+        kode_housekeeping_task: id,
+        assigned_to: targetUserId,
+        assigned_to_name: targetUserName
+      }
     });
   } catch (error) {
     return res.status(500).json({
