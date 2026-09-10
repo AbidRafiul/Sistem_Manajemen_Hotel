@@ -91,11 +91,6 @@ router.post("/", async (req, res) => {
         .whereIn("user_code", oPayload.user_code)
         .del();
 
-      // Hapus data navigation
-      await trx("user_navigation")
-        .whereIn("user_code", oPayload.user_code)
-        .del();
-
       // Catat log perubahan untuk setiap user yang dihapus
       for (const item of oDataBefore) {
         const oLogDataBefore = { ...item };

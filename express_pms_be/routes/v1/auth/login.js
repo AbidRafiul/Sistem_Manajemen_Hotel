@@ -118,15 +118,16 @@ router.post("/", async (req, res) => {
         });
       }
 
-      const oNavigation = await DB("user_navigation")
+      // Validasi konfigurasi role user di mst_navigation
+      const oNavigation = await DB("mst_navigation")
         .select("menu")
-        .where("user_code", oUser.user_code)
+        .whereRaw("LOWER(role) = LOWER(?)", [oUser.role])
         .first();
 
-      if (!oNavigation && !oNavigation?.menu) {
+      if (!oNavigation || !oNavigation?.menu) {
         return res.status(400).json({
           status: status.GAGAL,
-          message: "User tidak memiliki credential terdaftar di database",
+          message: `Role ${oUser.role} belum memiliki konfigurasi navigasi di database`,
           datetime: formatDateSystem(),
         });
       }

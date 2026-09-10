@@ -43,14 +43,6 @@ export interface TableData {
     created_at: string | Date;
 }
 
-export interface NavState {
-    user_code: string;
-    load: boolean;
-    show: boolean;
-    data: MenuModel[];
-    menu: MenuModel[];
-}
-
 export interface State {
     load: boolean;
     data: TableData[];
@@ -80,8 +72,8 @@ export interface State {
             matchMode: FilterMatchMode;
         };
     };
-    session: Session | null;
-    submittedData: initValue | null;
+    session?: Session | null;
+    submittedData?: initValue | null;
 }
 
 export interface TableProps {
@@ -91,10 +83,7 @@ export interface TableProps {
     formik: FormikProps<initValue>;
     setState: React.Dispatch<React.SetStateAction<State>>;
     getData: (apiEndpoint: string) => Promise<void>;
-    getNav?: (user_code: string) => Promise<void>;
     toast: RefObject<Toast>;
-    navBar?: NavState;
-    setNavBar?: React.Dispatch<React.SetStateAction<NavState>>;
 }
 
 export interface FormProps {
@@ -103,23 +92,6 @@ export interface FormProps {
     formik: FormikProps<initValue>;
     toast: RefObject<Toast>;
     getData: (apiEndpoint: string) => Promise<void>;
-}
-
-export interface NavbarProps {
-    navBar: NavState;
-    setNavBar: React.Dispatch<React.SetStateAction<NavState>>;
-    handleSaveNavbar: () => Promise<void>;
-}
-
-export interface MenuDisplayProps {
-    data: AppMenuItem[];
-    onEdit: (item: number[]) => void;
-}
-
-export interface ListMenuDisplayProps {
-    data: AppMenuItem;
-    indexPath?: number[];
-    onEdit: (item: number[]) => void;
 }
 
 export interface RoleColors {

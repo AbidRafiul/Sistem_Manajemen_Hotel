@@ -25,8 +25,6 @@ import userDelete from "./user_login/user_delete.js";
 
 import navBase from "./navigation/mst_navigation_data.js";
 import navUser from "./navigation/user_navigation_data.js";
-import navUserEdit from "./navigation/user_navigation_data_edit.js";
-import navUserInsert from "./navigation/user_navigation_insert.js";
 import navMstList from "./navigation/mst_navigation_list.js";
 import navMstCreate from "./navigation/mst_navigation_create.js";
 import navMstUpdate from "./navigation/mst_navigation_update.js";
@@ -47,8 +45,6 @@ router.use("/config-create", configCreate);
 //navigation
 router.use("/nav/base-data", navBase);
 router.use("/nav/user-data", navUser);
-router.use("/nav/user-data-edit", navUserEdit);
-router.use("/nav/user-insert", navUserInsert);
 router.use("/nav/mst-list", navMstList);
 router.use("/nav/mst-create", navMstCreate);
 router.use("/nav/mst-update", navMstUpdate);

@@ -110,18 +110,18 @@ router.post("/", async (req, res) => {
       return res.status(422).json(oResult);
     }
 
-    // Ambil rule navigasi berdasarkan role langsung (dinamis)
+    // Validasi apakah role terdaftar di mst_navigation (case-insensitive)
     let cRole = oPayload.role;
 
     const oNavigation = await DB("mst_navigation")
       .select("menu")
-      .where("role", cRole)
+      .whereRaw("LOWER(role) = LOWER(?)", [cRole])
       .first();
 
     if (!oNavigation || !oNavigation?.menu) {
       return res.status(400).json({
         status: status.GAGAL,
-        message: "User tidak memiliki credential terdaftar di database",
+        message: `Role ${cRole} belum terdaftar di master navigasi database`,
         datetime: formatDateSystem(),
       });
     }
@@ -150,14 +150,6 @@ router.post("/", async (req, res) => {
         const secret = process.env.USER_SECRET;
         oData["password"] = hmac(cPassword, secret, "sha512");
       }
-
-      // Insert navigasi user
-      await trx("user_navigation").insert({
-        menu: oNavigation.menu,
-        user_code: cUserCode,
-        created_at: formatDateSystem(),
-        updated_at: formatDateSystem(),
-      });
 
       // Insert data mst_user
       await trx("mst_user").insert(oData);
