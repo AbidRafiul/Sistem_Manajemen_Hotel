@@ -149,7 +149,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                         <h5 className="m-0 text-primary">{tk.nama_tipe}</h5>
                                         <div className="flex flex-column align-items-end">
                                             <span className={`badge ${tk.available_count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} px-2 py-1 border-round text-sm font-bold`}>
-                                                Sisa {tk.available_count}
+                                                {tk.available_count > 0 ? `Sisa ${tk.available_count}` : 'Habis (0)'}
                                             </span>
                                         </div>
                                     </div>
@@ -165,15 +165,16 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                     <div className="flex flex-column gap-2 mt-3 border-top-1 surface-border pt-3">
                                         {tk.packages.map((pkg: any, j: number) => {
                                             const isSelected = formik.values.kode_tipe_kamar === tk.kode_tipe_kamar && formik.values.kode_rate_plan === pkg.kode_rate_plan;
+                                            const isUnavailable = tk.available_count <= 0;
                                             return (
                                                 <div 
                                                     key={j} 
-                                                    className={`p-2 border-round cursor-pointer transition-colors transition-duration-150 ${isSelected ? 'bg-primary-reverse border-primary border-2' : 'surface-100 hover:surface-200 border-1 surface-border'}`}
+                                                    className={`p-2 border-round transition-colors transition-duration-150 ${isUnavailable ? 'surface-200 opacity-60 cursor-not-allowed border-1 surface-border' : isSelected ? 'bg-primary-reverse border-primary border-2 cursor-pointer' : 'surface-100 hover:surface-200 border-1 surface-border cursor-pointer'}`}
                                                     onClick={() => {
                                                         if (tk.available_count > 0) {
                                                             selectPackage(tk, pkg);
                                                         } else {
-                                                            showError(toast, "Kamar ini sudah habis.");
+                                                            showError(toast, "Tipe kamar ini sudah penuh pada rentang tanggal yang dipilih.");
                                                         }
                                                     }}
                                                 >

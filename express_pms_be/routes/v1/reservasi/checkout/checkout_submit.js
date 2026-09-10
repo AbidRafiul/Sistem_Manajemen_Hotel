@@ -185,18 +185,27 @@ router.post("/", async (req, res) => {
           });
       }
 
-      // 8. Insert trx_housekeeping_task otomatis
-      const hkTaskCode = await generateSequence("FMT-HKT", trx);
-      await trx("trx_housekeeping_task").insert({
-          kode_housekeeping_task: hkTaskCode,
-          kode_cabang: folio.kode_cabang,
-          kode_kamar: resRoom.kode_kamar,
-          task_type: 'cleaning',
-          priority: 'normal',
-          status: 'assigned',
-          created_by: user_id,
-          created_at: formatDateSystem()
-      });
+      // 8. Cek apakah ada task aktif, jika tidak, insert trx_housekeeping_task otomatis
+      const activeTask = await trx("trx_housekeeping_task")
+        .where("kode_kamar", resRoom.kode_kamar)
+        .whereIn("status", ['assigned', 'in_progress'])
+        .whereNull("deleted_at")
+        .where("is_active", 1)
+        .first();
+
+      if (!activeTask) {
+          const hkTaskCode = await generateSequence("FMT-HKT", trx);
+          await trx("trx_housekeeping_task").insert({
+              kode_housekeeping_task: hkTaskCode,
+              kode_cabang: folio.kode_cabang,
+              kode_kamar: resRoom.kode_kamar,
+              task_type: 'cleaning',
+              priority: 'normal',
+              status: 'assigned',
+              created_by: user_id,
+              created_at: formatDateSystem()
+          });
+      }
 
       // 9. Insert trx_checkout
       cUniqueCode = await generateSequence("FMT-CO", trx);

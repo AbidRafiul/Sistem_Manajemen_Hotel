@@ -65,6 +65,13 @@ router.post("/", async (req, res) => {
       .where("housekeeping_status", "clean")
       .where("is_active", 1)
       .whereNull("deleted_at")
+      .whereNotExists(
+        DB("trx_housekeeping_task")
+          .whereRaw("trx_housekeeping_task.kode_kamar = mst_kamar.kode_kamar")
+          .whereIn("status", ["assigned", "in_progress"])
+          .where("is_active", 1)
+          .whereNull("deleted_at")
+      )
       .select("kode_kamar", "nomor_kamar", "tipe_pemandangan");
 
     if (!availableRooms || availableRooms.length === 0) {
