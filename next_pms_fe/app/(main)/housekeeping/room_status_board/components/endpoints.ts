@@ -5,3 +5,5 @@ export const apiEndpointCompleteTask = (id: string) => `/housekeeping/tasks/${id
 export const apiEndpointVerifyTask = (id: string) => `/housekeeping/tasks/${id}/verify`;
 export const apiEndpointCancelTask = (id: string) => `/housekeeping/tasks/${id}/cancel`;
 export const apiEndpointGetUsers = '/setup/user-login/user-data';
+export const apiEndpointGetHousekeepingStaff = '/housekeeping/staff';
+export const apiEndpointGetHousekeepingHistory = '/housekeeping/history';

@@ -17,6 +17,7 @@ import DB from "../../../../core/config/knex.js";
 import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
+import { findIdleHousekeeper } from "../../components/tools/housekeeping_helper.js";
 
 const router = express.Router();
 
@@ -195,11 +196,13 @@ router.post("/", async (req, res) => {
 
       if (!activeTask) {
           const hkTaskCode = await generateSequence("FMT-HKT", trx);
+          const idleStaff = await findIdleHousekeeper(folio.kode_cabang, trx);
           await trx("trx_housekeeping_task").insert({
               kode_housekeeping_task: hkTaskCode,
               kode_cabang: folio.kode_cabang,
               kode_kamar: resRoom.kode_kamar,
               task_type: 'cleaning',
+              assigned_to: idleStaff ? idleStaff.id : null,
               priority: 'normal',
               status: 'assigned',
               created_by: user_id,

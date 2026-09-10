@@ -9,6 +9,7 @@ import { apiEndpointGetRoomStatus } from './components/endpoints';
 import postData from '@/lib/axios/postData';
 import { FilterMatchMode } from 'primereact/api';
 import CancelDialog from './components/display/cancel_dialog';
+import HistoryDialog from './components/display/history_dialog';
 
 const RoomStatusBoard = () => {
     const toast = useRef<Toast>(null);
@@ -23,6 +24,8 @@ const RoomStatusBoard = () => {
         kode_cabang: '',
         actionDialogVisible: false,
         cancelDialogVisible: false,
+        historyDialogVisible: false,
+        historyRoom: null,
         selectedRoom: null
     });
 
@@ -113,6 +116,12 @@ const RoomStatusBoard = () => {
                     <Table state={state} setState={setState} toast={toast} getData={getData} />
                     <ActionDialog state={state} setState={setState} toast={toast} getData={getData} />
                     <CancelDialog state={state} setState={setState} toast={toast} getData={getData} />
+                    <HistoryDialog 
+                        visible={!!state.historyDialogVisible} 
+                        onHide={() => setState((p) => ({ ...p, historyDialogVisible: false }))} 
+                        kodeCabang={state.kode_cabang} 
+                        selectedRoom={state.historyRoom} 
+                    />
                 </div>
             </div>
         </div>

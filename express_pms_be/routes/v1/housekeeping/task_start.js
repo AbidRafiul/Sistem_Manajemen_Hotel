@@ -45,12 +45,14 @@ const handleStart = async (req, res) => {
     }
 
     await DB.transaction(async (trx) => {
-      // 1. Update status task
+      const tNow = formatDateSystem();
+      // 1. Update status task dan catat jam mulai pembersihan
       await trx("trx_housekeeping_task")
         .where("kode_housekeeping_task", id)
         .update({
           status: 'in_progress',
-          updated_at: formatDateSystem(),
+          started_at: tNow,
+          updated_at: tNow,
           updated_by: user_id,
         });
 
@@ -59,9 +61,9 @@ const handleStart = async (req, res) => {
           tableName: "trx_housekeeping_task",
           action: "UPDATE",
           referenceCode: existing.kode_housekeeping_task,
-          description: "Mulai pengerjaan task housekeeping",
+          description: `Mulai pengerjaan task housekeeping oleh petugas pada ${tNow}`,
           dataBefore: existing,
-          dataAfter: { ...existing, status: 'in_progress' },
+          dataAfter: { ...existing, status: 'in_progress', started_at: tNow },
           user: user_id ? String(user_id) : "system",
         },
         trx

@@ -10,18 +10,26 @@
  * @version 1.0.1
  */
 import express from "express";
+import roomStatusBoard from "./room_status_board.js";
 import getTasks from "./tasks_get.js";
 import assignTask from "./task_assign.js";
 import startTask from "./task_start.js";
 import completeTask from "./task_complete.js";
 import verifyTask from "./task_verify.js";
 import cancelTask from "./task_cancel.js";
-import roomStatusBoard from "./room_status_board.js";
+import staffGet from "./staff_get.js";
+import historyGet from "./history_get.js";
 
 const router = express.Router();
 
 // Route: Room Status Board
 router.use("/room-status-board", [], roomStatusBoard);
+
+// Route: Housekeeping Staff & Workload
+router.use("/staff", [], staffGet);
+
+// Route: Housekeeping Activity History & Audit Trail
+router.use("/history", [], historyGet);
 
 // Route: Housekeeping Tasks
 router.use("/tasks", [], getTasks);
