@@ -64,9 +64,11 @@ router.post("/", async (req, res) => {
     // Inisiasi Query Builder
     let oQuery = DB("mst_user as u")
       .select(
+        "u.id",
         "u.user_code",
         "u.username",
         "u.fullname",
+        "u.fullname as name",
         "u.role",
         "u.status",
         "u.telp",

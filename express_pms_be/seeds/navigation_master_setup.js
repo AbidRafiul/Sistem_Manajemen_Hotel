@@ -82,6 +82,13 @@ export async function seed(knex) {
       ]
     },
     {
+      label: "Housekeeping",
+      icon: "pi pi-fw pi-refresh",
+      items: [
+        { label: "Room Status Board", icon: "pi pi-fw pi-th-large", to: "/housekeeping/room_status_board" }
+      ]
+    },
+    {
       label: "Contoh & Template",
       icon: "pi pi-fw pi-bookmark",
       items: [
