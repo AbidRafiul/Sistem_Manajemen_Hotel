@@ -265,18 +265,26 @@ export const getDBConfig = async (kode = [], trx = DB) => {
 }
 
 export const ChangesLog = async (
-  {
-    description,
-    tableName,
-    referenceCode,
-    action,
-    dataBefore = null,
-    dataAfter = null,
-    user,
-    tz = "UTC",
-  },
+  payload = {},
   transaction = null,
 ) => {
+  const description = payload.description || payload.keterangan || "";
+  const tableName = payload.tableName || payload.table_name || payload.nama_tabel || "";
+  const referenceCode = String(
+    payload.referenceCode !== undefined && payload.referenceCode !== null
+      ? payload.referenceCode
+      : (payload.kode_referensi !== undefined && payload.kode_referensi !== null
+          ? payload.kode_referensi
+          : (payload.primary_key !== undefined && payload.primary_key !== null
+              ? payload.primary_key
+              : ""))
+  );
+  const action = (payload.action || payload.aksi || "UPDATE").toUpperCase();
+  const dataBefore = payload.dataBefore !== undefined ? payload.dataBefore : (payload.data_sebelum || null);
+  const dataAfter = payload.dataAfter !== undefined ? payload.dataAfter : (payload.data_sesudah || null);
+  const user = payload.user || payload.username || (payload.user_id ? String(payload.user_id) : "system");
+  const tz = payload.tz || "UTC";
+
   const inputPayload = {
     description,
     tableName,
@@ -289,8 +297,6 @@ export const ChangesLog = async (
   };
 
   try {
-    console.log(description);
-
     const executeQuery = transaction || DB;
 
     await executeQuery("log_perubahan").insert({

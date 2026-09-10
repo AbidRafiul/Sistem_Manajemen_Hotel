@@ -39,14 +39,6 @@ router.post("/", async (req, res) => {
         tipe_view: Joi.string().allow("", null).optional().label("View"),
         catatan: Joi.string().allow("", null).optional().label("Catatan"),
         boleh_merokok: Joi.number().valid(0, 1).optional().label("Smoking"),
-        occupancy_status: Joi.string()
-          .valid("vacant", "occupied", "blocked")
-          .optional()
-          .label("Occupancy Status"),
-        housekeeping_status: Joi.string()
-          .valid("clean", "dirty", "inspection", "maintenance")
-          .optional()
-          .label("Housekeeping Status"),
         is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
       },
       {
@@ -62,19 +54,6 @@ router.post("/", async (req, res) => {
         .status(422)
         .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
 
-    if (
-      oPayload.occupancy_status === "occupied" &&
-      oPayload.housekeeping_status === "maintenance"
-    ) {
-      return res
-        .status(400)
-        .json({
-          status: status.BAD_REQUEST,
-          message: "Kamar yang sedang ditempati (Occupied) tidak boleh berstatus Maintenance.",
-          datetime: formatDateSystem(),
-        });
-    }
-
     let cUniqueCode = "";
     await DB.transaction(async (trx) => {
       cUniqueCode = await generateSequence("FMT-KAMAR", trx);
@@ -88,8 +67,8 @@ router.post("/", async (req, res) => {
         tipe_pemandangan: oPayload.tipe_view || null,
         catatan: oPayload.catatan || null,
         boleh_merokok: oPayload.boleh_merokok ?? 0,
-        occupancy_status: oPayload.occupancy_status || "vacant",
-        housekeeping_status: oPayload.housekeeping_status || "clean",
+        occupancy_status: "vacant",
+        housekeeping_status: "clean",
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
         created_by: req.auth?.user_id || 1,
         created_at: formatDateSystem(),

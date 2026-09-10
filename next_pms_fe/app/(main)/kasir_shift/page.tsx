@@ -188,7 +188,7 @@ const Page = () => {
                                                 id="kode_cabang"
                                                 value={formikOpen.values.kode_cabang}
                                                 options={cabangOptions}
-                                                optionLabel="nama_hotel"
+                                                optionLabel="name"
                                                 optionValue="kode_cabang"
                                                 onChange={formikOpen.handleChange}
                                                 placeholder="Pilih Cabang"

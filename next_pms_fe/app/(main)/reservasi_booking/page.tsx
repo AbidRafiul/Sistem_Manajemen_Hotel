@@ -51,10 +51,13 @@ const Page = () => {
         },
         validate: (data) => {
             let errors: any = {};
-            // Validation logic based on active step will be handled in child components or here
-            if (state.activeStep === 0) {
+            const checkStep0 = state.activeStep === 0 || state.activeStep === 3;
+            const checkStep1 = state.activeStep === 1 || state.activeStep === 3;
+            const checkStep2 = state.activeStep === 2 || state.activeStep === 3;
+
+            if (checkStep0) {
                 if (!data.kode_cabang) errors.kode_cabang = 'Cabang wajib dipilih';
-                if (!state.foundGuest && !state.isGuestNew) {
+                if (!state.foundGuest && !state.isGuestNew && !data.kode_guest) {
                     errors.keyword_guest = 'Silakan cari atau buat data tamu baru';
                 }
                 if (state.isGuestNew) {
@@ -62,13 +65,15 @@ const Page = () => {
                     if (!data.id_number) errors.id_number = 'Nomor ID wajib diisi';
                     if (!data.phone) errors.phone = 'Nomor Telepon wajib diisi';
                 }
-            } else if (state.activeStep === 1) {
+            }
+            if (checkStep1) {
                 if (!data.check_in_date) errors.check_in_date = 'Tanggal Check In wajib diisi';
                 if (!data.check_out_date) errors.check_out_date = 'Tanggal Check Out wajib diisi';
                 if (!data.kode_tipe_kamar) errors.kode_tipe_kamar = 'Tipe Kamar wajib dipilih';
                 if (!data.kode_rate_plan) errors.kode_rate_plan = 'Rate Plan wajib dipilih';
                 if (!state.rateInfo) errors.kode_tipe_kamar = 'Pilih paket kamar yang tersedia';
-            } else if (state.activeStep === 2) {
+            }
+            if (checkStep2) {
                 if (data.deposit_amount > 0) {
                     if (!data.payment_method) errors.payment_method = 'Metode pembayaran wajib dipilih';
                     if (!data.kode_cashier_shift) errors.kode_cashier_shift = 'Shift kasir wajib dipilih';

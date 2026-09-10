@@ -64,14 +64,6 @@ router.post("/", async (req, res) => {
 
             // Bulk logic dihapus, dipindah ke helper dalam loop
 
-            // Ambil detail fisik kamar
-            const mstKamar = await trx('mst_kamar')
-                .where('kode_cabang', oPayload.kode_cabang)
-                .where('is_active', 1)
-                .where('occupancy_status', '!=', 'blocked')
-                .whereNull('deleted_at')
-                .select('kode_kamar', 'nomor_kamar', 'kode_tipe_kamar', 'tipe_pemandangan');
-
             const packagesList = [];
 
             // 4. Generate kombinasi (Tipe Kamar x Rate Plan)
@@ -84,12 +76,7 @@ router.post("/", async (req, res) => {
                 }, trx);
                 
                 const available_count = ketersediaan.available_count;
-                
-                // Cari fisik kamar yang tersedia
-                const available_rooms = mstKamar.filter(k => 
-                    k.kode_tipe_kamar === tk.kode_tipe_kamar && 
-                    !ketersediaan.terpakai_kamar_ids.includes(k.kode_kamar)
-                );
+                const available_rooms = ketersediaan.available_rooms || [];
 
                 // Buat item master Tipe Kamar
                 const productGroup = {

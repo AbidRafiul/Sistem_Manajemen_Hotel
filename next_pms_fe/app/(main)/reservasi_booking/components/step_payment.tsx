@@ -66,35 +66,32 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
                 />
             </div>
 
-            {formik.values.deposit_amount > 0 && (
-                <>
-                    <div className="field col-12 md:col-4">
-                        <label>Metode Pembayaran Deposit</label>
-                        <Dropdown 
-                            value={formik.values.payment_method} 
-                            options={paymentMethods} 
-                            onChange={(e) => formik.setFieldValue('payment_method', e.value)}
-                            placeholder="Pilih Metode" 
-                            className={formik.errors.payment_method && formik.touched.payment_method ? 'p-invalid' : ''}
-                        />
-                        {formik.errors.payment_method && formik.touched.payment_method && <small className="p-error">{formik.errors.payment_method}</small>}
-                    </div>
-                    <div className="field col-12 md:col-4">
-                        <label>Shift Kasir</label>
-                        <Dropdown 
-                            value={formik.values.kode_cashier_shift} 
-                            options={state.cashierShiftOptions} 
-                            onChange={(e) => formik.setFieldValue('kode_cashier_shift', e.value)}
-                            optionLabel="nama_shift" 
-                            optionValue="kode_cashier_shift"
-                            placeholder="Pilih Shift" 
-                            disabled={state.cashierShiftLoad}
-                            className={formik.errors.kode_cashier_shift && formik.touched.kode_cashier_shift ? 'p-invalid' : ''}
-                        />
-                        {formik.errors.kode_cashier_shift && formik.touched.kode_cashier_shift && <small className="p-error">{formik.errors.kode_cashier_shift}</small>}
-                    </div>
-                </>
-            )}
+            <div className="field col-12 md:col-4">
+                <label>Metode Pembayaran Deposit</label>
+                <Dropdown 
+                    value={formik.values.payment_method} 
+                    options={paymentMethods} 
+                    onChange={(e) => formik.setFieldValue('payment_method', e.value)}
+                    placeholder="Pilih Metode" 
+                    disabled={!formik.values.deposit_amount || formik.values.deposit_amount === 0}
+                    className={formik.errors.payment_method && formik.touched.payment_method ? 'p-invalid' : ''}
+                />
+                {formik.errors.payment_method && formik.touched.payment_method && <small className="p-error">{formik.errors.payment_method}</small>}
+            </div>
+            <div className="field col-12 md:col-4">
+                <label>Shift Kasir</label>
+                <Dropdown 
+                    value={formik.values.kode_cashier_shift} 
+                    options={state.cashierShiftOptions} 
+                    onChange={(e) => formik.setFieldValue('kode_cashier_shift', e.value)}
+                    optionLabel="nama_shift" 
+                    optionValue="kode_cashier_shift"
+                    placeholder="Pilih Shift" 
+                    disabled={state.cashierShiftLoad || !formik.values.deposit_amount || formik.values.deposit_amount === 0}
+                    className={formik.errors.kode_cashier_shift && formik.touched.kode_cashier_shift ? 'p-invalid' : ''}
+                />
+                {formik.errors.kode_cashier_shift && formik.touched.kode_cashier_shift && <small className="p-error">{formik.errors.kode_cashier_shift}</small>}
+            </div>
 
 
         </div>

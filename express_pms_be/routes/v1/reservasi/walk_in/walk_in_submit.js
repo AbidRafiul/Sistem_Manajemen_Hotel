@@ -16,6 +16,7 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { processCheckIn } from "../../components/tools/checkin_helper.js";
+import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
 
 const router = express.Router();
 
@@ -107,6 +108,22 @@ router.post("/", async (req, res) => {
     let reservationData = null;
 
     await DB.transaction(async (trx) => {
+        // Validasi ketersediaan kamar
+        const ketersediaan = await hitungKetersediaanTipeKamar({
+            kode_cabang: oPayload.kode_cabang,
+            kode_tipe_kamar: oPayload.kode_tipe_kamar,
+            check_in_date: checkinDate,
+            check_out_date: checkoutDate
+        }, trx);
+
+        if (ketersediaan.available_count <= 0) {
+            throw new Error("Kamar pada tipe ini sudah penuh atau belum siap (kamar kotor / sedang inspeksi / terisi).");
+        }
+
+        if (oPayload.kode_kamar && ketersediaan.terpakai_kamar_ids.includes(oPayload.kode_kamar)) {
+            throw new Error("Kamar fisik yang dipilih sedang tidak tersedia atau belum bersih.");
+        }
+
         // a. Hitung Harga
         const rateInfo = await hitungHargaKamar({
             kode_tipe_kamar: oPayload.kode_tipe_kamar,

@@ -57,8 +57,6 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 name: input.nomor_kamar,
                 tipe_view: input.tipe_view,
                 boleh_merokok: input.boleh_merokok,
-                occupancy_status: input.occupancy_status,
-                housekeeping_status: input.housekeeping_status,
                 is_active: input.is_active,
                 tz: getTzUser()
             };
@@ -257,40 +255,36 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                             </div>
                         </div>
 
-                        {/* Status Kamar */}
+
+                        {/* Status Kamar (Read-only) */}
                         <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
                             <div className="flex flex-column gap-1 w-full">
                                 <label htmlFor="occupancy_status" className="font-semibold text-sm">
-                                    Occupancy Status <span className="text-red-500">*</span>
+                                    Occupancy Status
                                 </label>
                                 <Dropdown
                                     id="occupancy_status"
                                     name="occupancy_status"
                                     options={OCCUPANCY_STATUS_OPTIONS}
                                     value={formik?.values.occupancy_status || 'vacant'}
-                                    onChange={(e) => formik?.setFieldValue('occupancy_status', e.value)}
-                                    placeholder="Pilih Status"
-                                    className={isFormFieldInvalid('occupancy_status') ? 'p-invalid w-full' : 'w-full'}
+                                    disabled={true}
+                                    className="w-full bg-gray-100"
                                 />
-                                {getFormErrorMessage('occupancy_status')}
                             </div>
                             <div className="flex flex-column gap-1 w-full">
                                 <label htmlFor="housekeeping_status" className="font-semibold text-sm">
-                                    Housekeeping Status <span className="text-red-500">*</span>
+                                    Housekeeping Status
                                 </label>
                                 <Dropdown
                                     id="housekeeping_status"
                                     name="housekeeping_status"
                                     options={HOUSEKEEPING_STATUS_OPTIONS}
                                     value={formik?.values.housekeeping_status || 'clean'}
-                                    onChange={(e) => formik?.setFieldValue('housekeeping_status', e.value)}
-                                    placeholder="Pilih Status"
-                                    className={isFormFieldInvalid('housekeeping_status') ? 'p-invalid w-full' : 'w-full'}
+                                    disabled={true}
+                                    className="w-full bg-gray-100"
                                 />
-                                {getFormErrorMessage('housekeeping_status')}
                             </div>
                         </div>
-
                         {/* Switches */}
                         <div className="flex flex-column md:flex-row gap-4 mt-4">
                             <div className="flex align-items-center gap-2">

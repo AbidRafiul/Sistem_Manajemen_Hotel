@@ -71,8 +71,6 @@ const Page = () => {
             if (!data.kode_lantai) errors.kode_lantai = 'Lantai wajib diisi.';
             if (!data.kode_tipe_kamar) errors.kode_tipe_kamar = 'Tipe Kamar wajib diisi.';
             if (!data.nomor_kamar || !data.nomor_kamar.trim()) errors.nomor_kamar = 'Nomor Kamar wajib diisi.';
-            if (!data.occupancy_status) errors.occupancy_status = 'Status Occupancy wajib diisi.';
-            if (!data.housekeeping_status) errors.housekeeping_status = 'Status Housekeeping wajib diisi.';
             return errors;
         },
         onSubmit: (data) => {

@@ -33,8 +33,8 @@ export interface initValue {
     nomor_kamar: string;
     tipe_view: string;
     boleh_merokok: number;
-    occupancy_status: string;
-    housekeeping_status: string;
+    occupancy_status?: string;
+    housekeeping_status?: string;
     is_active: number;
 }
 
