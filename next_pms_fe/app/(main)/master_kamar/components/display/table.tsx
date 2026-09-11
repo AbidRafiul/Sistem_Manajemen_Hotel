@@ -1,7 +1,7 @@
 'use client';
 
 import { DataTable } from 'primereact/datatable';
-import { TableData, TableProps } from '../interfaces';
+import { TableData, TableProps, getRoomStatusDetails, ROOM_STATUS_CONFIG } from '../interfaces';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
 import { formatDateSystem } from '@/lib/tools/dateTools';
@@ -131,18 +131,15 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
         </div>
     );
 
-    const activeStatusBodyTemplate = (rowData: TableData) => (
-        <StatusIndicator status={rowData.is_active} />
-    );
-
-    const occupancyStatusBodyTemplate = (rowData: TableData) => {
-        const s = rowData.occupancy_status || '';
-        return <StatusIndicator status={s} label={s.toUpperCase()} />;
-    };
-
-    const housekeepingStatusBodyTemplate = (rowData: TableData) => {
-        const s = rowData.housekeeping_status || '';
-        return <StatusIndicator status={s} label={s.toUpperCase()} />;
+    const roomStatusBodyTemplate = (rowData: TableData) => {
+        const details = getRoomStatusDetails(rowData);
+        return (
+            <StatusIndicator
+                status={details.label}
+                label={details.label}
+                customColor={details.color}
+            />
+        );
     };
 
     return (
@@ -202,7 +199,16 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
 
-                <StatusLegend />
+                <StatusLegend
+                    title="KETERANGAN STATUS:"
+                    items={[
+                        { label: 'Vacant Clean', color: ROOM_STATUS_CONFIG.vacant_clean.color },
+                        { label: 'Vacant Dirty', color: ROOM_STATUS_CONFIG.vacant_dirty.color },
+                        { label: 'Occupied Clean', color: ROOM_STATUS_CONFIG.occupied_clean.color },
+                        { label: 'Occupied Dirty', color: ROOM_STATUS_CONFIG.occupied_dirty.color },
+                        { label: 'Tidak Aktif', color: ROOM_STATUS_CONFIG.inactive.color }
+                    ]}
+                />
 
                 <DataTable
                     value={state.data}
@@ -228,14 +234,12 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data kamar"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
-                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
+                    <Column field="status" header="Status" align="center" body={roomStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                     <Column field="kode_kamar" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="nomor_kamar" header="Nomor Kamar" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="room_type_name" header="Tipe Kamar" sortable style={{ minWidth: '14rem' }} body={(rowData) => rowData.room_type_name || rowData.kode_tipe_kamar}></Column>
                     <Column field="floor_name" header="Lantai" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.floor_name || rowData.kode_lantai}></Column>
                     <Column field="tipe_view" header="View" sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="occupancy_status" header="Occupancy" align="center" body={occupancyStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
-                    <Column field="housekeeping_status" header="Housekeeping" align="center" body={housekeepingStatusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>

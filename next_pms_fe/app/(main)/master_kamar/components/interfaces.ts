@@ -123,3 +123,28 @@ export const HOUSEKEEPING_STATUS_OPTIONS = [
     { label: 'Inspection', value: 'inspection' },
     { label: 'Maintenance', value: 'maintenance' }
 ];
+
+export const ROOM_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+    vacant_clean: { label: 'Vacant Clean', color: '#22c55e' },
+    vacant_dirty: { label: 'Vacant Dirty', color: '#f59e0b' },
+    vacant_inspection: { label: 'Vacant Inspection', color: '#8b5cf6' },
+    occupied_clean: { label: 'Occupied Clean', color: '#3b82f6' },
+    occupied_dirty: { label: 'Occupied Dirty', color: '#64748b' },
+    occupied_inspection: { label: 'Occupied Inspection', color: '#ec4899' },
+    inactive: { label: 'Tidak Aktif', color: '#ef4444' }
+};
+
+export const getRoomStatusDetails = (rowData: { is_active?: number; occupancy_status?: string; housekeeping_status?: string }) => {
+    if (rowData.is_active === 0) {
+        return ROOM_STATUS_CONFIG.inactive;
+    }
+    const occ = (rowData.occupancy_status || 'vacant').toLowerCase();
+    const hk = (rowData.housekeeping_status || 'clean').toLowerCase();
+    const key = `${occ}_${hk}`;
+    return (
+        ROOM_STATUS_CONFIG[key] || {
+            label: `${occ.toUpperCase()} ${hk.toUpperCase()}`,
+            color: '#22c55e'
+        }
+    );
+};
