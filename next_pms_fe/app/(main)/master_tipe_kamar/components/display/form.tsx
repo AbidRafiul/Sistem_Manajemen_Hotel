@@ -6,20 +6,51 @@ import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
-import { apiEndpointCreate, apiEndpointDelete, apiEndpointGet, apiEndpointUpdate } from '../endpoints';
+import { Tag } from 'primereact/tag';
+import { Image } from 'primereact/image';
+import {
+    apiEndpointCreate,
+    apiEndpointDelete,
+    apiEndpointGet,
+    apiEndpointUpdate,
+    apiEndpointFotoData,
+    apiEndpointFotoUpload,
+    apiEndpointFotoDelete,
+    apiEndpointFotoSetCover
+} from '../endpoints';
 import postData from '@/lib/axios/postData';
+import formUpload from '@/lib/axios/formData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dropdown } from 'primereact/dropdown';
 import { MultiSelect } from 'primereact/multiselect';
 import { getTzUser } from '@/lib/tools/dateTools';
 import { InputSwitch } from 'primereact/inputswitch';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [cabangList, setCabangList] = useState([]);
     const [bedTypeList, setBedTypeList] = useState([]);
     const [fasilitasList, setFasilitasList] = useState([]);
     const [amenityList, setAmenityList] = useState([]);
+
+    // State untuk galeri foto
+    const [photos, setPhotos] = useState<any[]>([]);
+    const [photoLoad, setPhotoLoad] = useState<boolean>(false);
+    const [stagedPhotos, setStagedPhotos] = useState<{ file: File; preview: string; name: string }[]>([]);
+
+    const fetchPhotos = async (kode_tipe_kamar: string) => {
+        if (!kode_tipe_kamar) return;
+        setPhotoLoad(true);
+        try {
+            const res = await postData(apiEndpointFotoData, { kode_tipe_kamar });
+            setPhotos(res.data?.data || []);
+        } catch (err: any) {
+            console.error('Gagal mengambil data foto tipe kamar:', err);
+        } finally {
+            setPhotoLoad(false);
+        }
+    };
 
     const fetchCabang = async (keyword = '') => {
         try {
@@ -87,9 +118,15 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 } finally {
                     setState(p => ({ ...p, load: false }));
                 }
+
+                // Ambil foto yang sudah ada
+                fetchPhotos(formik.values.kode_tipe_kamar);
+                setStagedPhotos([]);
             } else if (state.add) {
                 formik.setFieldValue('kode_fasilitas', []);
                 formik.setFieldValue('kode_amenity', []);
+                setPhotos([]);
+                setStagedPhotos([]);
             }
         };
         if (state.add || state.edit) {
@@ -97,6 +134,97 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.add, state.edit]);
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        const validFiles: File[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.size > 2 * 1024 * 1024) {
+                showError(toast, `File ${file.name} melebihi batas maksimal 2MB.`);
+                continue;
+            }
+            if (!allowedTypes.includes(file.type)) {
+                showError(toast, `Format file ${file.name} tidak valid (gunakan JPG, PNG, atau WEBP).`);
+                continue;
+            }
+            validFiles.push(file);
+        }
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+
+        if (validFiles.length === 0) return;
+
+        if (state.edit && formik.values.kode_tipe_kamar) {
+            setPhotoLoad(true);
+            try {
+                const formData = new FormData();
+                formData.append('kode_tipe_kamar', formik.values.kode_tipe_kamar);
+                validFiles.forEach((file) => {
+                    formData.append('foto', file);
+                });
+
+                const res = await formUpload(apiEndpointFotoUpload, formData, { 'X-Level': '1' });
+                showSuccess(toast, res.data?.message || `${validFiles.length} foto berhasil diunggah`);
+                await fetchPhotos(formik.values.kode_tipe_kamar);
+            } catch (err: any) {
+                const msg = err?.response?.data?.message || err?.message || 'Gagal mengunggah foto';
+                showError(toast, msg);
+            } finally {
+                setPhotoLoad(false);
+            }
+        } else {
+            const newStaged = validFiles.map((file) => ({
+                file,
+                preview: URL.createObjectURL(file),
+                name: file.name
+            }));
+            setStagedPhotos((prev) => [...prev, ...newStaged]);
+            showSuccess(toast, `${validFiles.length} foto ditambahkan untuk diunggah saat disimpan`);
+        }
+    };
+
+    const handleSetCover = async (photoId: number) => {
+        setPhotoLoad(true);
+        try {
+            const res = await postData(apiEndpointFotoSetCover, { id: photoId });
+            showSuccess(toast, res.data?.message || 'Foto cover berhasil diperbarui');
+            if (formik.values.kode_tipe_kamar) {
+                await fetchPhotos(formik.values.kode_tipe_kamar);
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || 'Gagal mengubah foto cover';
+            showError(toast, msg);
+        } finally {
+            setPhotoLoad(false);
+        }
+    };
+
+    const handleDeletePhoto = async (photoId: number) => {
+        setPhotoLoad(true);
+        try {
+            const res = await postData(apiEndpointFotoDelete, { id: photoId });
+            showSuccess(toast, res.data?.message || 'Foto berhasil dihapus');
+            if (formik.values.kode_tipe_kamar) {
+                await fetchPhotos(formik.values.kode_tipe_kamar);
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || 'Gagal menghapus foto';
+            showError(toast, msg);
+        } finally {
+            setPhotoLoad(false);
+        }
+    };
+
+    const handleRemoveStagedPhoto = (index: number) => {
+        setStagedPhotos((prev) => prev.filter((_, i) => i !== index));
+    };
 
     const handleSave = async (input: initValue) => {
         setState((p) => ({ ...p, load: true }));
@@ -139,6 +267,22 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             } catch (assignError) {
                 console.error(assignError);
                 showError(toast, 'Tipe Kamar tersimpan, namun gagal menyimpan assignment fasilitas/amenity');
+            }
+
+            // Upload staged photos jika ada
+            if (stagedPhotos.length > 0 && savedKode) {
+                try {
+                    const formData = new FormData();
+                    formData.append('kode_tipe_kamar', savedKode);
+                    stagedPhotos.forEach((item) => {
+                        formData.append('foto', item.file);
+                    });
+                    await formUpload(apiEndpointFotoUpload, formData, { 'X-Level': '1' });
+                    setStagedPhotos([]);
+                } catch (photoErr) {
+                    console.error('Gagal mengunggah foto bertahap:', photoErr);
+                    showError(toast, 'Tipe kamar tersimpan, namun foto gagal diunggah');
+                }
             }
 
             showSuccess(toast, res.message || 'Berhasil Menyimpan Data Tipe Kamar');
@@ -214,7 +358,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 visible={state.add || state.edit}
                 header={state.edit ? 'Edit Data Tipe Kamar' : 'Tambah Tipe Kamar Baru'}
                 modal
-                style={{ width: '100%', maxWidth: '700px' }}
+                style={{ width: '100%', maxWidth: '800px' }}
                 breakpoints={{ '641px': '90vw' }}
                 onHide={() => {
                     setState((p) => ({ ...p, add: false, edit: false, delete: false }));
@@ -410,6 +554,162 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 rows={3}
                                 autoResize
                             />
+                        </div>
+
+                        {/* Galeri Foto Tipe Kamar */}
+                        <div className="flex flex-column gap-2 w-full mt-3 p-3 surface-50 border-round border-1 surface-border">
+                            <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center gap-2">
+                                <div>
+                                    <span className="font-semibold text-base text-900 flex align-items-center gap-2">
+                                        <i className="pi pi-images text-primary"></i> Galeri Foto Tipe Kamar
+                                    </span>
+                                    <p className="text-xs text-500 m-0 mt-1">
+                                        Maks 2MB per foto (JPG, PNG, WEBP). Foto cover akan menjadi thumbnail di katalog kamar.
+                                    </p>
+                                </div>
+                                <div>
+                                    <Button
+                                        type="button"
+                                        label="Tambah Foto"
+                                        icon="pi pi-upload"
+                                        size="small"
+                                        outlined
+                                        onClick={() => fileInputRef.current?.click()}
+                                        loading={photoLoad}
+                                    />
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileSelect}
+                                        multiple
+                                        accept="image/png,image/jpeg,image/jpg,image/webp"
+                                        style={{ display: 'none' }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Foto yang sudah terunggah di database (Edit Mode) */}
+                            {state.edit && (
+                                <div className="mt-2">
+                                    {photoLoad && photos.length === 0 ? (
+                                        <div className="text-center p-3 text-500 text-sm">
+                                            <i className="pi pi-spin pi-spinner mr-2"></i>Memuat galeri foto...
+                                        </div>
+                                    ) : photos.length > 0 ? (
+                                        <div className="grid">
+                                            {photos.map((item) => (
+                                                <div key={item.id} className="col-12 sm:col-6 md:col-4 lg:col-3">
+                                                    <div className="surface-card border-round shadow-1 p-2 flex flex-column gap-2 border-1 surface-border relative h-full">
+                                                        <div className="relative w-full overflow-hidden border-round" style={{ height: '110px' }}>
+                                                            <Image
+                                                                src={item.foto_url}
+                                                                alt={item.file_name}
+                                                                width="100%"
+                                                                height="110"
+                                                                preview
+                                                                imageStyle={{ width: '100%', height: '110px', objectFit: 'cover' }}
+                                                            />
+                                                            {item.is_cover === 1 && (
+                                                                <div className="absolute top-0 left-0 m-1">
+                                                                    <Tag severity="success" value="Cover Utama" icon="pi pi-star-fill" style={{ fontSize: '0.7rem' }} />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex justify-content-between align-items-center gap-1 mt-auto pt-1">
+                                                            {item.is_cover !== 1 ? (
+                                                                <Button
+                                                                    type="button"
+                                                                    label="Set Cover"
+                                                                    icon="pi pi-star"
+                                                                    size="small"
+                                                                    outlined
+                                                                    severity="warning"
+                                                                    className="p-button-xs text-xs py-1 px-2"
+                                                                    onClick={() => handleSetCover(item.id)}
+                                                                    loading={photoLoad}
+                                                                />
+                                                            ) : (
+                                                                <span className="text-xs text-green-600 font-semibold flex align-items-center gap-1">
+                                                                    <i className="pi pi-check text-xs"></i> Cover
+                                                                </span>
+                                                            )}
+                                                            <Button
+                                                                type="button"
+                                                                icon="pi pi-trash"
+                                                                size="small"
+                                                                severity="danger"
+                                                                text
+                                                                className="p-button-xs text-xs p-1"
+                                                                tooltip="Hapus Foto"
+                                                                tooltipOptions={{ position: 'top' }}
+                                                                onClick={() => handleDeletePhoto(item.id)}
+                                                                loading={photoLoad}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="border-2 border-dashed surface-border border-round p-4 text-center text-500">
+                                            <i className="pi pi-image text-3xl mb-2 text-400"></i>
+                                            <p className="m-0 text-sm">Belum ada foto untuk tipe kamar ini.</p>
+                                            <p className="m-0 text-xs text-400 mt-1">Klik tombol &ldquo;Tambah Foto&rdquo; di atas untuk mengunggah.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Foto yang baru dipilih / staged (Add Mode) */}
+                            {state.add && (
+                                <div className="mt-2">
+                                    {stagedPhotos.length > 0 ? (
+                                        <div className="grid">
+                                            {stagedPhotos.map((item, idx) => (
+                                                <div key={idx} className="col-12 sm:col-6 md:col-4 lg:col-3">
+                                                    <div className="surface-card border-round shadow-1 p-2 flex flex-column gap-2 border-1 surface-border relative h-full">
+                                                        <div className="relative w-full overflow-hidden border-round" style={{ height: '110px' }}>
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img
+                                                                src={item.preview}
+                                                                alt={item.name}
+                                                                style={{ width: '100%', height: '110px', objectFit: 'cover' }}
+                                                                className="border-round"
+                                                            />
+                                                            {idx === 0 && (
+                                                                <div className="absolute top-0 left-0 m-1">
+                                                                    <Tag severity="info" value="Cover Otomatis" icon="pi pi-star" style={{ fontSize: '0.7rem' }} />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex justify-content-between align-items-center gap-1 mt-auto pt-1">
+                                                            <span className="text-xs text-500 truncate" style={{ maxWidth: '100px' }} title={item.name}>
+                                                                {item.name}
+                                                            </span>
+                                                            <Button
+                                                                type="button"
+                                                                icon="pi pi-times"
+                                                                size="small"
+                                                                severity="danger"
+                                                                text
+                                                                className="p-button-xs text-xs p-1"
+                                                                tooltip="Batal Unggah"
+                                                                onClick={() => handleRemoveStagedPhoto(idx)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="border-2 border-dashed surface-border border-round p-4 text-center text-500">
+                                            <i className="pi pi-image text-3xl mb-2 text-400"></i>
+                                            <p className="m-0 text-sm">Pilih foto sekarang untuk otomatis diunggah saat tipe kamar disimpan.</p>
+                                            <p className="m-0 text-xs text-400 mt-1">Anda juga dapat menambahkan foto nanti melalui form Edit.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Status Aktif */}
