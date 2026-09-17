@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file amenity_data.js
@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
-  const sortField = ["kode_amenity", "name", "is_active", "created_at", "updated_at"].includes(
+  const sortField = ["kode_amenity", "name", "harga", "is_active", "created_at", "updated_at"].includes(
     oPayload.sortField
   )
     ? oPayload.sortField
@@ -43,6 +43,7 @@ router.post("/", async (req, res) => {
       "a.kode_amenity",
       "a.name",
       "a.icon",
+      "a.harga",
       "a.is_active",
       "a.created_at",
       "a.updated_at",

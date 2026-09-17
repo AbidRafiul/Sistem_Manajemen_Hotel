@@ -56,6 +56,7 @@ const Page = () => {
         initialValues: {
             name: '',
             icon: '',
+            harga: 0,
             is_active: 1
         },
         validate: (data: initValue) => {

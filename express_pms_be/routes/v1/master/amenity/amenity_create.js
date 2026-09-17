@@ -33,12 +33,14 @@ router.post("/", async (req, res) => {
       {
         name: Joi.string().min(2).max(100).required().label("Nama Amenity"),
         icon: Joi.string().allow("", null).max(50).optional().label("Icon"),
+        harga: Joi.number().min(0).optional().default(0).label("Harga / Tarif"),
         is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
       },
       {
         "string.base": "{#label} harus berupa teks",
         "string.empty": "{#label} tidak boleh kosong",
         "any.required": "{#label} wajib diisi",
+        "number.base": "{#label} harus berupa angka",
       },
       oPayload,
       { table: "mst_amenity", allowUnknown: true }
@@ -54,6 +56,7 @@ router.post("/", async (req, res) => {
         kode_amenity: cUniqueCode,
         name: oPayload.name,
         icon: oPayload.icon || null,
+        harga: Number(oPayload.harga) || 0,
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
         created_by: req.auth?.user_id || 1,
         created_at: formatDateSystem(),

@@ -6,6 +6,7 @@ import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
 import StepGuest from './step_guest';
 import StepAvailability from './step_availability';
+import StepExtraFacilities from './step_extra_facilities';
 import StepPayment from './step_payment';
 import StepConfirmation from './step_confirmation';
 import { Button } from 'primereact/button';
@@ -22,11 +23,17 @@ interface FormWalkInProps {
 }
 
 const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast }) => {
+    const selectedRooms = formik.values.selected_rooms || [];
     const hasGuest = !!(formik.values.kode_guest || (state.foundGuest && !state.isGuestNew));
-    const hasRoom = !!(formik.values.kode_tipe_kamar && formik.values.kode_rate_plan && formik.values.kode_kamar);
+    const hasRoom = selectedRooms.length > 0 || !!(formik.values.kode_tipe_kamar && formik.values.kode_rate_plan && formik.values.kode_kamar);
     const hasPaymentSetup = formik.values.deposit_amount === 0 || !!(formik.values.deposit_amount > 0 && formik.values.payment_method);
 
-    const totalTagihan = (state.rateInfo?.price_per_night || 0) * formik.values.nights;
+    const activeExtraFacilities = (formik.values.extra_facilities || []).filter(f => f.qty > 0 || f.subtotal > 0);
+    const totalFasilitas = activeExtraFacilities.reduce((sum, f) => sum + (f.subtotal || 0), 0);
+    const totalKamar = selectedRooms.length > 0
+        ? selectedRooms.reduce((sum, r) => sum + (r.total_price || 0), 0)
+        : (state.rateInfo?.price_per_night || 0) * formik.values.nights;
+    const totalTagihan = totalKamar + totalFasilitas;
     const guestName = state.foundGuest?.full_name || formik.values.full_name || null;
 
     const hasTabErrors = (tabIndex: number): boolean => {
@@ -39,7 +46,7 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
     const getTabForField = (fieldName: string): number => {
         if (['kode_cabang', 'keyword_guest', 'full_name', 'id_number', 'phone'].includes(fieldName)) return 0;
         if (['check_in_date', 'check_out_date', 'kode_tipe_kamar', 'kode_rate_plan', 'kode_kamar'].includes(fieldName)) return 1;
-        if (['payment_method', 'kode_cashier_shift'].includes(fieldName)) return 2;
+        if (['payment_method', 'kode_cashier_shift'].includes(fieldName)) return 3;
         return 0;
     };
 
@@ -79,7 +86,7 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                                 header={
                                     <div className={`flex align-items-center gap-2 ${hasTabErrors(1) ? 'text-red-500' : ''}`}>
                                         <i className="pi pi-home"></i>
-                                        <span>Kamar & Tarif</span>
+                                        <span>Kamar & Tarif {selectedRooms.length > 0 ? `(${selectedRooms.length})` : ''}</span>
                                         {hasTabErrors(1) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }
@@ -91,10 +98,23 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
 
                             <TabPanel
                                 header={
-                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(2) ? 'text-red-500' : ''}`}>
+                                    <div className={`flex align-items-center gap-2`}>
+                                        <i className="pi pi-sparkles"></i>
+                                        <span>Fasilitas Tambahan {activeExtraFacilities.length > 0 ? `(${activeExtraFacilities.length})` : ''}</span>
+                                    </div>
+                                }
+                            >
+                                <div className="pt-4 animation-duration-300 fadein">
+                                    <StepExtraFacilities state={state} setState={setState} formik={formik} toast={toast} />
+                                </div>
+                            </TabPanel>
+
+                            <TabPanel
+                                header={
+                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(3) ? 'text-red-500' : ''}`}>
                                         <i className="pi pi-wallet"></i>
                                         <span>Deposit (Opsional)</span>
-                                        {hasTabErrors(2) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
+                                        {hasTabErrors(3) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }
                             >
@@ -173,10 +193,30 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
 
                     {/* Room Info */}
                     <div className="mb-3">
-                        <div className="text-xs text-color-secondary font-medium uppercase mb-2 flex align-items-center gap-1">
-                            <i className="pi pi-home" style={{ fontSize: 10 }} /> Kamar
+                        <div className="text-xs text-color-secondary font-medium uppercase mb-2 flex align-items-center justify-content-between">
+                            <span className="flex align-items-center gap-1">
+                                <i className="pi pi-home" style={{ fontSize: 10 }} /> Kamar Terpilih
+                            </span>
+                            {selectedRooms.length > 0 && (
+                                <span className="text-xs text-primary font-bold">{selectedRooms.length} Kamar</span>
+                            )}
                         </div>
-                        {state.rateInfo ? (
+                        {selectedRooms.length > 0 ? (
+                            <div className="flex flex-column gap-2">
+                                {selectedRooms.map((rm, idx) => (
+                                    <div key={idx} className="p-2 border-round surface-50 text-xs border-1 surface-border">
+                                        <div className="font-bold text-900 flex justify-content-between">
+                                            <span>Kamar {rm.nomor_kamar}</span>
+                                            <span className="text-primary font-bold">Rp {rm.total_price.toLocaleString('id-ID')}</span>
+                                        </div>
+                                        <div className="text-secondary mt-1 flex justify-content-between">
+                                            <span>{rm.nama_tipe}</span>
+                                            <span>{rm.nama_rate_plan}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : state.rateInfo ? (
                             <div>
                                 <div className="font-bold text-sm">{state.rateInfo.nama_tipe}</div>
                                 <div className="text-xs text-color-secondary mt-1">{state.rateInfo.nama_rate_plan}</div>
@@ -188,6 +228,48 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                             </div>
                         )}
                     </div>
+
+                    {/* Extra Facilities Info */}
+                    {activeExtraFacilities.length > 0 && (
+                        <>
+                            <Divider className="my-2" />
+                            <div className="mb-3">
+                                <div className="text-xs text-color-secondary font-medium uppercase mb-2 flex align-items-center justify-content-between">
+                                    <span className="flex align-items-center gap-1">
+                                        <i className="pi pi-sparkles" style={{ fontSize: 10 }} /> Fasilitas Tambahan
+                                    </span>
+                                    <span className="text-xs text-blue-600 font-bold">{activeExtraFacilities.length} Item</span>
+                                </div>
+                                <div className="flex flex-column gap-1">
+                                    {activeExtraFacilities.map((fac, idx) => (
+                                        <div key={idx} className="flex justify-content-between text-xs py-1">
+                                            <span className="text-700">
+                                                {fac.nama} {fac.qty > 1 ? `(${fac.qty}x)` : ''}
+                                            </span>
+                                            <span className="font-semibold text-900">
+                                                {fac.subtotal > 0 ? `Rp ${fac.subtotal.toLocaleString('id-ID')}` : 'Termasuk (Gratis)'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Special Request Note */}
+                    {formik.values.special_request && (
+                        <>
+                            <Divider className="my-2" />
+                            <div className="mb-3">
+                                <div className="text-xs text-color-secondary font-medium uppercase mb-1 flex align-items-center gap-1">
+                                    <i className="pi pi-comment" style={{ fontSize: 10 }} /> Catatan Khusus
+                                </div>
+                                <div className="text-xs text-700 surface-50 p-2 border-round border-1 surface-border font-italic">
+                                    &ldquo;{formik.values.special_request}&rdquo;
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     {/* Date Info */}
                     {formik.values.check_in_date && (
@@ -222,27 +304,40 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                         <div className="text-xs text-color-secondary font-medium uppercase mb-2 flex align-items-center gap-1">
                             <i className="pi pi-credit-card" style={{ fontSize: 10 }} /> Ringkasan Estimasi Tagihan
                         </div>
-                        <div className="flex justify-content-between text-sm mb-2">
-                            <span className="text-color-secondary">
-                                {state.rateInfo ? `${formik.values.nights}x Rp ${(state.rateInfo.price_per_night || 0).toLocaleString('id-ID')}` : 'Tagihan Kamar'}
-                            </span>
-                            <span className="font-medium">Rp {totalTagihan.toLocaleString('id-ID')}</span>
+                        <div className="flex justify-content-between text-sm mb-1">
+                            <span className="text-color-secondary">Sewa Kamar</span>
+                            <span className="font-medium">Rp {totalKamar.toLocaleString('id-ID')}</span>
                         </div>
-                        {formik.values.deposit_amount > 0 && (
-                            <div className="flex justify-content-between text-sm mb-2">
-                                <span className="text-color-secondary">Deposit Awal</span>
-                                <span className="font-medium text-green-600">- Rp {formik.values.deposit_amount.toLocaleString('id-ID')}</span>
+                        {totalFasilitas > 0 && (
+                            <div className="flex justify-content-between text-sm mb-1">
+                                <span className="text-color-secondary">Fasilitas Tambahan</span>
+                                <span className="font-medium text-blue-600">+ Rp {totalFasilitas.toLocaleString('id-ID')}</span>
                             </div>
                         )}
                         <div
                             className="flex justify-content-between mt-2 pt-2"
                             style={{ borderTop: '2px solid var(--primary-color)' }}
                         >
-                            <span className="font-bold">{formik.values.deposit_amount > 0 ? 'Sisa Tagihan' : 'Total Tagihan'}</span>
+                            <span className="font-bold">Total Tagihan</span>
                             <span className="font-bold text-primary text-lg">
-                                Rp {Math.max(0, totalTagihan - (formik.values.deposit_amount || 0)).toLocaleString('id-ID')}
+                                Rp {totalTagihan.toLocaleString('id-ID')}
                             </span>
                         </div>
+
+                        {/* Deposit / Uang Jaminan (Terpisah dari total tagihan) */}
+                        {formik.values.deposit_amount > 0 && (
+                            <div className="mt-3 p-2 border-round surface-50 border-1 border-green-300">
+                                <div className="flex justify-content-between text-xs mb-1">
+                                    <span className="font-semibold text-green-800 flex align-items-center gap-1">
+                                        <i className="pi pi-shield text-green-600" /> Uang Jaminan (Deposit)
+                                    </span>
+                                    <span className="font-bold text-green-700">Rp {formik.values.deposit_amount.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div className="text-color-secondary" style={{ fontSize: '11px', lineHeight: 1.3 }}>
+                                    Deposit dipegang kasir sebagai jaminan dan tidak mengurangi total tagihan (dapat di-refund saat checkout).
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Progress Checklist */}

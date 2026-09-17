@@ -11,6 +11,7 @@ import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { useEffect, useState } from 'react';
 import { getTzUser } from '@/lib/tools/dateTools';
 import { InputSwitch } from 'primereact/inputswitch';
+import { InputNumber } from 'primereact/inputnumber';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
     const [cabangList, setCabangList] = useState<any[]>([]);
@@ -40,6 +41,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             const oBody: Record<string, any> = {
                 kode_cabang: input.kode_cabang,
                 name: input.name,
+                harga: Number(input.harga) || 0,
                 is_active: input.is_active,
                 tz: getTzUser()
             };
@@ -172,6 +174,26 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 className={isFormFieldInvalid('name') ? 'p-invalid w-full' : 'w-full'}
                             />
                             {getFormErrorMessage('name')}
+                        </div>
+
+                        {/* Harga / Tarif */}
+                        <div className="flex flex-column gap-1 w-full mt-2">
+                            <label htmlFor="harga" className="font-semibold text-sm">
+                                Tarif / Harga (Rp)
+                            </label>
+                            <InputNumber
+                                id="harga"
+                                name="harga"
+                                value={formik?.values.harga || 0}
+                                onValueChange={(e) => formik?.setFieldValue('harga', e.value || 0)}
+                                mode="currency"
+                                currency="IDR"
+                                locale="id-ID"
+                                min={0}
+                                placeholder="Rp 0 (Kosongkan jika gratis)"
+                                className="w-full"
+                            />
+                            <small className="text-color-secondary">Isi nominal tarif jika fasilitas ini merupakan add-on berbayar bagi tamu.</small>
                         </div>
 
                         {/* Status Aktif */}

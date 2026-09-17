@@ -75,6 +75,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kode_amenity: rowData.kode_amenity || '',
                         name: rowData.name || '',
                         icon: rowData.icon || '',
+                        harga: rowData.harga !== undefined ? Number(rowData.harga) : 0,
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
                     });
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
@@ -120,6 +121,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                             formik.setValues({
                                 name: '',
                                 icon: '',
+                                harga: 0,
                                 is_active: 1
                             });
                             setState((p) => ({ ...p, selectedDatas: [], add: true, edit: false }));
@@ -176,7 +178,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                     <Column field="kode_amenity" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="name" header="Nama Amenity" sortable style={{ minWidth: '16rem' }}></Column>
-                    <Column field="icon" header="Icon" align="center" style={{ minWidth: '10rem' }} body={(rowData) => rowData.icon || '-'}></Column>
+                    <Column field="icon" header="Icon" align="center" style={{ minWidth: '8rem' }} body={(rowData) => rowData.icon || '-'}></Column>
+                    <Column field="harga" header="Tarif / Harga" align="right" sortable style={{ minWidth: '11rem' }} body={(rowData) => Number(rowData.harga) > 0 ? `Rp ${Number(rowData.harga).toLocaleString('id-ID')}` : <Tag severity="info" value="Gratis / Include" />}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>

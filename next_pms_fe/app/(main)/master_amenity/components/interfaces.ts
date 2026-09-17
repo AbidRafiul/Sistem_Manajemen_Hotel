@@ -11,6 +11,7 @@ export interface TableData {
     kode_amenity?: string;
     name: string;
     icon?: string | null;
+    harga?: number;
     is_active: number;
     created_at?: string;
     updated_at?: string;
@@ -20,6 +21,7 @@ export interface initValue {
     kode_amenity?: string;
     name: string;
     icon?: string;
+    harga?: number;
     is_active: number;
 }
 

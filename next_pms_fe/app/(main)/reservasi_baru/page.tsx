@@ -47,15 +47,18 @@ const Page = () => {
             kode_tipe_kamar: '',
             kode_rate_plan: '',
             kode_kamar: '',
+            selected_rooms: [],
+            extra_facilities: [],
+            special_request: '',
             deposit_amount: 0,
             payment_method: '',
             kode_cashier_shift: ''
         },
         validate: (data) => {
             let errors: any = {};
-            const checkStep0 = state.activeStep === 0 || state.activeStep === 3;
-            const checkStep1 = state.activeStep === 1 || state.activeStep === 3;
-            const checkStep2 = state.activeStep === 2 || state.activeStep === 3;
+            const checkStep0 = state.activeStep === 0 || state.activeStep === 4;
+            const checkStep1 = state.activeStep === 1 || state.activeStep === 4;
+            const checkStep3 = state.activeStep === 3 || state.activeStep === 4;
 
             if (checkStep0) {
                 if (!data.kode_cabang) errors.kode_cabang = 'Cabang wajib dipilih';
@@ -71,12 +74,12 @@ const Page = () => {
             if (checkStep1) {
                 if (!data.check_in_date) errors.check_in_date = 'Tanggal Check In wajib diisi';
                 if (!data.check_out_date) errors.check_out_date = 'Tanggal Check Out wajib diisi';
-                if (!data.kode_tipe_kamar) errors.kode_tipe_kamar = 'Tipe Kamar wajib dipilih';
-                if (!data.kode_rate_plan) errors.kode_rate_plan = 'Rate Plan wajib dipilih';
-                if (!data.kode_kamar) errors.kode_kamar = 'Kamar wajib dipilih';
-                if (!state.rateInfo) errors.kode_tipe_kamar = 'Pilih paket kamar yang tersedia';
+                const hasRooms = (data.selected_rooms && data.selected_rooms.length > 0) || (data.kode_kamar && data.kode_tipe_kamar);
+                if (!hasRooms) {
+                    errors.kode_kamar = 'Silakan pilih minimal 1 kamar fisik yang tersedia';
+                }
             }
-            if (checkStep2) {
+            if (checkStep3) {
                 if (data.deposit_amount > 0) {
                     if (!data.payment_method) errors.payment_method = 'Metode pembayaran wajib dipilih';
                     if (!data.kode_cashier_shift) errors.kode_cashier_shift = 'Shift kasir wajib dipilih';

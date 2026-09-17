@@ -51,9 +51,32 @@ router.post("/", async (req, res) => {
                 .where('kode_cabang', oPayload.kode_cabang)
                 .where('is_active', 1)
                 .whereNull('deleted_at')
-                .select('kode_tipe_kamar', 'nama_tipe', 'harga_default', 'luas_sqm as luas_m2', 'kapasitas_dasar', 'kapasitas_maksimal');
+                .select('kode_tipe_kamar', 'nama_tipe', 'harga_default', 'luas_sqm as luas_m2', 'kapasitas_dasar', 'kapasitas_maksimal', 'deskripsi');
 
             if (tipeKamars.length === 0) return [];
+
+            // 1.1 Ambil foto cover & count foto untuk tipe kamar
+            const roomTypeCodes = tipeKamars.map(tk => tk.kode_tipe_kamar);
+            const photos = await trx('mst_tipe_kamar_foto')
+                .whereIn('kode_tipe_kamar', roomTypeCodes)
+                .whereNull('deleted_at')
+                .where('is_active', 1)
+                .orderBy('is_cover', 'desc')
+                .orderBy('urutan', 'asc')
+                .orderBy('id', 'asc')
+                .select('kode_tipe_kamar', 'foto_url', 'is_cover');
+
+            const coverMap = new Map();
+            const countMap = new Map();
+
+            for (const p of photos) {
+                countMap.set(p.kode_tipe_kamar, (countMap.get(p.kode_tipe_kamar) || 0) + 1);
+                if (!coverMap.has(p.kode_tipe_kamar) || p.is_cover === 1) {
+                    coverMap.set(p.kode_tipe_kamar, p.foto_url);
+                }
+            }
+
+            const assetsPath = process.env.ASSETS_PATH || "";
 
             // 2. Ambil semua rate plan aktif untuk cabang ini
             const ratePlans = await trx('mst_paket_harga')
@@ -77,12 +100,21 @@ router.post("/", async (req, res) => {
                 
                 const available_count = ketersediaan.available_count;
                 const available_rooms = ketersediaan.available_rooms || [];
+                const rooms = ketersediaan.all_rooms || [];
+
+                const coverFilename = coverMap.get(tk.kode_tipe_kamar) || null;
+                const fotoCoverUrl = coverFilename ? `${assetsPath}/uploads/tipe_kamar/${coverFilename}` : null;
+                const jumlahFoto = countMap.get(tk.kode_tipe_kamar) || 0;
 
                 // Buat item master Tipe Kamar
                 const productGroup = {
                     ...tk,
+                    deskripsi: tk.deskripsi || '',
+                    foto_cover_url: fotoCoverUrl,
+                    jumlah_foto: jumlahFoto,
                     available_count,
                     available_rooms,
+                    rooms,
                     packages: []
                 };
 
