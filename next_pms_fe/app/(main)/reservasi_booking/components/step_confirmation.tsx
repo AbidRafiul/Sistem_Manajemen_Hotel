@@ -17,8 +17,7 @@ interface StepConfirmationProps {
 
 const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, formik, toast }) => {
 
-
-    const submitWalkIn = async () => {
+    const submitBooking = async () => {
         const errors = await formik.validateForm();
         if (Object.keys(errors).length > 0) {
             formik.setTouched(
@@ -29,18 +28,36 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
         }
         setState(p => ({ ...p, submitLoad: true }));
         try {
-            const res = await postData(apiSubmitBooking, {
+            const selectedRooms = formik.values.selected_rooms || [];
+            const hasMultiRooms = selectedRooms.length > 0;
+            const activeExtraFacilities = (formik.values.extra_facilities || []).filter(f => f.qty > 0 || f.subtotal > 0);
+            const payload: any = {
                 kode_cabang: formik.values.kode_cabang,
                 kode_guest: formik.values.kode_guest,
                 check_in_date: formatDateSystem(formik.values.check_in_date || new Date(), "yyyy-MM-dd"),
                 check_out_date: formatDateSystem(formik.values.check_out_date || new Date(), "yyyy-MM-dd"),
                 nights: formik.values.nights,
-                kode_tipe_kamar: formik.values.kode_tipe_kamar,
-                kode_rate_plan: formik.values.kode_rate_plan,
                 deposit_amount: formik.values.deposit_amount,
                 payment_method: formik.values.payment_method || null,
-                kode_cashier_shift: formik.values.kode_cashier_shift || null
-            });
+                kode_cashier_shift: formik.values.kode_cashier_shift || null,
+                extra_facilities: activeExtraFacilities,
+                special_request: formik.values.special_request || ""
+            };
+
+            if (hasMultiRooms) {
+                payload.rooms = selectedRooms.map(r => ({
+                    kode_tipe_kamar: r.kode_tipe_kamar,
+                    kode_kamar: r.kode_kamar,
+                    kode_rate_plan: r.kode_rate_plan
+                }));
+                payload.kode_tipe_kamar = selectedRooms[0].kode_tipe_kamar;
+                payload.kode_rate_plan = selectedRooms[0].kode_rate_plan;
+            } else {
+                payload.kode_tipe_kamar = formik.values.kode_tipe_kamar;
+                payload.kode_rate_plan = formik.values.kode_rate_plan;
+            }
+
+            const res = await postData(apiSubmitBooking, payload);
 
             if (res.data.status === '00') {
                 setState(p => ({ ...p, submittedData: res.data.data }));
@@ -55,33 +72,48 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
         }
     };
 
-    const totalTagihan = (state.rateInfo?.price_per_night || 0) * formik.values.nights;
+    const selectedRooms = formik.values.selected_rooms || [];
+    const hasMultiRooms = selectedRooms.length > 0;
+    const activeExtraFacilities = (formik.values.extra_facilities || []).filter(f => f.qty > 0 || f.subtotal > 0);
+    const totalFasilitas = activeExtraFacilities.reduce((sum, f) => sum + (f.subtotal || 0), 0);
+    const totalKamar = hasMultiRooms
+        ? selectedRooms.reduce((acc, r) => acc + (r.price_per_night * (r.nights || formik.values.nights)), 0)
+        : (state.rateInfo?.price_per_night || 0) * formik.values.nights;
+    const totalTagihan = totalKamar + totalFasilitas;
 
     if (state.submittedData) {
         return (
             <div className="col-12 mt-4 text-center">
                 <i className="pi pi-check-circle text-green-500" style={{ fontSize: '4rem' }}></i>
-                <h4 className="mt-3">Reservasi Berhasil!</h4>
+                <h4 className="mt-3">Reservasi Berhasil Dibuat!</h4>
                 <p className="text-secondary">Tamu dapat melakukan check-in pada hari kedatangan.</p>
                 
                 <div className="mt-4 flex flex-column align-items-center gap-3">
                     <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
                         <span className="font-medium">No. Reservasi:</span>
-                        <span className="font-bold">{state.submittedData?.kode_reservasi}</span>
+                        <span className="font-bold text-primary">{state.submittedData?.kode_reservasi}</span>
+                    </div>
+                    <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
+                        <span className="font-medium">Tipe Booking:</span>
+                        <span className="font-bold uppercase">{state.submittedData?.booking_type || (hasMultiRooms ? 'group' : 'individual')}</span>
+                    </div>
+                    <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
+                        <span className="font-medium">Jumlah Kamar:</span>
+                        <span className="font-bold">{state.submittedData?.rooms_count || (hasMultiRooms ? selectedRooms.length : 1)} Kamar</span>
                     </div>
                     <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
                         <span className="font-medium">Status:</span>
-                        <span className="font-bold uppercase text-primary">{state.submittedData?.status}</span>
+                        <span className="font-bold uppercase text-green-600">{state.submittedData?.status || 'CONFIRMED'}</span>
                     </div>
                 </div>
-                <Button label="Buat Reservasi Baru" className="mt-4" onClick={() => window.location.reload()} />
+                <Button label="Buat Reservasi Baru" icon="pi pi-plus" className="mt-4" onClick={() => window.location.reload()} />
             </div>
         );
     }
 
     return (
         <div className="p-fluid">
-            <h5>Ringkasan Reservasi</h5>
+            <h5>Ringkasan Reservasi Di Muka (Booking)</h5>
             <div className="grid">
                 <div className="col-12 md:col-6">
                     <div className="p-3 border-1 surface-border border-round h-full">
@@ -93,33 +125,135 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                 </div>
                 <div className="col-12 md:col-6">
                     <div className="p-3 border-1 surface-border border-round h-full">
-                        <h6>Kamar & Waktu</h6>
+                        <h6>Kamar & Waktu ({hasMultiRooms ? selectedRooms.length : 1} Kamar)</h6>
                         <p className="m-0 text-secondary">
                             Check In: <strong>{formik.values.check_in_date ? formatDateSystem(formik.values.check_in_date, 'dd-MM-yyyy') : '-'}</strong>
                         </p>
                         <p className="m-0 text-secondary">
                             Check Out: <strong>{formik.values.check_out_date ? formatDateSystem(formik.values.check_out_date, 'dd-MM-yyyy') : '-'}</strong>
                         </p>
-                        <p className="m-0 text-secondary">Malam: <strong>{formik.values.nights}</strong></p>
+                        <p className="m-0 text-secondary">Durasi: <strong>{formik.values.nights} Malam</strong></p>
+
+                        <div className="mt-2 pt-2 border-top-1 surface-border">
+                            <div className="text-xs font-semibold text-color-secondary mb-1">DAFTAR KAMAR DIPILIH:</div>
+                            {hasMultiRooms ? (
+                                <div className="flex flex-column gap-1">
+                                    {selectedRooms.map((rm, idx) => (
+                                        <div key={idx} className="flex justify-content-between text-sm py-1 border-bottom-1 surface-border">
+                                            <div>
+                                                <span className="font-bold text-primary mr-2">No. {rm.nomor_kamar}</span>
+                                                <span className="text-color-secondary">({rm.nama_tipe} - {rm.nama_rate_plan})</span>
+                                            </div>
+                                            <span className="font-semibold">Rp {(rm.price_per_night * (rm.nights || formik.values.nights)).toLocaleString('id-ID')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="m-0 text-secondary">Tipe: <strong>{state.rateInfo?.nama_tipe || '-'}</strong> ({state.rateInfo?.nama_rate_plan || '-'})</p>
+                            )}
+                        </div>
                     </div>
                 </div>
+
+                {/* Fasilitas Tambahan & Catatan Section */}
+                {(activeExtraFacilities.length > 0 || formik.values.special_request) && (
+                    <div className="col-12">
+                        <div className="p-3 border-1 surface-border border-round">
+                            <h6>Fasilitas Tambahan & Catatan</h6>
+                            {activeExtraFacilities.length > 0 && (
+                                <div className="flex flex-column gap-1 mb-2">
+                                    {activeExtraFacilities.map((ef, idx) => (
+                                        <div key={idx} className="flex justify-content-between text-sm py-1 border-bottom-1 surface-border">
+                                            <span>{ef.nama} {ef.qty > 1 ? `(${ef.qty}x)` : ''}</span>
+                                            <span className="font-semibold text-900">
+                                                {ef.subtotal > 0 ? `Rp ${ef.subtotal.toLocaleString('id-ID')}` : 'Termasuk (Gratis)'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    <div className="flex justify-content-between text-sm font-bold pt-1">
+                                        <span>Total Fasilitas Tambahan</span>
+                                        <span className="text-blue-600">Rp {totalFasilitas.toLocaleString('id-ID')}</span>
+                                    </div>
+                                </div>
+                            )}
+                            {formik.values.special_request && (
+                                <div className="mt-2 text-sm text-700 bg-gray-50 p-2 border-round">
+                                    <strong>Catatan Khusus:</strong> &ldquo;{formik.values.special_request}&rdquo;
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="col-12">
                     <div className="p-3 border-1 surface-border border-round bg-blue-50">
-                        <h6>Keuangan</h6>
-                        <div className="flex justify-content-between">
-                            <span>Tagihan Kamar</span>
-                            <strong>Rp {totalTagihan.toLocaleString('id-ID')}</strong>
+                        <div className="flex align-items-center justify-content-between mb-2">
+                            <h6 className="m-0 font-bold text-blue-900">Ringkasan Keuangan</h6>
+                            <span className="text-xs text-blue-700">Estimasi Booking Folio</span>
                         </div>
-                        <div className="flex justify-content-between mt-2">
-                            <span>Deposit Dibayarkan</span>
-                            <strong>Rp {formik.values.deposit_amount.toLocaleString('id-ID')}</strong>
+                        <div className="flex justify-content-between mb-1 text-sm">
+                            <span className="text-700">Sewa Kamar ({hasMultiRooms ? selectedRooms.length : 1} Kamar)</span>
+                            <strong>Rp {totalKamar.toLocaleString('id-ID')}</strong>
                         </div>
+                        {totalFasilitas > 0 && (
+                            <div className="flex justify-content-between mb-1 text-sm">
+                                <span className="text-700">Fasilitas & Layanan Tambahan</span>
+                                <strong className="text-blue-600">+ Rp {totalFasilitas.toLocaleString('id-ID')}</strong>
+                            </div>
+                        )}
+                        <div className="flex justify-content-between mb-1 pt-2 border-top-1 border-blue-200">
+                            <span className="font-bold text-base text-900">Total Tagihan</span>
+                            <strong className="text-primary text-xl">Rp {totalTagihan.toLocaleString('id-ID')}</strong>
+                        </div>
+
+                        {formik.values.deposit_amount > 0 ? (
+                            <div className="mt-3 pt-2 border-top-1 border-blue-200">
+                                <div className="p-2 border-round surface-0 border-1 border-green-300">
+                                    <div className="flex justify-content-between align-items-center">
+                                        <div>
+                                            <span className="font-semibold text-green-800 text-sm flex align-items-center gap-1">
+                                                <i className="pi pi-shield text-green-600"></i> Uang Jaminan (Deposit Diterima)
+                                            </span>
+                                            <span className="text-xs text-color-secondary block mt-1">
+                                                Metode: <strong className="uppercase">{formik.values.payment_method || 'CASH'}</strong> • Disimpan di kasir sebagai jaminan (tidak memotong total tagihan)
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <strong className="text-green-700 text-base">
+                                                Rp {formik.values.deposit_amount.toLocaleString('id-ID')}
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mt-2 text-xs text-color-secondary">
+                                <i className="pi pi-info-circle mr-1"></i> Tidak ada pembayaran deposit awal. Seluruh tagihan diselesaikan saat check-in/check-out.
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            <div className="flex justify-content-end mt-4">
-                <Button label="Proses Booking" icon="pi pi-check" iconPos="right" severity="success" onClick={submitWalkIn} loading={state.submitLoad} />
+            <div className="col-12 flex justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top-1 surface-border">
+                <Button 
+                    type="button" 
+                    label="Kembali ke Deposit" 
+                    icon="pi pi-arrow-left" 
+                    outlined 
+                    severity="secondary" 
+                    className="p-button-sm font-medium px-3 py-2" 
+                    onClick={() => setState(p => ({ ...p, activeStep: 3 }))} 
+                />
+                <Button 
+                    label="Buat Reservasi (Booking)" 
+                    icon="pi pi-check" 
+                    iconPos="right" 
+                    severity="success" 
+                    className="p-button-sm font-bold px-4 py-2" 
+                    onClick={submitBooking} 
+                    loading={state.submitLoad} 
+                />
             </div>
         </div>
     );
