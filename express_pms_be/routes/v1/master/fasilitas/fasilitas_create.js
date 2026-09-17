@@ -33,6 +33,7 @@ router.post("/", async (req, res) => {
       {
         kode_cabang: Joi.string().required().label("Kode Cabang"),
         name: Joi.string().min(2).max(100).required().label("Nama Fasilitas"),
+        harga: Joi.number().min(0).optional().default(0).label("Harga / Tarif"),
         is_active: Joi.number().valid(0, 1).optional().default(1).label("Status Aktif"),
       },
       {
@@ -57,6 +58,7 @@ router.post("/", async (req, res) => {
         kode_cabang: oPayload.kode_cabang,
         kode_fasilitas: cUniqueCode,
         name: oPayload.name,
+        harga: Number(oPayload.harga) || 0,
         is_active: oPayload.is_active !== undefined ? oPayload.is_active : 1,
         created_by: req.auth?.user_id || 1,
         created_at: formatDateSystem(),

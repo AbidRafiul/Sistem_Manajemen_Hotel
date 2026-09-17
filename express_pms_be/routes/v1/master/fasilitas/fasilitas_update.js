@@ -24,6 +24,7 @@ router.post("/", async (req, res) => {
       {
         kode_fasilitas: Joi.string().required().label("Kode Fasilitas"),
         name: Joi.string().min(2).max(100).required().label("Nama Fasilitas"),
+        harga: Joi.number().min(0).optional().label("Harga / Tarif"),
         is_active: Joi.number().valid(0, 1).optional().label("Status Aktif"),
       },
       {
@@ -32,6 +33,7 @@ router.post("/", async (req, res) => {
         "string.min": "{#label} minimal {#limit} karakter",
         "string.max": "{#label} maksimal {#limit} karakter",
         "any.required": "{#label} wajib diisi",
+        "number.base": "{#label} harus berupa angka",
       },
       oPayload,
       { table: "mst_fasilitas", allowUnknown: true }
@@ -54,6 +56,7 @@ router.post("/", async (req, res) => {
         });
     const oData = {
       name: oPayload.name,
+      harga: oPayload.harga !== undefined ? Number(oPayload.harga) : existing.harga,
       is_active: oPayload.is_active !== undefined ? oPayload.is_active : existing.is_active,
       updated_by: req.auth?.user_id || 1,
       updated_at: formatDateSystem(),
