@@ -10,6 +10,7 @@ import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { useEffect } from 'react';
 import { getTzUser } from '@/lib/tools/dateTools';
 import { InputSwitch } from 'primereact/inputswitch';
+import { InputNumber } from 'primereact/inputnumber';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
     const handleSave = async (input: initValue) => {
@@ -26,6 +27,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             const oBody: Record<string, any> = {
                 name: input.name,
                 icon: input.icon || '',
+                harga: Number(input.harga) || 0,
                 is_active: input.is_active,
                 tz: getTzUser()
             };
@@ -147,6 +149,26 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 onChange={(e) => formik?.setFieldValue('icon', e.target.value)}
                                 className="w-full"
                             />
+                        </div>
+
+                        {/* Harga / Tarif */}
+                        <div className="flex flex-column gap-1 w-full mt-2">
+                            <label htmlFor="harga" className="font-semibold text-sm">
+                                Tarif / Harga (Rp)
+                            </label>
+                            <InputNumber
+                                id="harga"
+                                name="harga"
+                                value={formik?.values.harga || 0}
+                                onValueChange={(e) => formik?.setFieldValue('harga', e.value || 0)}
+                                mode="currency"
+                                currency="IDR"
+                                locale="id-ID"
+                                min={0}
+                                placeholder="Rp 0 (Kosongkan jika gratis)"
+                                className="w-full"
+                            />
+                            <small className="text-color-secondary">Isi nominal tarif jika amenity ini merupakan layanan tambahan berbayar (add-on) bagi tamu.</small>
                         </div>
 
                         {/* Status Aktif */}
