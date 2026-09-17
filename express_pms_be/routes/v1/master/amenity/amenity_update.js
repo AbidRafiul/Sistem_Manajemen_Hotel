@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file amenity_update.js
@@ -33,9 +33,10 @@ router.post("/", async (req, res) => {
         kode_amenity: Joi.string().required().label("Kode Amenity"),
         name: Joi.string().min(2).max(100).required().label("Nama Amenity"),
         icon: Joi.string().allow("", null).max(50).optional().label("Icon"),
+        harga: Joi.number().min(0).optional().label("Harga / Tarif"),
         is_active: Joi.number().valid(0, 1).optional().label("Status Aktif"),
       },
-      { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi" },
+      { "string.base": "{#label} harus berupa teks", "any.required": "{#label} wajib diisi", "number.base": "{#label} harus berupa angka" },
       oPayload,
       { table: "mst_amenity", allowUnknown: true }
     );
@@ -58,6 +59,7 @@ router.post("/", async (req, res) => {
     const oData = {
       name: oPayload.name,
       icon: oPayload.icon !== undefined ? oPayload.icon : existing.icon,
+      harga: oPayload.harga !== undefined ? Number(oPayload.harga) : existing.harga,
       is_active: oPayload.is_active !== undefined ? oPayload.is_active : existing.is_active,
       updated_by: req.auth?.user_id || 1,
       updated_at: formatDateSystem(),
