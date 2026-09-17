@@ -55,7 +55,8 @@ export const hitungKetersediaanTipeKamar = async (payload, trx) => {
             terpakai: 0,
             available_count: 0,
             terpakai_kamar_ids: [],
-            available_rooms: []
+            available_rooms: [],
+            all_rooms: []
         };
     }
 
@@ -111,9 +112,11 @@ export const hitungKetersediaanTipeKamar = async (payload, trx) => {
         .select('rr.kode_kamar', 'rr.kode_reservasi_room', 'r.status as res_status');
 
     let unassignedCount = 0;
+    const reservedRoomCodesOnDates = new Set();
     overlappingReservations.forEach(row => {
         if (row.kode_kamar) {
             unavailableRoomIds.add(row.kode_kamar);
+            reservedRoomCodesOnDates.add(row.kode_kamar);
         } else {
             unassignedCount++;
         }
@@ -132,11 +135,71 @@ export const hitungKetersediaanTipeKamar = async (payload, trx) => {
     const terpakai = total - available_count;
     const terpakai_kamar_ids = Array.from(unavailableRoomIds);
 
+    // 5. Buat mapping status untuk SELURUH kamar fisik tipe ini (Best practice PMS: bedakan Walk-in vs Booking)
+    const availableRoomCodes = new Set(available_rooms.map(r => r.kode_kamar));
+    const all_rooms = physicalRooms.map(r => {
+        let roomStatus = 'available';
+        let roomStatusLabel = 'Tersedia';
+        let isSelectable = false;
+
+        // Cek maintenance / blocked operasional
+        if (r.occupancy_status === 'blocked' || r.housekeeping_status === 'out_of_service' || r.housekeeping_status === 'maintenance') {
+            roomStatus = 'maintenance';
+            roomStatusLabel = 'Maintenance';
+        } else if (isTodayOrPast) {
+            // ── Logika WALK-IN (Check-in Hari Ini / Same-Day) ──
+            // Tamu akan LANGSUNG menempati kamar saat ini juga, sehingga bergantung kondisi fisik riil:
+            if (r.occupancy_status === 'occupied' || reservedRoomCodesOnDates.has(r.kode_kamar)) {
+                roomStatus = 'occupied';
+                roomStatusLabel = 'Terisi';
+            } else if (r.housekeeping_status === 'dirty' || r.housekeeping_status === 'inspection' || unavailableRoomIds.has(r.kode_kamar)) {
+                roomStatus = 'dirty';
+                roomStatusLabel = 'Perlu Dibersihkan';
+            } else if (availableRoomCodes.has(r.kode_kamar)) {
+                roomStatus = 'available';
+                roomStatusLabel = 'Tersedia';
+                isSelectable = true;
+            } else {
+                roomStatus = 'occupied';
+                roomStatusLabel = 'Terisi';
+            }
+        } else {
+            // ── Logika ADVANCE BOOKING (Check-in di Masa Depan) ──
+            // Tamu datang di masa depan. Kondisi 'occupied' atau 'dirty' HARI INI tidak menghalangi masa depan,
+            // karena tamu hari ini akan checkout dan kamar akan dibersihkan sebelum tanggal check-in.
+            // Yang menentukan adalah apakah ada reservasi yang overlap pada rentang tanggal tersebut.
+            if (reservedRoomCodesOnDates.has(r.kode_kamar)) {
+                roomStatus = 'occupied';
+                roomStatusLabel = 'Sudah Dipesan';
+            } else if (availableRoomCodes.has(r.kode_kamar)) {
+                roomStatus = 'available';
+                roomStatusLabel = 'Tersedia';
+                isSelectable = true;
+            } else {
+                roomStatus = 'occupied';
+                roomStatusLabel = 'Sudah Dipesan';
+            }
+        }
+
+        return {
+            kode_kamar: r.kode_kamar,
+            nomor_kamar: r.nomor_kamar,
+            kode_tipe_kamar: r.kode_tipe_kamar,
+            tipe_pemandangan: r.tipe_pemandangan,
+            occupancy_status: r.occupancy_status,
+            housekeeping_status: r.housekeeping_status,
+            status: roomStatus, // 'available' | 'occupied' | 'dirty' | 'maintenance'
+            status_label: roomStatusLabel,
+            is_selectable: isSelectable
+        };
+    }).sort((a, b) => a.nomor_kamar.localeCompare(b.nomor_kamar, undefined, { numeric: true }));
+
     return {
         total,
         terpakai,
         available_count,
         terpakai_kamar_ids,
-        available_rooms
+        available_rooms,
+        all_rooms
     };
 };

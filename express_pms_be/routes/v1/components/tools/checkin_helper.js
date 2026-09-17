@@ -81,10 +81,9 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
 
     // 3. Generate IDs
     const noCheckin = await generateSequence("FMT-CHECKIN", trx);
-    const noFolio = await generateSequence("FMT-FOLIO", trx);
     const noFolioCharge = await generateSequence("FMT-FOLIOCHARGE", trx);
     
-    if (!noCheckin || !noFolio || !noFolioCharge) {
+    if (!noCheckin || !noFolioCharge) {
         throw new Error("Gagal membuat nomor transaksi check-in");
     }
 
@@ -118,27 +117,49 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
         created_at: tNow
     });
 
-    // 7. Insert trx_folio
-    await trx("trx_folio").insert({
-        kode_cabang: resRoom.kode_cabang,
-        kode_folio: noFolio,
-        kode_reservation: resRoom.kode_reservation,
-        folio_owner_type: "guest",
-        status: "open",
-        subtotal: totalRoomCharge,
-        tax_amount: 0, // akan dihitung saat checkout
-        service_charge_amount: 0,
-        grand_total: totalRoomCharge,
-        created_by: userId,
-        created_at: tNow
-    });
+    // 7. Cek / Buat trx_folio (Satu reservasi multi-kamar menggunakan satu folio gabungan)
+    let targetFolio = await trx("trx_folio")
+        .where("kode_reservation", resRoom.kode_reservation)
+        .where("status", "open")
+        .first();
+
+    let folioCode;
+    if (!targetFolio) {
+        const noFolio = await generateSequence("FMT-FOLIO", trx);
+        if (!noFolio) throw new Error("Gagal membuat nomor transaksi folio");
+
+        await trx("trx_folio").insert({
+            kode_cabang: resRoom.kode_cabang,
+            kode_folio: noFolio,
+            kode_reservation: resRoom.kode_reservation,
+            folio_owner_type: "guest",
+            status: "open",
+            subtotal: totalRoomCharge,
+            tax_amount: 0, // akan dihitung saat checkout
+            service_charge_amount: 0,
+            grand_total: totalRoomCharge,
+            created_by: userId,
+            created_at: tNow
+        });
+        folioCode = noFolio;
+    } else {
+        folioCode = targetFolio.kode_folio;
+        await trx("trx_folio")
+            .where("kode_folio", folioCode)
+            .update({
+                subtotal: trx.raw('subtotal + ?', [totalRoomCharge]),
+                grand_total: trx.raw('grand_total + ?', [totalRoomCharge]),
+                updated_by: userId,
+                updated_at: tNow
+            });
+    }
 
     // 8. Insert trx_folio_charge
     await trx("trx_folio_charge").insert({
         kode_folio_charge: noFolioCharge,
-        kode_folio: noFolio,
+        kode_folio: folioCode,
         charge_type: "room",
-        description: `Room Charge (${computedNights} night/s)`,
+        description: `Room Charge (${computedNights} night/s) - Kamar ${kamarAvailable.nomor_kamar || assignedKamar}`,
         qty: computedNights,
         unit_price: ratePerNight,
         amount: totalRoomCharge,
@@ -161,7 +182,7 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
 
     return {
         kode_checkin: noCheckin,
-        kode_folio: noFolio,
+        kode_folio: folioCode,
         kode_kamar_assigned: assignedKamar,
         nights: computedNights,
         total_charge: totalRoomCharge
