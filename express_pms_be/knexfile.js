@@ -29,11 +29,11 @@ pg.types.setTypeParser(pg.types.builtins.DATE, parseFn);
 
 const getConnectionConfig = ({ dbms, host, port, username, password, database }) => {
   const baseConfig = {
-    host: host || process.env.DB_HOST || process.env.MYSQLHOST || "localhost",
-    port: Number(port || process.env.DB_PORT || process.env.MYSQLPORT) || (dbms === "pg" || dbms === "postgresql" ? 5432 : 3306),
-    user: username || process.env.DB_USERNAME || process.env.MYSQLUSER || "",
-    password: password || process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || "",
-    database: database || process.env.DB_DATABASE || process.env.MYSQLDATABASE || "",
+    host: host || "localhost",
+    port: Number(port) || (dbms === "pg" || dbms === "postgresql" ? 5432 : 3306),
+    user: username || "",
+    password: password || "",
+    database: database || "",
   };
 
   if (dbms === "mysql" || dbms === "mysql2") {
@@ -61,11 +61,11 @@ const knexConfig = {
     client: process.env.DB_DBMS || "mysql2",
     connection: getConnectionConfig({
       dbms: process.env.DB_DBMS,
-      host: process.env.DB_HOST || process.env.MYSQLHOST,
-      port: process.env.DB_PORT || process.env.MYSQLPORT,
-      username: process.env.DB_USERNAME || process.env.MYSQLUSER,
-      password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD,
-      database: process.env.DB_DATABASE || process.env.MYSQLDATABASE,
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
     }),
     pool: {
       min: 2,
