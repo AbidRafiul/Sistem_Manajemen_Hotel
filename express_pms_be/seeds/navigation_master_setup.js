@@ -105,7 +105,7 @@ export async function seed(knex) {
   const menuString = JSON.stringify(menuData);
   const now = formatDateSystem();
 
-  // 1. Seed ke mst_navigation untuk role superadmin dan master
+  // 1. Seed ke mst_navigation untuk role superadmin, admin, dan master
   for (const roleName of ["superadmin", "admin", "master"]) {
     const existingMst = await knex("mst_navigation").where("role", roleName).first();
     if (existingMst) {
@@ -119,6 +119,20 @@ export async function seed(knex) {
         menu: menuString,
         created_at: now,
         updated_at: now
+      });
+    }
+  }
+
+  // 2. Sinkronkan ke user_navigation yang sudah ada agar menu langsung terupdate
+  const userNavTable = await knex.raw(
+    "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_navigation'"
+  );
+  if (userNavTable[0].length > 0) {
+    const userNavs = await knex("user_navigation").select("id");
+    if (userNavs.length > 0) {
+      await knex("user_navigation").update({
+        menu: menuString,
+        updated_at: now,
       });
     }
   }
