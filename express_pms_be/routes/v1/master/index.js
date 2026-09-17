@@ -60,6 +60,11 @@ import tipeKamarCreate from "./tipe_kamar/tipe_kamar_create.js";
 import tipeKamarUpdate from "./tipe_kamar/tipe_kamar_update.js";
 import tipeKamarDelete from "./tipe_kamar/tipe_kamar_delete.js";
 
+import tipeKamarFotoData from "./tipe_kamar_foto/tipe_kamar_foto_data.js";
+import tipeKamarFotoUpload from "./tipe_kamar_foto/tipe_kamar_foto_upload.js";
+import tipeKamarFotoDelete from "./tipe_kamar_foto/tipe_kamar_foto_delete.js";
+import tipeKamarFotoSetCover from "./tipe_kamar_foto/tipe_kamar_foto_set_cover.js";
+
 import ratePlanData from "./rate_plan/rate_plan_data.js";
 import ratePlanCreate from "./rate_plan/rate_plan_create.js";
 import ratePlanUpdate from "./rate_plan/rate_plan_update.js";
@@ -158,6 +163,12 @@ router.use("/tipe-kamar/tipe-kamar-data", tipeKamarData);
 router.use("/tipe-kamar/tipe-kamar-create", tipeKamarCreate);
 router.use("/tipe-kamar/tipe-kamar-update", tipeKamarUpdate);
 router.use("/tipe-kamar/tipe-kamar-delete", tipeKamarDelete);
+
+// Master Tipe Kamar Foto
+router.use("/tipe-kamar-foto/tipe-kamar-foto-data", tipeKamarFotoData);
+router.use("/tipe-kamar-foto/tipe-kamar-foto-upload", tipeKamarFotoUpload);
+router.use("/tipe-kamar-foto/tipe-kamar-foto-delete", tipeKamarFotoDelete);
+router.use("/tipe-kamar-foto/tipe-kamar-foto-set-cover", tipeKamarFotoSetCover);
 
 // Master Rate Plan
 router.use("/rate-plan/rate-plan-data", ratePlanData);
