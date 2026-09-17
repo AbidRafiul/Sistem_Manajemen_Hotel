@@ -22,6 +22,7 @@ import roomPackages from "./kamar/room_packages.js";
 import reservationCreate from "./booking/reservation_create.js";
 import reservationData from "./booking/reservation_data.js";
 import checkinSubmit from "./checkin/checkin_submit.js";
+import inhouse from "./inhouse/index.js";
 
 const router = express.Router();
 
@@ -38,5 +39,6 @@ router.use("/kamar/room-packages", roomPackages);
 router.use("/booking/reservation-create", reservationCreate);
 router.use("/booking/reservation-data", reservationData);
 router.use("/checkin/checkin-submit", checkinSubmit);
+router.use("/inhouse", inhouse);
 
 export default router;
