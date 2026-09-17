@@ -12,6 +12,7 @@ export interface TableData {
     kode_cabang?: string;
     cabang_name?: string;
     name: string;
+    harga?: number;
     is_active: number;
     created_at?: string;
     updated_at?: string;
@@ -21,6 +22,7 @@ export interface initValue {
     kode_fasilitas?: string;
     kode_cabang: string;
     name: string;
+    harga?: number;
     is_active: number;
 }
 

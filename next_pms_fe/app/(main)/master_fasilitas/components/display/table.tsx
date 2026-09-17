@@ -75,6 +75,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         kode_fasilitas: rowData.kode_fasilitas || '',
                         kode_cabang: rowData.kode_cabang || '',
                         name: rowData.name || '',
+                        harga: rowData.harga !== undefined ? Number(rowData.harga) : 0,
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
                     });
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
@@ -120,6 +121,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                             formik.setValues({
                                 kode_cabang: '',
                                 name: '',
+                                harga: 0,
                                 is_active: 1
                             });
                             setState((p) => ({ ...p, selectedDatas: [], add: true, edit: false }));
@@ -177,6 +179,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="kode_fasilitas" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Fasilitas" sortable style={{ minWidth: '16rem' }}></Column>
+                    <Column field="harga" header="Tarif / Harga" align="right" sortable style={{ minWidth: '11rem' }} body={(rowData) => Number(rowData.harga) > 0 ? `Rp ${Number(rowData.harga).toLocaleString('id-ID')}` : <Tag severity="info" value="Gratis / Include" />}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
