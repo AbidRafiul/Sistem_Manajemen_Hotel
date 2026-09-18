@@ -173,7 +173,9 @@ const Form = ({
             visible={state.add || state.edit}
             header={state.edit ? 'Edit Data User' : 'Tambah Data User'}
             modal
-            style={{ width: '70%' }}
+            style={{ width: '750px', maxWidth: '95vw' }}
+            breakpoints={{ '960px': '85vw', '641px': '95vw' }}
+            contentStyle={{ overflowX: 'hidden' }}
             onHide={() => {
                 setState((p) => ({ ...p, add: false, edit: false, delete: false }));
                 formik?.resetForm();

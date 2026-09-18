@@ -358,8 +358,9 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 visible={state.add || state.edit}
                 header={state.edit ? 'Edit Data Tipe Kamar' : 'Tambah Tipe Kamar Baru'}
                 modal
-                style={{ width: '100%', maxWidth: '800px' }}
-                breakpoints={{ '641px': '90vw' }}
+                style={{ width: '850px', maxWidth: '95vw' }}
+                breakpoints={{ '960px': '85vw', '641px': '95vw' }}
+                contentStyle={{ overflowX: 'hidden' }}
                 onHide={() => {
                     setState((p) => ({ ...p, add: false, edit: false, delete: false }));
                     formik?.resetForm();
@@ -388,9 +389,9 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                             {getFormErrorMessage('kode_cabang')}
                         </div>
 
-                        {/* Nama Tipe Kamar & Luas */}
-                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
-                            <div className="flex flex-column gap-1 w-full">
+                        {/* Nama Tipe Kamar & Tipe Bed */}
+                        <div className="grid w-full m-0 mt-1">
+                            <div className="col-12 md:col-6 p-0 md:pr-2 flex flex-column gap-1">
                                 <label htmlFor="name" className="font-semibold text-sm">
                                     Nama Tipe Kamar <span className="text-red-500">*</span>
                                 </label>
@@ -404,7 +405,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 />
                                 {getFormErrorMessage('name')}
                             </div>
-                            <div className="flex flex-column gap-1 w-full">
+                            <div className="col-12 md:col-6 p-0 md:pl-2 flex flex-column gap-1 mt-2 md:mt-0">
                                 <label htmlFor="kode_bed_type" className="font-semibold text-sm">
                                     Tipe Bed
                                 </label>
@@ -427,8 +428,8 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                         </div>
 
                         {/* Harga Default & Luas */}
-                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
-                            <div className="flex flex-column gap-1 w-full">
+                        <div className="grid w-full m-0 mt-1">
+                            <div className="col-12 md:col-6 p-0 md:pr-2 flex flex-column gap-1">
                                 <label htmlFor="harga_default" className="font-semibold text-sm">
                                     Harga Default <span className="text-red-500">*</span>
                                 </label>
@@ -444,7 +445,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 />
                                 {getFormErrorMessage('harga_default')}
                             </div>
-                            <div className="flex flex-column gap-1 w-full">
+                            <div className="col-12 md:col-6 p-0 md:pl-2 flex flex-column gap-1 mt-2 md:mt-0">
                                 <label htmlFor="luas_m2" className="font-semibold text-sm">
                                     Luas (m²)
                                 </label>
@@ -462,50 +463,53 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                             </div>
                         </div>
 
-                        {/* Fasilitas & Amenity */}
-                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
-                            <div className="flex flex-column gap-1 w-full">
-                                <label htmlFor="kode_fasilitas" className="font-semibold text-sm">
-                                    Fasilitas Tersedia
-                                </label>
-                                <MultiSelect
-                                    id="kode_fasilitas"
-                                    name="kode_fasilitas"
-                                    value={formik?.values.kode_fasilitas}
-                                    options={fasilitasList}
-                                    onChange={formik?.handleChange}
-                                    optionLabel="name"
-                                    optionValue="kode_fasilitas"
-                                    placeholder="Pilih Fasilitas"
-                                    display="chip"
-                                    filter
-                                    className="w-full"
-                                />
-                            </div>
-                            <div className="flex flex-column gap-1 w-full">
-                                <label htmlFor="kode_amenity" className="font-semibold text-sm">
-                                    Amenity Tersedia
-                                </label>
-                                <MultiSelect
-                                    id="kode_amenity"
-                                    name="kode_amenity"
-                                    value={formik?.values.kode_amenity}
-                                    options={amenityList}
-                                    onChange={formik?.handleChange}
-                                    optionLabel="name"
-                                    optionValue="kode_amenity"
-                                    placeholder="Pilih Amenity"
-                                    display="chip"
-                                    filter
-                                    className="w-full"
-                                />
-                            </div>
+                        {/* Fasilitas Tersedia */}
+                        <div className="flex flex-column gap-1 w-full mt-2">
+                            <label htmlFor="kode_fasilitas" className="font-semibold text-sm">
+                                Fasilitas Tersedia
+                            </label>
+                            <MultiSelect
+                                id="kode_fasilitas"
+                                name="kode_fasilitas"
+                                value={formik?.values.kode_fasilitas}
+                                options={fasilitasList}
+                                onChange={formik?.handleChange}
+                                optionLabel="name"
+                                optionValue="kode_fasilitas"
+                                placeholder="-- Pilih Fasilitas Kamar --"
+                                display="chip"
+                                maxSelectedLabels={3}
+                                selectedItemsLabel="{0} fasilitas dipilih"
+                                filter
+                                className="w-full"
+                            />
                         </div>
 
+                        {/* Amenity Tersedia */}
+                        <div className="flex flex-column gap-1 w-full mt-2">
+                            <label htmlFor="kode_amenity" className="font-semibold text-sm">
+                                Amenity Tersedia
+                            </label>
+                            <MultiSelect
+                                id="kode_amenity"
+                                name="kode_amenity"
+                                value={formik?.values.kode_amenity}
+                                options={amenityList}
+                                onChange={formik?.handleChange}
+                                optionLabel="name"
+                                optionValue="kode_amenity"
+                                placeholder="-- Pilih Amenity Kamar --"
+                                display="chip"
+                                maxSelectedLabels={3}
+                                selectedItemsLabel="{0} amenity dipilih"
+                                filter
+                                className="w-full"
+                            />
+                        </div>
 
                         {/* Kapasitas */}
-                        <div className="flex flex-column md:flex-row gap-3 w-full mt-2">
-                            <div className="flex flex-column gap-1 w-full">
+                        <div className="grid w-full m-0 mt-2">
+                            <div className="col-12 md:col-6 p-0 md:pr-2 flex flex-column gap-1">
                                 <label htmlFor="kapasitas_dasar" className="font-semibold text-sm">
                                     Kapasitas Dasar (Orang) <span className="text-red-500">*</span>
                                 </label>
@@ -521,7 +525,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 />
                                 {getFormErrorMessage('kapasitas_dasar')}
                             </div>
-                            <div className="flex flex-column gap-1 w-full">
+                            <div className="col-12 md:col-6 p-0 md:pl-2 flex flex-column gap-1 mt-2 md:mt-0">
                                 <label htmlFor="kapasitas_maksimal" className="font-semibold text-sm">
                                     Kapasitas Maksimal (Orang) <span className="text-red-500">*</span>
                                 </label>
