@@ -69,14 +69,14 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                 header={
                     <div className="flex align-items-center gap-2">
                         <i className="pi pi-receipt text-primary text-base"></i>
-                        <span className="font-bold text-base text-900">Kartu Tagihan Folio Tamu (Guest Folio)</span>
+                        <span className="font-bold text-base text-900">Rincian Folio & Tagihan Tamu</span>
                     </div>
                 }
-                style={{ width: '92vw', maxWidth: '820px' }}
+                style={{ width: '92vw', maxWidth: '600px' }}
                 contentStyle={{ overflowX: 'hidden', padding: '1rem' }}
                 modal
                 footer={
-                    <div className="flex justify-content-between align-items-center flex-wrap gap-2 pt-2">
+                    <div className="flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top-1 surface-border">
                         <div className="flex gap-2">
                             <Button
                                 label="Cetak Folio"
@@ -109,52 +109,47 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                 {loading && <ProgressBar mode="indeterminate" style={{ height: '3px' }} className="mb-2" />}
 
                 {folioData && (
-                    <div ref={printRef} className="flex flex-column gap-2 text-xs">
-                        {/* Header Folio Card Compact */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-2 sm:p-3">
-                            <div className="grid align-items-center">
-                                <div className="col-12 sm:col-7">
-                                    <div className="text-xs text-500 font-semibold uppercase">Tamu & Kamar (PIC)</div>
-                                    <div className="text-base font-bold text-900 mt-1 flex align-items-center gap-2 flex-wrap">
-                                        <span className="bg-primary-50 text-primary border-round px-2 py-0.5 font-bold">
+                    <div ref={printRef} className="flex flex-column gap-2.5">
+                        {/* 1. Header Card: Compact & Proporsional */}
+                        <div className="surface-card border-round-xl border-1 surface-border p-3">
+                            <div className="flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <div className="flex align-items-center gap-2">
+                                        <span className="bg-primary text-white font-bold border-round px-2 py-1 text-xs">
                                             {folioData.rooms && folioData.rooms.length > 1
                                                 ? `Kamar ${folioData.rooms.map((r: any) => r.nomor_kamar).join(', ')}`
                                                 : header?.nomor_kamar
                                                 ? `Kamar ${header.nomor_kamar}`
                                                 : 'Kamar -'}
                                         </span>
-                                        <span className="text-xs font-normal text-600">
-                                            {folioData.rooms && folioData.rooms.length > 1
-                                                ? [...new Set(folioData.rooms.map((r: any) => r.nama_tipe_kamar || r.nama_tipe))].join(', ')
-                                                : header?.nama_tipe_kamar || 'Tipe Kamar'}
+                                        <span className="font-semibold text-sm text-900">
+                                            {header?.nama_tipe_kamar || 'Tipe Kamar'}
                                         </span>
                                     </div>
-                                    <div className="text-xs font-semibold text-700 mt-1 flex align-items-center gap-2">
+                                    <div className="text-sm font-medium text-700 mt-1.5 flex align-items-center gap-2">
                                         <span>
-                                            <i className="pi pi-user mr-1 text-400"></i>
+                                            <i className="pi pi-user mr-1 text-500 text-xs"></i>
                                             {header?.guest_name || '-'}
                                         </span>
                                         {header?.guest_phone && (
-                                            <span className="text-500 font-normal">
-                                                <i className="pi pi-phone mr-1 text-400"></i>
-                                                {header.guest_phone}
+                                            <span className="text-xs text-500 font-normal">
+                                                ({header.guest_phone})
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <div className="col-12 sm:col-5 text-left sm:text-right">
-                                    <div className="text-xs text-500 font-semibold uppercase">Nomor Folio</div>
-                                    <div className="text-sm font-bold text-primary font-mono mt-0.5">
+                                <div className="text-right flex-shrink-0">
+                                    <div className="text-xs text-500 font-mono font-semibold">
                                         {header?.kode_folio || '-'}
                                     </div>
                                     <div className="text-xs text-600 mt-0.5">
-                                        {header?.check_in_date ? formatDateSystem(header.check_in_date, 'dd MMM yyyy') : '-'} s/d{' '}
+                                        {header?.check_in_date ? formatDateSystem(header.check_in_date, 'dd MMM') : '-'} –{' '}
                                         {header?.check_out_date ? formatDateSystem(header.check_out_date, 'dd MMM yyyy') : '-'}
                                     </div>
                                     <div className="mt-1">
                                         <Tag
                                             severity={isSettled ? 'success' : 'danger'}
-                                            value={isSettled ? 'LUNAS (SETTLED)' : `BELUM LUNAS (Rp ${(header?.balance || 0).toLocaleString('id-ID')})`}
+                                            value={isSettled ? 'LUNAS' : 'BELUM LUNAS'}
                                             className="text-xs px-2 py-0 font-bold"
                                         />
                                     </div>
@@ -162,144 +157,36 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                             </div>
                         </div>
 
-                        {/* Section 0: Daftar Kamar Ditempati */}
-                        {folioData.rooms && folioData.rooms.length > 0 && (
-                            <div className="surface-card border-round-xl border-1 surface-border p-2 sm:p-3">
-                                <div className="font-bold text-xs sm:text-sm text-900 mb-2 flex align-items-center gap-1.5">
-                                    <i className="pi pi-home text-primary text-xs"></i>
-                                    Daftar Kamar Ditempati ({folioData.rooms.length} Kamar)
-                                </div>
-                                <DataTable
-                                    value={folioData.rooms}
-                                    size="small"
-                                    className="p-datatable-sm"
-                                    responsiveLayout="scroll"
-                                >
-                                    <Column
-                                        header="Kamar"
-                                        align="left"
-                                        alignHeader="left"
-                                        headerStyle={{ width: '36%', textAlign: 'left' }}
-                                        bodyStyle={{ width: '36%', textAlign: 'left' }}
-                                        body={(rowData) => (
-                                            <div className="flex align-items-center gap-2">
-                                                <span className="w-1.5rem h-1.5rem border-round bg-primary-100 text-primary font-bold flex align-items-center justify-content-center text-xs">
-                                                    {rowData.nomor_kamar}
-                                                </span>
-                                                <span className="font-semibold text-900 text-xs">
-                                                    {rowData.nama_tipe_kamar || rowData.nama_tipe}
-                                                </span>
-                                            </div>
-                                        )}
-                                    />
-                                    <Column
-                                        header="Status"
-                                        align="center"
-                                        alignHeader="center"
-                                        headerStyle={{ width: '20%', textAlign: 'center' }}
-                                        bodyStyle={{ width: '20%', textAlign: 'center' }}
-                                        body={(rowData) => (
-                                            <Tag
-                                                severity={
-                                                    rowData.status_room === 'checked_in' || rowData.status === 'checked_in'
-                                                        ? 'success'
-                                                        : 'warning'
-                                                }
-                                                value={
-                                                    rowData.status_room === 'checked_in' || rowData.status === 'checked_in'
-                                                        ? 'CHECKED IN'
-                                                        : String(rowData.status_room || rowData.status || '-').toUpperCase()
-                                                }
-                                                className="text-xs py-0"
-                                            />
-                                        )}
-                                    />
-                                    <Column
-                                        header="Tarif / Malam"
-                                        align="right"
-                                        alignHeader="right"
-                                        headerStyle={{ width: '22%', textAlign: 'right' }}
-                                        bodyStyle={{ width: '22%', textAlign: 'right' }}
-                                        body={(rowData) => (
-                                            <span className="text-xs">
-                                                Rp {Number(rowData.rate_per_night || 0).toLocaleString('id-ID')}
-                                            </span>
-                                        )}
-                                    />
-                                    <Column
-                                        header="Subtotal Sewa"
-                                        align="right"
-                                        alignHeader="right"
-                                        headerStyle={{ width: '22%', textAlign: 'right' }}
-                                        bodyStyle={{ width: '22%', textAlign: 'right' }}
-                                        body={(rowData) => (
-                                            <span className="font-bold text-900 text-xs">
-                                                Rp {Number(rowData.subtotal || rowData.total_charges || rowData.rate_per_night || 0).toLocaleString('id-ID')}
-                                            </span>
-                                        )}
-                                    />
-                                </DataTable>
-                            </div>
-                        )}
-
-                        {/* Section 1: Rincian Tagihan Layanan & Fasilitas (Charges) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-2 sm:p-3">
-                            <div className="font-bold text-xs sm:text-sm text-900 mb-2 flex align-items-center gap-1.5">
+                        {/* 2. Rincian Tagihan (Charges) - Tabel Presisi & Terpadu */}
+                        <div className="surface-card border-round-xl border-1 surface-border p-3">
+                            <div className="font-bold text-sm text-900 mb-2 flex align-items-center gap-1.5">
                                 <i className="pi pi-list text-primary text-xs"></i>
-                                Rincian Tagihan Layanan & Fasilitas Tambahan (Charges)
+                                Rincian Biaya Sewa & Layanan ({charges.length} Item)
                             </div>
                             <DataTable
                                 value={charges}
                                 size="small"
                                 className="p-datatable-sm"
-                                emptyMessage="Belum ada tagihan fasilitas tambahan."
+                                emptyMessage="Belum ada tagihan."
                                 responsiveLayout="scroll"
                             >
                                 <Column
-                                    header="Waktu"
+                                    header="Keterangan / Layanan"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '18%', textAlign: 'left' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'left' }}
+                                    headerStyle={{ width: '48%', textAlign: 'left' }}
+                                    bodyStyle={{ width: '48%', textAlign: 'left' }}
                                     body={(rowData) => (
-                                        <span className="text-xs text-600">
-                                            {formatDateSystem(rowData.posted_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
-                                        </span>
-                                    )}
-                                />
-                                <Column
-                                    header="Kategori"
-                                    align="center"
-                                    alignHeader="center"
-                                    headerStyle={{ width: '14%', textAlign: 'center' }}
-                                    bodyStyle={{ width: '14%', textAlign: 'center' }}
-                                    body={(rowData) => (
-                                        <Tag
-                                            severity={
-                                                rowData.charge_type === 'room'
-                                                    ? 'info'
-                                                    : rowData.charge_type === 'restaurant'
-                                                    ? 'warning'
-                                                    : rowData.charge_type === 'laundry'
-                                                    ? 'contrast'
-                                                    : 'secondary'
-                                            }
-                                            value={rowData.charge_type?.toUpperCase()}
-                                            className="text-xs py-0"
-                                        />
-                                    )}
-                                />
-                                <Column
-                                    header="Keterangan / Item"
-                                    field="description"
-                                    align="left"
-                                    alignHeader="left"
-                                    headerStyle={{ width: '36%', textAlign: 'left' }}
-                                    bodyStyle={{ width: '36%', textAlign: 'left' }}
-                                    body={(rowData) => (
-                                        <span className="font-medium text-800 text-xs">
-                                            {rowData.description}
-                                        </span>
+                                        <div>
+                                            <div className="font-semibold text-sm text-900 line-height-2">
+                                                {rowData.description}
+                                            </div>
+                                            <div className="text-xs text-500 flex align-items-center gap-1 mt-0.5">
+                                                <span>{formatDateSystem(rowData.posted_at || rowData.created_at, 'dd/MM HH:mm')}</span>
+                                                <span>•</span>
+                                                <span className="uppercase text-primary font-semibold">{rowData.charge_type}</span>
+                                            </div>
+                                        </div>
                                     )}
                                 />
                                 <Column
@@ -307,32 +194,32 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     field="qty"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '8%', textAlign: 'center' }}
-                                    bodyStyle={{ width: '8%', textAlign: 'center' }}
+                                    headerStyle={{ width: '12%', textAlign: 'center' }}
+                                    bodyStyle={{ width: '12%', textAlign: 'center' }}
                                     body={(rowData) => (
-                                        <span className="text-xs">{rowData.qty || 1}x</span>
+                                        <span className="font-semibold text-sm text-700">{rowData.qty || 1}x</span>
                                     )}
                                 />
                                 <Column
-                                    header="Harga Satuan"
+                                    header="Tarif Satuan"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '12%', textAlign: 'right' }}
-                                    bodyStyle={{ width: '12%', textAlign: 'right' }}
+                                    headerStyle={{ width: '20%', textAlign: 'right' }}
+                                    bodyStyle={{ width: '20%', textAlign: 'right' }}
                                     body={(rowData) => (
-                                        <span className="text-xs text-700">
+                                        <span className="text-sm text-700">
                                             Rp {Number(rowData.unit_price || 0).toLocaleString('id-ID')}
                                         </span>
                                     )}
                                 />
                                 <Column
-                                    header="Jumlah"
+                                    header="Subtotal"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '12%', textAlign: 'right' }}
-                                    bodyStyle={{ width: '12%', textAlign: 'right' }}
+                                    headerStyle={{ width: '20%', textAlign: 'right' }}
+                                    bodyStyle={{ width: '20%', textAlign: 'right' }}
                                     body={(rowData) => (
-                                        <span className="font-bold text-900 text-xs">
+                                        <span className="font-bold text-sm text-900">
                                             Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
                                         </span>
                                     )}
@@ -340,89 +227,94 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                             </DataTable>
                         </div>
 
-                        {/* Section 2: Riwayat Pembayaran (Payments) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-2 sm:p-3">
-                            <div className="font-bold text-xs sm:text-sm text-900 mb-2 flex align-items-center gap-1.5">
+                        {/* 3. Riwayat Pembayaran (Payments) */}
+                        <div className="surface-card border-round-xl border-1 surface-border p-3">
+                            <div className="font-bold text-sm text-900 mb-2 flex align-items-center gap-1.5">
                                 <i className="pi pi-wallet text-green-600 text-xs"></i>
-                                Riwayat Pembayaran Diterima (Payments)
+                                Riwayat Pembayaran Diterima
                             </div>
-                            <DataTable
-                                value={payments}
-                                size="small"
-                                className="p-datatable-sm"
-                                emptyMessage="Belum ada pembayaran tercatat."
-                                responsiveLayout="scroll"
-                            >
-                                <Column
-                                    header="Waktu Bayar"
-                                    align="left"
-                                    alignHeader="left"
-                                    headerStyle={{ width: '22%', textAlign: 'left' }}
-                                    bodyStyle={{ width: '22%', textAlign: 'left' }}
-                                    body={(rowData) => (
-                                        <span className="text-xs text-600">
-                                            {formatDateSystem(rowData.paid_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
-                                        </span>
-                                    )}
-                                />
-                                <Column
-                                    header="Metode"
-                                    align="center"
-                                    alignHeader="center"
-                                    headerStyle={{ width: '18%', textAlign: 'center' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'center' }}
-                                    body={(rowData) => (
-                                        <Tag
-                                            severity="success"
-                                            value={rowData.payment_method?.toUpperCase()}
-                                            className="text-xs py-0 font-semibold"
-                                        />
-                                    )}
-                                />
-                                <Column
-                                    header="No. Referensi / Shift"
-                                    align="left"
-                                    alignHeader="left"
-                                    headerStyle={{ width: '38%', textAlign: 'left' }}
-                                    bodyStyle={{ width: '38%', textAlign: 'left' }}
-                                    body={(rowData) => (
-                                        <span className="text-xs text-700">
-                                            {rowData.reference_no || '-'} {rowData.kode_cashier_shift ? `(${rowData.kode_cashier_shift})` : ''}
-                                        </span>
-                                    )}
-                                />
-                                <Column
-                                    header="Nominal Bayar"
-                                    align="right"
-                                    alignHeader="right"
-                                    headerStyle={{ width: '22%', textAlign: 'right' }}
-                                    bodyStyle={{ width: '22%', textAlign: 'right' }}
-                                    body={(rowData) => (
-                                        <span className="font-bold text-green-700 text-xs">
-                                            Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
-                                        </span>
-                                    )}
-                                />
-                            </DataTable>
+                            {payments.length > 0 ? (
+                                <DataTable
+                                    value={payments}
+                                    size="small"
+                                    className="p-datatable-sm"
+                                    responsiveLayout="scroll"
+                                >
+                                    <Column
+                                        header="Waktu"
+                                        align="left"
+                                        alignHeader="left"
+                                        headerStyle={{ width: '30%', textAlign: 'left' }}
+                                        bodyStyle={{ width: '30%', textAlign: 'left' }}
+                                        body={(rowData) => (
+                                            <span className="text-xs text-700">
+                                                {formatDateSystem(rowData.paid_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
+                                            </span>
+                                        )}
+                                    />
+                                    <Column
+                                        header="Metode"
+                                        align="center"
+                                        alignHeader="center"
+                                        headerStyle={{ width: '25%', textAlign: 'center' }}
+                                        bodyStyle={{ width: '25%', textAlign: 'center' }}
+                                        body={(rowData) => (
+                                            <Tag
+                                                severity="success"
+                                                value={rowData.payment_method?.toUpperCase()}
+                                                className="text-xs py-0 font-semibold"
+                                            />
+                                        )}
+                                    />
+                                    <Column
+                                        header="Ref / Shift"
+                                        align="left"
+                                        alignHeader="left"
+                                        headerStyle={{ width: '20%', textAlign: 'left' }}
+                                        bodyStyle={{ width: '20%', textAlign: 'left' }}
+                                        body={(rowData) => (
+                                            <span className="text-xs text-600">
+                                                {rowData.reference_no || rowData.kode_cashier_shift || '-'}
+                                            </span>
+                                        )}
+                                    />
+                                    <Column
+                                        header="Nominal"
+                                        align="right"
+                                        alignHeader="right"
+                                        headerStyle={{ width: '25%', textAlign: 'right' }}
+                                        bodyStyle={{ width: '25%', textAlign: 'right' }}
+                                        body={(rowData) => (
+                                            <span className="font-bold text-green-700 text-sm">
+                                                Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
+                                            </span>
+                                        )}
+                                    />
+                                </DataTable>
+                            ) : (
+                                <div className="surface-50 border-round-lg p-2.5 text-center text-xs text-500">
+                                    Belum ada transaksi pembayaran masuk pada folio ini.
+                                </div>
+                            )}
                         </div>
 
-                        {/* Section 3: Summary Saldo Compact */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-2 sm:p-3 bg-bluegray-50">
-                            <div className="flex justify-content-between align-items-center py-0.5">
-                                <span className="text-xs text-700">Total Tagihan (Grand Total):</span>
-                                <span className="text-xs font-bold text-900">
+                        {/* 4. Ringkasan Saldo Akhir */}
+                        <div className="surface-card border-round-xl border-1 surface-border p-3 bg-bluegray-50">
+                            <div className="flex justify-content-between align-items-center py-1">
+                                <span className="text-xs font-medium text-600">Total Biaya & Sewa:</span>
+                                <span className="text-sm font-semibold text-900">
                                     Rp {Number(header?.grand_total || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>
-                            <div className="flex justify-content-between align-items-center py-0.5 border-bottom-1 surface-border">
-                                <span className="text-xs text-700">Total Pembayaran Masuk:</span>
-                                <span className="text-xs font-bold text-green-600">
+                            <div className="flex justify-content-between align-items-center py-1 border-bottom-1 surface-border">
+                                <span className="text-xs font-medium text-600">Pembayaran Diterima:</span>
+                                <span className="text-sm font-semibold text-green-600">
                                     - Rp {Number(header?.total_paid || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>
-                            <div className="flex justify-content-between align-items-center pt-1.5">
-                                <span className="text-xs font-bold text-900">Sisa Tagihan (Saldo / Outstanding):</span>
-                                <span className={`text-base font-bold ${isSettled ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className="flex justify-content-between align-items-center pt-2">
+                                <span className="text-sm font-bold text-900">Sisa Saldo Tagihan:</span>
+                                <span className={`text-lg font-bold ${isSettled ? 'text-green-600' : 'text-red-600'}`}>
                                     Rp {Number(header?.balance || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>

@@ -235,8 +235,8 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                     </div>
                 </div>
             }
-            style={{ width: '92vw', maxWidth: '580px' }}
-            breakpoints={{ '960px': '85vw', '641px': '95vw' }}
+            style={{ width: '92vw', maxWidth: '480px' }}
+            breakpoints={{ '641px': '95vw' }}
             contentStyle={{ overflowX: 'hidden', padding: '1rem' }}
             modal
             footer={
