@@ -608,6 +608,11 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                                                 height="110"
                                                                 preview
                                                                 imageStyle={{ width: '100%', height: '110px', objectFit: 'cover' }}
+                                                                onError={(e: any) => {
+                                                                    if (e?.target) {
+                                                                        e.target.src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                                                                    }
+                                                                }}
                                                             />
                                                             {item.is_cover === 1 && (
                                                                 <div className="absolute top-0 left-0 m-1">
