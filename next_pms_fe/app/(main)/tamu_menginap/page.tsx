@@ -196,7 +196,7 @@ const TamuMenginapPage = () => {
                             <Dropdown
                                 value={selectedCabang}
                                 options={cabangOptions}
-                                optionLabel="nama_hotel"
+                                optionLabel="name"
                                 optionValue="kode_cabang"
                                 onChange={(e) => setSelectedCabang(e.value)}
                                 placeholder="Pilih Cabang Hotel"
