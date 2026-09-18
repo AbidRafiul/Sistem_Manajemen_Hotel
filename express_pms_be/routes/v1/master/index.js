@@ -237,7 +237,39 @@ router.use("/cashier-counter/cashier-counter-create", cashierCounterCreate);
 router.use("/cashier-counter/cashier-counter-update", cashierCounterUpdate);
 router.use("/cashier-counter/cashier-counter-delete", cashierCounterDelete);
 
+import guestData from "./guest/guest_data.js";
+import guestDetail from "./guest/guest_detail.js";
+import guestCreate from "./guest/guest_create.js";
+import guestUpdate from "./guest/guest_update.js";
+import guestDelete from "./guest/guest_delete.js";
+import checkDuplicate from "./guest/check_duplicate.js";
+import duplicateSuspects from "./guest/duplicate_suspects.js";
+import guestMerge from "./guest/guest_merge.js";
+import stayHistory from "./guest/stay_history.js";
+import guestFlag from "./guest/guest_flag.js";
+import guestExport from "./guest/guest_export.js";
+
+import dashboardSummary from "./guest_dashboard/dashboard_summary.js";
+import dashboardAnalytics from "./guest_dashboard/dashboard_analytics.js";
+
 // Cashier Shift Dropdown (shift yang sedang open)
 router.use("/cashier-shift/dropdown", cashierShiftDropdown);
+
+// Master Tamu Routes
+router.use("/guest/guest-data", guestData);
+router.use("/guest/guest-detail", guestDetail);
+router.use("/guest/guest-create", guestCreate);
+router.use("/guest/guest-update", guestUpdate);
+router.use("/guest/guest-delete", guestDelete);
+router.use("/guest/check-duplicate", checkDuplicate);
+router.use("/guest/duplicate-suspects", duplicateSuspects);
+router.use("/guest/merge", guestMerge);
+router.use("/guest/stay-history", stayHistory);
+router.use("/guest/flag", guestFlag);
+router.use("/guest/export", guestExport);
+
+// Dashboard Tamu Routes
+router.use("/guest/dashboard/summary", dashboardSummary);
+router.use("/guest/dashboard/analytics", dashboardAnalytics);
 
 export default router;
