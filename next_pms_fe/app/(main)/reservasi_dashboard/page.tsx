@@ -245,26 +245,28 @@ const ReservasiDashboardPage = () => {
                             />
                         </div>
 
-                        <div className="col-6 sm:col-3 lg:col-1">
+                        <div className="col-6 sm:col-3 md:col-3 lg:col-1">
                             <label className="text-xs font-bold text-700 block mb-1">Kamar</label>
-                            <InputNumber
+                            <Dropdown
                                 value={totalKamar}
-                                onValueChange={(e) => setTotalKamar(e.value || 1)}
-                                min={1}
-                                max={20}
-                                showButtons
+                                options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map((n) => ({
+                                    label: `${n} Kamar`,
+                                    value: n
+                                }))}
+                                onChange={(e) => setTotalKamar(e.value)}
                                 className="w-full text-sm"
                             />
                         </div>
 
-                        <div className="col-6 sm:col-3 lg:col-1">
+                        <div className="col-6 sm:col-3 md:col-3 lg:col-1">
                             <label className="text-xs font-bold text-700 block mb-1">Tamu</label>
-                            <InputNumber
+                            <Dropdown
                                 value={totalTamu}
-                                onValueChange={(e) => setTotalTamu(e.value || 1)}
-                                min={1}
-                                max={50}
-                                showButtons
+                                options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30].map((n) => ({
+                                    label: `${n} Tamu`,
+                                    value: n
+                                }))}
+                                onChange={(e) => setTotalTamu(e.value)}
                                 className="w-full text-sm"
                             />
                         </div>
@@ -429,36 +431,46 @@ const ReservasiDashboardPage = () => {
                                                 <div className="surface-border border-1 border-round-xl overflow-hidden shadow-1 h-full flex flex-column justify-content-between surface-card hover:shadow-2 transition-duration-200">
                                                     <div>
                                                         {/* Room Image / Visual Banner */}
-                                                        <div
-                                                            className="relative w-full h-10rem bg-cover bg-center flex flex-column justify-content-between p-3"
-                                                            style={{
-                                                                backgroundImage: item.foto_url
-                                                                    ? `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url(${item.foto_url})`
-                                                                    : 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
-                                                            }}
-                                                        >
-                                                            <div className="flex justify-content-between align-items-start">
+                                                        <div className="relative w-full h-12rem bg-gray-100 overflow-hidden">
+                                                            <img
+                                                                src={item.foto_url || '/api/assets/uploads/tipe_kamar/foto_TIP0001_interior.jpg'}
+                                                                alt={item.nama_tipe}
+                                                                className="w-full h-full object-cover transition-transform transition-duration-300 hover:scale-105"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                                                                }}
+                                                            />
+                                                            <div className="absolute top-0 left-0 right-0 p-3 flex justify-content-between align-items-start bg-gradient-to-b from-black-alpha-70 to-transparent">
                                                                 <Tag
                                                                     severity={isAvail ? 'success' : 'danger'}
                                                                     value={isAvail ? `Tersedia: ${item.available_units} Unit` : 'Penuh'}
                                                                     icon={isAvail ? 'pi pi-check-circle' : 'pi pi-times-circle'}
                                                                 />
-                                                                <span className="bg-black-alpha-60 text-white text-xs px-2 py-1 border-round">
+                                                                <span className="bg-black-alpha-70 text-white text-xs px-2 py-1 border-round font-semibold">
                                                                     Total: {item.total_units} Kamar
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <h5 className="m-0 font-bold text-white text-shadow-1">
-                                                                    {item.nama_tipe}
-                                                                </h5>
-                                                                <span className="text-xs text-white-alpha-80">
-                                                                    Kapasitas: {item.kapasitas_dewasa} Dewasa, {item.kapasitas_anak} Anak
                                                                 </span>
                                                             </div>
                                                         </div>
 
                                                         {/* Body details */}
                                                         <div className="p-3">
+                                                            <div className="mb-2">
+                                                                <h5 className="m-0 font-bold text-900 text-lg">
+                                                                    {item.nama_tipe}
+                                                                </h5>
+                                                                <div className="flex align-items-center gap-2 text-xs text-600 mt-1">
+                                                                    <span className="flex align-items-center gap-1 font-medium">
+                                                                        <i className="pi pi-users text-primary text-xs"></i>
+                                                                        {item.kapasitas_dewasa} Dewasa, {item.kapasitas_anak} Anak
+                                                                    </span>
+                                                                    <span>&bull;</span>
+                                                                    <span className="flex align-items-center gap-1">
+                                                                        <i className="pi pi-arrows-alt text-500 text-xs"></i>
+                                                                        {item.luas_m2} m²
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
                                                             <p className="text-xs text-600 m-0 line-clamp-2 mb-3">
                                                                 {item.deskripsi || 'Kamar nyaman dengan standar pelayanan hotel berbintang.'}
                                                             </p>

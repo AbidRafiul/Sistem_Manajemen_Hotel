@@ -229,9 +229,17 @@ router.post("/", async (req, res) => {
       const photoObj = photos.find((p) => p.kode_tipe_kamar === tk.kode_tipe_kamar);
       let fotoUrl = null;
       if (photoObj && photoObj.foto_url) {
-        fotoUrl = photoObj.foto_url.startsWith("http")
-          ? photoObj.foto_url
-          : `/api/assets/${photoObj.foto_url}`;
+        if (photoObj.foto_url.startsWith("http")) {
+          fotoUrl = photoObj.foto_url;
+        } else if (photoObj.foto_url.startsWith("/api/assets/")) {
+          fotoUrl = photoObj.foto_url;
+        } else if (photoObj.foto_url.startsWith("uploads/")) {
+          fotoUrl = `/api/assets/${photoObj.foto_url}`;
+        } else {
+          fotoUrl = `/api/assets/uploads/tipe_kamar/${photoObj.foto_url}`;
+        }
+      } else {
+        fotoUrl = `/api/assets/uploads/tipe_kamar/foto_TIP0001_interior.jpg`;
       }
 
       // Fasilitas
