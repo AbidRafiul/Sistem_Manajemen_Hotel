@@ -53,32 +53,45 @@ const ReservasiDashboardPage = () => {
     const loadDropdowns = async () => {
         try {
             const resCabang = await postData(apiCabangDropdown, {});
-            const cabangList = resCabang?.data?.data || [];
+            const rawCabang = resCabang?.data?.data || [];
+            const cabangList = rawCabang.map((c: any) => ({
+                kode_cabang: c.kode_cabang,
+                nama_cabang: c.name || c.nama_hotel || c.kode_cabang
+            }));
             setCabangOptions(cabangList);
-            if (cabangList.length > 0) {
-                setSelectedCabang(cabangList[0].kode_cabang);
+            const defaultCabang = cabangList.length > 0 ? cabangList[0].kode_cabang : '';
+            if (defaultCabang) {
+                setSelectedCabang(defaultCabang);
             }
 
             const resTipe = await postData(apiTipeKamarDropdown, {});
-            const tipeList = resTipe?.data?.data || [];
+            const rawTipe = resTipe?.data?.data || [];
+            const tipeList = rawTipe.map((t: any) => ({
+                kode_tipe_kamar: t.kode_tipe_kamar,
+                nama_tipe: t.name || t.nama_tipe || t.kode_tipe_kamar
+            }));
             setTipeKamarOptions([
                 { kode_tipe_kamar: '', nama_tipe: 'Semua Tipe Kamar' },
                 ...tipeList
             ]);
+
+            fetchSummary(defaultCabang);
+            fetchMonitoring(defaultCabang, matrixDays);
         } catch (error) {
             console.error('Failed to load initial dropdowns', error);
+            fetchSummary('');
+            fetchMonitoring('', matrixDays);
         }
     };
 
     const fetchSummary = async (cabang = selectedCabang) => {
-        if (!cabang) return;
         setSummaryLoading(true);
         try {
             const inDateStr = formatDateSystem(checkInDate, 'yyyy-MM-dd');
             const outDateStr = formatDateSystem(checkOutDate, 'yyyy-MM-dd');
 
             const res = await postData(apiDashboardSummary, {
-                kode_cabang: cabang,
+                kode_cabang: cabang || undefined,
                 check_in_date: inDateStr,
                 check_out_date: outDateStr,
                 total_kamar: totalKamar,
@@ -88,6 +101,9 @@ const ReservasiDashboardPage = () => {
 
             if (res?.data?.data) {
                 setSummaryData(res.data.data);
+                if (!selectedCabang && res.data.data?.filter?.kode_cabang) {
+                    setSelectedCabang(res.data.data.filter.kode_cabang);
+                }
             }
         } catch (error: any) {
             showError(toast, error?.response?.data?.message || 'Gagal memuat ringkasan reservasi');
@@ -97,12 +113,11 @@ const ReservasiDashboardPage = () => {
     };
 
     const fetchMonitoring = async (cabang = selectedCabang, days = matrixDays) => {
-        if (!cabang) return;
         setMatrixLoading(true);
         try {
             const inDateStr = formatDateSystem(checkInDate, 'yyyy-MM-dd');
             const res = await postData(apiDashboardMonitoring, {
-                kode_cabang: cabang,
+                kode_cabang: cabang || undefined,
                 start_date: inDateStr,
                 days: days
             });
@@ -151,7 +166,8 @@ const ReservasiDashboardPage = () => {
         const inStr = formatDateSystem(checkInDate, 'yyyy-MM-dd');
         const outStr = formatDateSystem(checkOutDate, 'yyyy-MM-dd');
         const target = type === 'walkin' ? '/reservasi_baru' : '/reservasi_booking';
-        router.push(`${target}?tipe=${item.kode_tipe_kamar}&in=${inStr}&out=${outStr}&rooms=${totalKamar}&guests=${totalTamu}`);
+        const branchParam = selectedCabang ? `&cabang=${selectedCabang}` : '';
+        router.push(`${target}?tipe=${item.kode_tipe_kamar}${branchParam}&in=${inStr}&out=${outStr}&rooms=${totalKamar}&guests=${totalTamu}`);
     };
 
     return (
@@ -178,13 +194,13 @@ const ReservasiDashboardPage = () => {
                                 label="Walk-In Baru"
                                 icon="pi pi-plus"
                                 className="p-button-sm p-button-success"
-                                onClick={() => router.push('/reservasi_baru')}
+                                onClick={() => router.push(selectedCabang ? `/reservasi_baru?cabang=${selectedCabang}` : '/reservasi_baru')}
                             />
                             <Button
                                 label="Booking Reservasi"
                                 icon="pi pi-calendar-plus"
                                 className="p-button-sm p-button-primary"
-                                onClick={() => router.push('/reservasi_booking')}
+                                onClick={() => router.push(selectedCabang ? `/reservasi_booking?cabang=${selectedCabang}` : '/reservasi_booking')}
                             />
                             <Button
                                 label="Tamu Menginap"
@@ -271,7 +287,7 @@ const ReservasiDashboardPage = () => {
                             <Dropdown
                                 value={selectedCabang}
                                 options={cabangOptions}
-                                optionLabel="nama_hotel"
+                                optionLabel="nama_cabang"
                                 optionValue="kode_cabang"
                                 onChange={(e) => setSelectedCabang(e.value)}
                                 placeholder="Pilih Cabang"

@@ -1,13 +1,14 @@
 'use client';
 import { Toast } from 'primereact/toast';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
-import { getTzUser } from '@/lib/tools/dateTools';
 import FormWalkIn from './components/form_walk_in';
 
-const Page = () => {
+const WalkInContent = () => {
     const toast = useRef<Toast>(null);
+    const searchParams = useSearchParams();
 
     const [state, setState] = useState<ReservasiBaruState>({
         load: false,
@@ -87,16 +88,50 @@ const Page = () => {
             }
             return errors;
         },
-        onSubmit: (data) => {
+        onSubmit: () => {
             // Handled by final submit function
         }
     });
+
+    // Auto populate dari query parameters jika datang dari dashboard
+    useEffect(() => {
+        if (!searchParams) return;
+        const cabang = searchParams.get('cabang');
+        const tipe = searchParams.get('tipe');
+        const inDate = searchParams.get('in');
+        const outDate = searchParams.get('out');
+
+        if (cabang) formik.setFieldValue('kode_cabang', cabang);
+        if (tipe) formik.setFieldValue('kode_tipe_kamar', tipe);
+        if (inDate) {
+            const dIn = new Date(inDate);
+            if (!isNaN(dIn.getTime())) formik.setFieldValue('check_in_date', dIn);
+        }
+        if (outDate) {
+            const dOut = new Date(outDate);
+            if (!isNaN(dOut.getTime())) {
+                formik.setFieldValue('check_out_date', dOut);
+                const cinTime = inDate ? new Date(inDate).getTime() : new Date().getTime();
+                const nights = Math.max(1, Math.round((dOut.getTime() - cinTime) / (1000 * 60 * 60 * 24)));
+                formik.setFieldValue('nights', nights);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
     return (
         <div className="p-0">
             <Toast ref={toast} position="top-right" />
             <FormWalkIn state={state} setState={setState} formik={formik} toast={toast} />
         </div>
+    );
+};
+
+const Page = () => {
+    return (
+        <Suspense fallback={<div className="p-4 text-center">Memuat data...</div>}>
+            <WalkInContent />
+        </Suspense>
     );
 };
 

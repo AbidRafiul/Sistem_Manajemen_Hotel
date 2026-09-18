@@ -2,10 +2,10 @@
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file summary.js
- * @description Endpoint ringkasan metrik dashboard reservasi: ketersediaan periode & operasional hari ini
+ * @description Endpoint ringkasan metrik dashboard reservasi: ketersediaan periode, operasional hari ini, dan katalog tipe kamar
  * @author Antigravity
  * @created 2026-09-18
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 import express from "express";
@@ -19,9 +19,20 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body || {};
   const username = req?.auth?.username || "";
-  const kode_cabang = oPayload.kode_cabang || req?.auth?.kode_cabang || "";
+  let kode_cabang = oPayload.kode_cabang || req?.auth?.kode_cabang || "";
 
   try {
+    // 1. Tentukan cabang default jika belum dipilih
+    if (!kode_cabang) {
+      const firstCabang = await DB("mst_cabang")
+        .where("is_active", 1)
+        .whereNull("deleted_at")
+        .first();
+      if (firstCabang) {
+        kode_cabang = firstCabang.kode_cabang;
+      }
+    }
+
     const today = new Date();
     const todayStr = formatDateSystem(today, "yyyy-MM-dd");
 
@@ -31,11 +42,18 @@ router.post("/", async (req, res) => {
     if (!oPayload.check_out_date) {
       coutDate.setDate(coutDate.getDate() + 1);
     }
+    if (coutDate <= cinDate) {
+      coutDate = new Date(cinDate);
+      coutDate.setDate(coutDate.getDate() + 1);
+    }
 
     const checkinStr = formatDateSystem(cinDate, "yyyy-MM-dd");
     const checkoutStr = formatDateSystem(coutDate, "yyyy-MM-dd");
+    const nights = Math.max(1, Math.round((coutDate.getTime() - cinDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const totalKamarReq = parseInt(oPayload.total_kamar || 1, 10);
+    const totalTamuReq = parseInt(oPayload.total_tamu || 1, 10);
 
-    // 1. Ambil Semua Kamar Fisik
+    // 2. Ambil Semua Kamar Fisik
     let roomQuery = DB("mst_kamar")
       .where("is_active", 1)
       .whereNull("deleted_at");
@@ -67,7 +85,7 @@ router.post("/", async (req, res) => {
     const maintenanceUnits = maintenanceRooms.length;
     const maintenanceCodes = new Set(maintenanceRooms.map((r) => r.kode_kamar));
 
-    // 2. Cek Reservasi yang Overlap pada Periode [checkin, checkout)
+    // 3. Cek Reservasi yang Overlap pada Periode [checkin, checkout)
     let overlapQuery = DB("trx_reservation_room as rr")
       .join("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
       .whereIn("rr.status", ["booked", "assigned", "checked_in"])
@@ -87,7 +105,9 @@ router.post("/", async (req, res) => {
     const overlappingRes = await overlapQuery.select(
       "rr.kode_reservasi_room",
       "rr.kode_kamar",
-      "rr.kode_tipe_kamar"
+      "rr.kode_tipe_kamar",
+      "rr.status as room_stay_status",
+      "r.kode_reservasi"
     );
 
     const allocatedPhysicalCodes = new Set();
@@ -106,7 +126,7 @@ router.post("/", async (req, res) => {
     const availableUnits = Math.max(0, sellableUnits - allocatedUnits);
     const occupancyPct = sellableUnits > 0 ? parseFloat(((allocatedUnits / sellableUnits) * 100).toFixed(1)) : 0;
 
-    // 3. Metrik Operasional Hari Ini (Real-Time Snapshot)
+    // 4. Metrik Operasional Hari Ini (Real-Time Snapshot)
     const occupiedToday = allRooms.filter((r) => r.occupancy_status === "occupied").length;
     const readyCleanToday = allRooms.filter(
       (r) => r.occupancy_status === "vacant" && r.housekeeping_status === "clean"
@@ -136,11 +156,144 @@ router.post("/", async (req, res) => {
     if (kode_cabang) departuresQuery.where("kode_cabang", kode_cabang);
     const departuresCount = await departuresQuery.count("id as total").first();
 
+    // 5. Query Pajak untuk Simulasi Tarif
+    const activeTaxes = await DB("mst_tax")
+      .where("is_active", 1)
+      .whereNull("deleted_at")
+      .modify((qb) => {
+        if (kode_cabang) {
+          qb.where(function () {
+            this.where("kode_cabang", kode_cabang).orWhereNull("kode_cabang");
+          });
+        }
+      });
+    const totalTaxPct = activeTaxes.reduce((sum, t) => sum + parseFloat(t.percentage || 0), 0);
+
+    // 6. Ambil Tipe Kamar dan Bangun Katalog
+    let tipeQuery = DB("mst_tipe_kamar")
+      .where("is_active", 1)
+      .whereNull("deleted_at")
+      .orderBy("harga_default", "asc");
+
+    if (kode_cabang) tipeQuery.where("kode_cabang", kode_cabang);
+    if (oPayload.kode_tipe_kamar) tipeQuery.where("kode_tipe_kamar", oPayload.kode_tipe_kamar);
+    const tipeList = await tipeQuery;
+
+    // Ambil foto cover
+    const photos = await DB("mst_tipe_kamar_foto")
+      .where("is_active", 1)
+      .whereNull("deleted_at")
+      .orderBy("is_cover", "desc")
+      .orderBy("urutan", "asc");
+
+    // Ambil fasilitas
+    let roomFacilities = [];
+    try {
+      roomFacilities = await DB("mst_room_type_fasilitas as rtf")
+        .join("mst_fasilitas as f", "rtf.kode_fasilitas", "f.kode_fasilitas")
+        .whereNull("f.deleted_at")
+        .select("rtf.kode_tipe_kamar", "f.name as nama_fasilitas");
+    } catch {
+      roomFacilities = [];
+    }
+
+    const catalog = tipeList.map((tk) => {
+      const typeRooms = allRooms.filter((r) => r.kode_tipe_kamar === tk.kode_tipe_kamar);
+      const typeTotalUnits = typeRooms.length;
+      const typeMaintenanceUnits = typeRooms.filter((r) => maintenanceCodes.has(r.kode_kamar)).length;
+
+      // Alokasi overlap pada tipe kamar ini
+      const typeOverlaps = overlappingRes.filter((r) => r.kode_tipe_kamar === tk.kode_tipe_kamar);
+      const typePhysicalAllocated = new Set();
+      let typeUnassignedCount = 0;
+
+      typeOverlaps.forEach((o) => {
+        if (o.kode_kamar && !maintenanceCodes.has(o.kode_kamar)) {
+          typePhysicalAllocated.add(o.kode_kamar);
+        } else {
+          typeUnassignedCount++;
+        }
+      });
+
+      const typeAllocated = typePhysicalAllocated.size + typeUnassignedCount;
+      const typeSellable = Math.max(0, typeTotalUnits - typeMaintenanceUnits);
+      const typeAvailable = Math.max(0, typeSellable - typeAllocated);
+
+      // Hitung finansial
+      const baseRate = parseFloat(tk.harga_default || 0);
+      const subtotalNights = baseRate * nights * totalKamarReq;
+      const taxEstimated = Math.round(subtotalNights * (totalTaxPct / 100));
+      const grandTotalEstimated = subtotalNights + taxEstimated;
+
+      // Foto
+      const photoObj = photos.find((p) => p.kode_tipe_kamar === tk.kode_tipe_kamar);
+      let fotoUrl = null;
+      if (photoObj && photoObj.foto_url) {
+        fotoUrl = photoObj.foto_url.startsWith("http")
+          ? photoObj.foto_url
+          : `/api/assets/${photoObj.foto_url}`;
+      }
+
+      // Fasilitas
+      const tfList = roomFacilities
+        .filter((rf) => rf.kode_tipe_kamar === tk.kode_tipe_kamar)
+        .map((rf) => rf.nama_fasilitas);
+      const finalFasilitas = tfList.length > 0 ? tfList : ["Free Wi-Fi", "AC", "Smart TV", "Hot Shower"];
+
+      return {
+        kode_tipe_kamar: tk.kode_tipe_kamar,
+        nama_tipe: tk.nama_tipe,
+        kapasitas_dewasa: tk.kapasitas_dasar || 2,
+        kapasitas_anak: Math.max(0, (tk.kapasitas_maksimal || 2) - (tk.kapasitas_dasar || 2)),
+        deskripsi: tk.deskripsi || "Kamar hotel nyaman dengan standar pelayanan kebersihan prima.",
+        luas_m2: tk.luas_sqm || 24,
+        foto_url: fotoUrl,
+        total_units: typeTotalUnits,
+        available_units: typeAvailable,
+        is_available: typeAvailable >= totalKamarReq,
+        rate_per_night: baseRate,
+        tax_estimated: taxEstimated,
+        grand_total_estimated: grandTotalEstimated,
+        fasilitas: finalFasilitas
+      };
+    });
+
+    const filterInfo = {
+      kode_cabang: kode_cabang,
+      check_in_date: checkinStr,
+      check_out_date: checkoutStr,
+      nights: nights,
+      total_kamar: totalKamarReq,
+      total_tamu: totalTamuReq
+    };
+
+    const kpiPeriodData = {
+      total_rooms: totalRooms,
+      available_rooms: availableUnits,
+      allocated_rooms: allocatedUnits,
+      maintenance_rooms: maintenanceUnits,
+      occupancy_rate_period: occupancyPct,
+      total_reservations_period: overlappingRes.length
+    };
+
+    const kpiTodayData = {
+      occupied_rooms: occupiedToday,
+      ready_rooms: readyCleanToday,
+      dirty_rooms: dirtyToday,
+      maintenance_rooms: maintenanceUnits,
+      arrivals_today: parseInt(arrivalsCount?.total || 0, 10),
+      departures_today: parseInt(departuresCount?.total || 0, 10)
+    };
+
     return res.status(200).json({
       status: status.SUKSES,
       message: "Data ringkasan dashboard berhasil dimuat",
       datetime: formatDateSystem(),
       data: {
+        filter: filterInfo,
+        kpi_period: kpiPeriodData,
+        kpi_today: kpiTodayData,
+        // Kompatibilitas backwards:
         period_metrics: {
           check_in_date: checkinStr,
           check_out_date: checkoutStr,
@@ -159,7 +312,8 @@ router.post("/", async (req, res) => {
           maintenance: maintenanceUnits,
           arrivals_today: parseInt(arrivalsCount?.total || 0, 10),
           departures_today: parseInt(departuresCount?.total || 0, 10)
-        }
+        },
+        catalog: catalog
       }
     });
   } catch (error) {
