@@ -83,6 +83,7 @@ export async function seed(knex) {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
+        { label: "Dashboard Reservasi", icon: "pi pi-fw pi-th-large", to: "/reservasi_dashboard" },
         { label: "Walk-In Check-in", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
         { label: "Booking Reservasi", icon: "pi pi-fw pi-calendar", to: "/reservasi_booking" },
         { label: "Kedatangan (Arrivals)", icon: "pi pi-fw pi-sign-in", to: "/reservasi_checkin" },
@@ -113,11 +114,24 @@ export async function seed(knex) {
   const menuString = JSON.stringify(menuData);
   const now = formatDateSystem();
 
-  // 1. Seed ke mst_navigation untuk role superadmin dan master
-  for (const roleName of ["superadmin", "admin", "master"]) {
-    const existingMst = await knex("mst_navigation").where("role", roleName).first();
+  // 1. Seed ke mst_navigation untuk seluruh role
+  const rolesToSeed = ["superadmin", "admin", "master", "frontdesk", "receptionist", "kasir", "housekeeping"];
+
+  try {
+    const userRoles = await knex("mst_user").distinct("role").pluck("role");
+    for (const r of userRoles) {
+      if (r && !rolesToSeed.includes(r.toLowerCase())) {
+        rolesToSeed.push(r.toLowerCase());
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  for (const roleName of rolesToSeed) {
+    const existingMst = await knex("mst_navigation").whereRaw("LOWER(role) = LOWER(?)", [roleName]).first();
     if (existingMst) {
-      await knex("mst_navigation").where("role", roleName).update({
+      await knex("mst_navigation").whereRaw("LOWER(role) = LOWER(?)", [roleName]).update({
         menu: menuString,
         updated_at: now
       });

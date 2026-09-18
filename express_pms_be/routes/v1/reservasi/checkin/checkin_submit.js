@@ -80,28 +80,34 @@ router.post("/", async (req, res) => {
                 userId: userId
             });
 
-            // 4. Proses Deposit (jika ada deposit_amount > 0 di trx_reservation)
+            // 4. Proses Deposit (jika ada deposit_amount > 0 di trx_reservation dan belum pernah dicatat)
             const depositAmount = parseFloat(resRoom.deposit_amount || 0);
             if (depositAmount > 0) {
-                if (!oPayload.kode_cashier_shift || !oPayload.payment_method) {
-                    throw new Error("Reservasi ini memiliki deposit. Harap kirimkan kode_cashier_shift dan payment_method untuk memproses deposit ke folio.");
+                const existingPayment = await trx("trx_payment")
+                    .where("kode_folio", checkinData.kode_folio)
+                    .first();
+
+                if (!existingPayment) {
+                    if (!oPayload.kode_cashier_shift || !oPayload.payment_method) {
+                        throw new Error("Reservasi ini memiliki deposit. Harap kirimkan kode_cashier_shift dan payment_method untuk memproses deposit ke folio.");
+                    }
+
+                    const noPayment = await generateSequence("FMT-PAYMENT", trx);
+                    if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
+
+                    const tNow = formatDateSystem();
+                    await trx("trx_payment").insert({
+                        kode_payment: noPayment,
+                        kode_folio: checkinData.kode_folio,
+                        payment_method: oPayload.payment_method,
+                        amount: depositAmount,
+                        kode_cashier_shift: oPayload.kode_cashier_shift,
+                        received_by: userId,
+                        paid_at: tNow,
+                        created_by: userId,
+                        created_at: tNow
+                    });
                 }
-
-                const noPayment = await generateSequence("FMT-PAYMENT", trx);
-                if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
-
-                const tNow = formatDateSystem();
-                await trx("trx_payment").insert({
-                    kode_payment: noPayment,
-                    kode_folio: checkinData.kode_folio,
-                    payment_method: oPayload.payment_method,
-                    amount: depositAmount,
-                    kode_cashier_shift: oPayload.kode_cashier_shift,
-                    received_by: userId,
-                    paid_at: tNow,
-                    created_by: userId,
-                    created_at: tNow
-                });
             }
 
             return checkinData;

@@ -1,12 +1,17 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { ReservasiBaruState, initValue } from './interfaces';
 import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
+import { Tag } from 'primereact/tag';
+import { useRouter } from 'next/navigation';
 import postData from '@/lib/axios/postData';
 import { apiSubmitBooking } from './endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import DialogInvoice from '@/app/components/dialogComponents/dialog_invoice';
 
 interface StepConfirmationProps {
     state: ReservasiBaruState;
@@ -16,6 +21,8 @@ interface StepConfirmationProps {
 }
 
 const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, formik, toast }) => {
+    const router = useRouter();
+    const [showInvoice, setShowInvoice] = useState(false);
 
     const submitBooking = async () => {
         const errors = await formik.validateForm();
@@ -61,7 +68,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
 
             if (res.data.status === '00') {
                 setState(p => ({ ...p, submittedData: res.data.data }));
-                showSuccess(toast, "Reservasi berhasil dibuat");
+                showSuccess(toast, "Reservasi booking berhasil dibuat!");
             } else {
                 showError(toast, res.data.message || "Gagal membuat reservasi");
             }
@@ -81,32 +88,109 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
         : (state.rateInfo?.price_per_night || 0) * formik.values.nights;
     const totalTagihan = totalKamar + totalFasilitas;
 
+    const paymentAmount = formik.values.deposit_amount || 0;
+    const sisaTagihan = Math.max(0, totalTagihan - paymentAmount);
+
     if (state.submittedData) {
+        const sub = state.submittedData;
+        const isSettled = sub.is_settled ?? ((sub.balance ?? 1) <= 0);
+        const totalPaid = Number(sub.total_paid || 0);
+
         return (
             <div className="col-12 mt-4 text-center">
                 <i className="pi pi-check-circle text-green-500" style={{ fontSize: '4rem' }}></i>
-                <h4 className="mt-3">Reservasi Berhasil Dibuat!</h4>
-                <p className="text-secondary">Tamu dapat melakukan check-in pada hari kedatangan.</p>
+                <h4 className="mt-3 font-bold text-900">Reservasi Booking Berhasil Dibuat!</h4>
+                <p className="text-secondary text-sm">Data reservasi dan dokumen invoice resmi telah terbit di sistem.</p>
                 
-                <div className="mt-4 flex flex-column align-items-center gap-3">
-                    <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
-                        <span className="font-medium">No. Reservasi:</span>
-                        <span className="font-bold text-primary">{state.submittedData?.kode_reservasi}</span>
+                {/* Status Badges: Reservasi & Pembayaran */}
+                <div className="flex justify-content-center align-items-center gap-2 mb-4 flex-wrap">
+                    <Tag 
+                        severity={sub.status === 'confirmed' ? 'success' : 'info'} 
+                        value={`STATUS RESERVASI: ${(sub.status || 'RESERVED').toUpperCase()}`}
+                        icon={sub.status === 'confirmed' ? 'pi pi-check' : 'pi pi-calendar'}
+                        className="text-xs px-3 py-1 font-bold"
+                    />
+                    <Tag 
+                        severity={isSettled ? 'success' : totalPaid > 0 ? 'warning' : 'danger'} 
+                        value={isSettled ? 'PEMBAYARAN: LUNAS' : totalPaid > 0 ? `DIBAYAR SEBAGIAN (DP Rp ${totalPaid.toLocaleString('id-ID')})` : 'PEMBAYARAN: BELUM DIBAYAR'}
+                        icon={isSettled ? 'pi pi-check-circle' : 'pi pi-wallet'}
+                        className="text-xs px-3 py-1 font-bold"
+                    />
+                </div>
+
+                {/* Structured Financial & Booking Summary Card */}
+                <div className="surface-card p-4 border-round-xl border-1 surface-border max-w-lg mx-auto text-left shadow-1 mb-4">
+                    <div className="flex justify-content-between align-items-center mb-2 pb-2 border-bottom-1 surface-border">
+                        <span className="text-xs text-500">Nomor Reservasi:</span>
+                        <span className="font-bold text-primary text-base font-mono">{sub.kode_reservasi}</span>
                     </div>
-                    <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
-                        <span className="font-medium">Tipe Booking:</span>
-                        <span className="font-bold uppercase">{state.submittedData?.booking_type || (hasMultiRooms ? 'group' : 'individual')}</span>
+
+                    {sub.invoice_number && (
+                        <div className="flex justify-content-between align-items-center mb-2 pb-2 border-bottom-1 surface-border">
+                            <span className="text-xs text-500">Nomor Invoice Resmi:</span>
+                            <span className="font-bold text-900 text-sm font-mono">{sub.invoice_number}</span>
+                        </div>
+                    )}
+
+                    <div className="flex justify-content-between align-items-center mb-2 pb-2 border-bottom-1 surface-border">
+                        <span className="text-xs text-500">Tipe Booking:</span>
+                        <span className="font-semibold text-700 uppercase text-xs">{sub.booking_type || (hasMultiRooms ? 'Group' : 'Individual')}</span>
                     </div>
-                    <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
-                        <span className="font-medium">Jumlah Kamar:</span>
-                        <span className="font-bold">{state.submittedData?.rooms_count || (hasMultiRooms ? selectedRooms.length : 1)} Kamar</span>
+
+                    <div className="flex justify-content-between align-items-center mb-2 pb-2 border-bottom-1 surface-border">
+                        <span className="text-xs text-500">Kamar Dipesan:</span>
+                        <span className="font-semibold text-900 text-xs">{sub.rooms?.length || selectedRooms.length || 1} Kamar</span>
                     </div>
-                    <div className="surface-100 p-3 border-round w-full md:w-6 flex justify-content-between">
-                        <span className="font-medium">Status:</span>
-                        <span className="font-bold uppercase text-green-600">{state.submittedData?.status || 'CONFIRMED'}</span>
+
+                    <div className="flex justify-content-between align-items-center mb-2 pb-2 border-bottom-1 surface-border">
+                        <span className="text-xs text-500">Total Tagihan Booking:</span>
+                        <span className="font-bold text-900 text-sm">Rp {Number(sub.grand_total || totalTagihan).toLocaleString('id-ID')}</span>
+                    </div>
+
+                    <div className="flex justify-content-between align-items-center mb-2 pb-2 border-bottom-1 surface-border">
+                        <span className="text-xs text-500">Pembayaran Diterima (DP/Lunas):</span>
+                        <span className="font-bold text-green-600 text-sm">Rp {totalPaid.toLocaleString('id-ID')}</span>
+                    </div>
+
+                    <div className="flex justify-content-between align-items-center pt-1">
+                        <span className="text-xs font-bold text-700">Sisa Tagihan saat Check-In:</span>
+                        <span className={`font-bold text-base ${isSettled ? 'text-green-700' : 'text-orange-600'}`}>
+                            Rp {Number(sub.balance ?? sisaTagihan).toLocaleString('id-ID')}
+                        </span>
                     </div>
                 </div>
-                <Button label="Buat Reservasi Baru" icon="pi pi-plus" className="mt-4" onClick={() => window.location.reload()} />
+
+                {/* Action Buttons */}
+                <div className="flex justify-content-center align-items-center gap-2 flex-wrap">
+                    <Button 
+                        label="Lihat & Cetak Invoice" 
+                        icon="pi pi-print" 
+                        className="p-button-primary font-semibold"
+                        onClick={() => setShowInvoice(true)} 
+                    />
+                    <Button 
+                        label="Dashboard Reservasi" 
+                        icon="pi pi-th-large" 
+                        outlined 
+                        className="p-button-secondary font-semibold"
+                        onClick={() => router.push('/reservasi_dashboard')} 
+                    />
+                    <Button 
+                        label="Buat Booking Baru" 
+                        icon="pi pi-plus" 
+                        outlined 
+                        className="p-button-success"
+                        onClick={() => window.location.reload()} 
+                    />
+                </div>
+
+                {/* Dialog Invoice Resmi */}
+                <DialogInvoice
+                    visible={showInvoice}
+                    onHide={() => setShowInvoice(false)}
+                    kode_folio={sub.kode_folio}
+                    kode_reservation={sub.kode_reservasi}
+                />
             </div>
         );
     }
@@ -185,10 +269,11 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                     </div>
                 )}
 
+                {/* Ringkasan Tagihan & Skema Pembayaran */}
                 <div className="col-12">
                     <div className="p-3 border-1 surface-border border-round bg-blue-50">
                         <div className="flex align-items-center justify-content-between mb-2">
-                            <h6 className="m-0 font-bold text-blue-900">Ringkasan Keuangan</h6>
+                            <h6 className="m-0 font-bold text-blue-900">Ringkasan Tagihan & Skema Pembayaran</h6>
                             <span className="text-xs text-blue-700">Estimasi Booking Folio</span>
                         </div>
                         <div className="flex justify-content-between mb-1 text-sm">
@@ -206,21 +291,21 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                             <strong className="text-primary text-xl">Rp {totalTagihan.toLocaleString('id-ID')}</strong>
                         </div>
 
-                        {formik.values.deposit_amount > 0 ? (
+                        {paymentAmount > 0 ? (
                             <div className="mt-3 pt-2 border-top-1 border-blue-200">
                                 <div className="p-2 border-round surface-0 border-1 border-green-300">
                                     <div className="flex justify-content-between align-items-center">
                                         <div>
                                             <span className="font-semibold text-green-800 text-sm flex align-items-center gap-1">
-                                                <i className="pi pi-shield text-green-600"></i> Uang Jaminan (Deposit Diterima)
+                                                <i className="pi pi-check-circle text-green-600"></i> Pembayaran di Muka (DP / Lunas)
                                             </span>
                                             <span className="text-xs text-color-secondary block mt-1">
-                                                Metode: <strong className="uppercase">{formik.values.payment_method || 'CASH'}</strong> • Disimpan di kasir sebagai jaminan (tidak memotong total tagihan)
+                                                Metode: <strong className="uppercase">{formik.values.payment_method || 'CASH'}</strong> • Sisa tagihan saat check-in: <strong>Rp {sisaTagihan.toLocaleString('id-ID')}</strong>
                                             </span>
                                         </div>
                                         <div className="text-right">
                                             <strong className="text-green-700 text-base">
-                                                Rp {formik.values.deposit_amount.toLocaleString('id-ID')}
+                                                Rp {paymentAmount.toLocaleString('id-ID')}
                                             </strong>
                                         </div>
                                     </div>
@@ -228,7 +313,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                             </div>
                         ) : (
                             <div className="mt-2 text-xs text-color-secondary">
-                                <i className="pi pi-info-circle mr-1"></i> Tidak ada pembayaran deposit awal. Seluruh tagihan diselesaikan saat check-in/check-out.
+                                <i className="pi pi-info-circle mr-1"></i> Tidak ada pembayaran di muka. Seluruh tagihan diselesaikan saat tamu check-in atau checkout.
                             </div>
                         )}
                     </div>
@@ -238,7 +323,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
             <div className="col-12 flex justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top-1 surface-border">
                 <Button 
                     type="button" 
-                    label="Kembali ke Deposit" 
+                    label="Kembali ke Pembayaran" 
                     icon="pi pi-arrow-left" 
                     outlined 
                     severity="secondary" 
@@ -246,7 +331,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                     onClick={() => setState(p => ({ ...p, activeStep: 3 }))} 
                 />
                 <Button 
-                    label="Buat Reservasi (Booking)" 
+                    label="Konfirmasi & Buat Booking" 
                     icon="pi pi-check" 
                     iconPos="right" 
                     severity="success" 

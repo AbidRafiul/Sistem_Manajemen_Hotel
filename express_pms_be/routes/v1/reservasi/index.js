@@ -23,6 +23,8 @@ import reservationCreate from "./booking/reservation_create.js";
 import reservationData from "./booking/reservation_data.js";
 import checkinSubmit from "./checkin/checkin_submit.js";
 import inhouse from "./inhouse/index.js";
+import dashboard from "./dashboard/index.js";
+import invoice from "./invoice/index.js";
 
 const router = express.Router();
 
@@ -40,5 +42,7 @@ router.use("/booking/reservation-create", reservationCreate);
 router.use("/booking/reservation-data", reservationData);
 router.use("/checkin/checkin-submit", checkinSubmit);
 router.use("/inhouse", inhouse);
+router.use("/dashboard", dashboard);
+router.use("/invoice", invoice);
 
 export default router;

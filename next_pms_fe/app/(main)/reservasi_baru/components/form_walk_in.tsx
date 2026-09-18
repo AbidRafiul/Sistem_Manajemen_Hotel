@@ -113,7 +113,7 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                                 header={
                                     <div className={`flex align-items-center gap-2 ${hasTabErrors(3) ? 'text-red-500' : ''}`}>
                                         <i className="pi pi-wallet"></i>
-                                        <span>Deposit (Opsional)</span>
+                                        <span>Pembayaran & Tagihan</span>
                                         {hasTabErrors(3) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }

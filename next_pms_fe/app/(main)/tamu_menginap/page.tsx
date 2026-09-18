@@ -120,6 +120,12 @@ const TamuMenginapPage = () => {
                                 loading={loading}
                             />
                             <Button
+                                label="Dashboard Reservasi"
+                                icon="pi pi-th-large"
+                                className="p-button-outlined p-button-sm"
+                                onClick={() => router.push('/reservasi_dashboard')}
+                            />
+                            <Button
                                 label="Menu Checkout"
                                 icon="pi pi-sign-out"
                                 className="p-button-sm p-button-danger"
@@ -224,17 +230,25 @@ const TamuMenginapPage = () => {
                         {/* Kolom Kamar */}
                         <Column
                             header="Kamar"
-                            body={(row) => (
-                                <div>
-                                    <span className="font-bold text-base text-900 block">
-                                        Kamar {row.nomor_kamar || row.kode_kamar}
-                                    </span>
-                                    <span className="text-xs text-color-secondary block">
-                                        {row.nama_tipe_kamar || 'Tipe Kamar'}
-                                    </span>
-                                </div>
-                            )}
-                            style={{ minWidth: '130px' }}
+                            body={(row) => {
+                                const count = row.room_count || row.rooms?.length || 1;
+                                return (
+                                    <div>
+                                        <div className="flex align-items-center gap-2 mb-1">
+                                            <span className="font-bold text-base text-900">
+                                                Kamar {row.nomor_kamar || row.kode_kamar}
+                                            </span>
+                                            {count > 1 && (
+                                                <Tag severity="info" value={`${count} Kamar`} className="text-xs" />
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-color-secondary block">
+                                            {row.nama_tipe_kamar || 'Tipe Kamar'}
+                                        </span>
+                                    </div>
+                                );
+                            }}
+                            style={{ minWidth: '160px' }}
                         />
 
                         {/* Kolom Tamu */}

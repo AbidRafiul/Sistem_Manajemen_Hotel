@@ -8,7 +8,13 @@
     "dev": "nodemon --legacy-watch server.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "seed": "knex seed:run",
+    "seed:all": "node scripts/run_all_seeds.js",
+    "seed:migration": "knex seed:run --specific=migration_batch3_seeder.js",
+    "seed:master": "knex seed:run --specific=master_data_seeder.js",
+    "seed:nav": "knex seed:run --specific=navigation_master_setup.js",
+    "db:setup": "node scripts/run_all_seeds.js"
   },
   "keywords": [],
   "author": "",

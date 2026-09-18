@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ReservasiBaruState, initValue } from './interfaces';
 import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
+import { Tag } from 'primereact/tag';
 import postData from '@/lib/axios/postData';
 import { apiWalkInSubmit } from './endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import DialogInvoice from '@/app/components/dialogComponents/dialog_invoice';
 
 interface StepConfirmationProps {
     state: ReservasiBaruState;
@@ -16,6 +18,7 @@ interface StepConfirmationProps {
 }
 
 const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, formik, toast }) => {
+    const [showInvoice, setShowInvoice] = useState(false);
 
     const submitWalkIn = async () => {
         const errors = await formik.validateForm();
@@ -71,30 +74,64 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
     const selectedRoom = state.rateInfo?.available_rooms?.find((r: any) => r.kode_kamar === formik.values.kode_kamar);
 
     if (state.submittedData) {
+        const isSettled = state.submittedData.is_settled ?? ((state.submittedData.balance ?? 1) <= 0);
+
         return (
             <div className="text-center p-5">
-                <i className="pi pi-check-circle text-green-500" style={{ fontSize: '4rem' }}></i>
-                <h4 className="mt-3">Walk-in Berhasil Diproses</h4>
-                <div className="mt-4 surface-100 p-4 border-round max-w-md mx-auto text-left shadow-1">
+                <i className={`pi ${isSettled ? 'pi-check-circle text-green-500' : 'pi-info-circle text-blue-500'}`} style={{ fontSize: '4rem' }}></i>
+                <h4 className="mt-3">
+                    Check-in Walk-in Berhasil Diproses
+                </h4>
+                <div className="mb-3">
+                    <Tag 
+                        severity={isSettled ? "success" : "warning"} 
+                        value={isSettled ? "PEMBAYARAN: LUNAS" : `SISA TAGIHAN: Rp ${Number(state.submittedData.balance || 0).toLocaleString('id-ID')}`} 
+                        className="text-sm px-3 py-1 font-bold"
+                    />
+                </div>
+
+                <div className="surface-100 p-4 border-round max-w-md mx-auto text-left shadow-1">
                     <p className="mb-2"><strong>Kode Reservasi:</strong> <span className="text-primary font-bold">{state.submittedData.kode_reservasi}</span></p>
-                    {state.submittedData.checkins && state.submittedData.checkins.length > 0 ? (
+                    {state.submittedData.invoice_number && (
+                        <p className="mb-2"><strong>Nomor Invoice:</strong> <span className="text-primary font-bold font-mono">{state.submittedData.invoice_number}</span></p>
+                    )}
+                    {state.submittedData.rooms && state.submittedData.rooms.length > 0 ? (
                         <div className="mb-2">
-                            <strong>Check-in ({state.submittedData.checkins.length} Kamar):</strong>
+                            <strong>Kamar Menginap ({state.submittedData.rooms.length} Kamar):</strong>
                             <ul className="pl-3 mt-1 mb-0">
-                                {state.submittedData.checkins.map((chk: any, idx: number) => (
+                                {state.submittedData.rooms.map((rm: any, idx: number) => (
                                     <li key={idx} className="text-sm">
-                                        Kamar {chk.kode_kamar}: <code>{chk.kode_checkin}</code>
+                                        Kamar {rm.kode_kamar}: <code>{rm.kode_checkin || rm.kode_reservasi_room}</code>
                                     </li>
                                 ))}
                             </ul>
                         </div>
-                    ) : (
-                        <p className="mb-2"><strong>Kode Check-in:</strong> {state.submittedData.kode_checkin}</p>
-                    )}
+                    ) : null}
                     <p className="mb-2"><strong>Kode Folio:</strong> {state.submittedData.kode_folio}</p>
-                    <p className="mb-0"><strong>Total Charge:</strong> Rp {(state.submittedData.total_charge || state.submittedData.grand_total || totalTagihan).toLocaleString('id-ID')}</p>
+                    <p className="mb-1"><strong>Grand Total:</strong> Rp {Number(state.submittedData.grand_total || totalTagihan).toLocaleString('id-ID')}</p>
+                    <p className="mb-0"><strong>Sudah Dibayar:</strong> Rp {Number(state.submittedData.total_paid || 0).toLocaleString('id-ID')}</p>
                 </div>
-                <Button label="Buat Reservasi Baru" icon="pi pi-plus" className="mt-4" onClick={() => window.location.reload()} />
+
+                <div className="flex justify-content-center gap-2 mt-4 flex-wrap">
+                    <Button 
+                        label="Lihat & Cetak Invoice" 
+                        icon="pi pi-print" 
+                        className="p-button-outlined p-button-success" 
+                        onClick={() => setShowInvoice(true)} 
+                    />
+                    <Button 
+                        label="Buat Reservasi Baru" 
+                        icon="pi pi-plus" 
+                        onClick={() => window.location.reload()} 
+                    />
+                </div>
+
+                <DialogInvoice
+                    visible={showInvoice}
+                    onHide={() => setShowInvoice(false)}
+                    kode_folio={state.submittedData.kode_folio}
+                    kode_reservation={state.submittedData.kode_reservasi}
+                />
             </div>
         );
     }
