@@ -288,28 +288,37 @@ const TamuMenginapPage = () => {
                         {/* Total Tagihan */}
                         <Column
                             header="Total Tagihan"
+                            align="right"
+                            alignHeader="right"
+                            headerStyle={{ textAlign: 'right' }}
                             body={(row) => (
                                 <span className="font-semibold text-sm text-900">
                                     Rp {Number(row.grand_total || 0).toLocaleString('id-ID')}
                                 </span>
                             )}
-                            style={{ minWidth: '120px', textAlign: 'right' }}
+                            style={{ minWidth: '120px' }}
                         />
 
                         {/* Sudah Dibayar */}
                         <Column
                             header="Sudah Dibayar"
+                            align="right"
+                            alignHeader="right"
+                            headerStyle={{ textAlign: 'right' }}
                             body={(row) => (
                                 <span className="font-semibold text-sm text-green-600">
                                     Rp {Number(row.total_paid || 0).toLocaleString('id-ID')}
                                 </span>
                             )}
-                            style={{ minWidth: '120px', textAlign: 'right' }}
+                            style={{ minWidth: '120px' }}
                         />
 
                         {/* Sisa Saldo (Balance) */}
                         <Column
                             header="Sisa Saldo"
+                            align="right"
+                            alignHeader="right"
+                            headerStyle={{ textAlign: 'right' }}
                             body={(row) => {
                                 const isSettled = (row.balance || 0) <= 0;
                                 return (
@@ -318,12 +327,15 @@ const TamuMenginapPage = () => {
                                     </span>
                                 );
                             }}
-                            style={{ minWidth: '120px', textAlign: 'right' }}
+                            style={{ minWidth: '120px' }}
                         />
 
                         {/* Status Tagihan */}
                         <Column
                             header="Status Tagihan"
+                            align="center"
+                            alignHeader="center"
+                            headerStyle={{ textAlign: 'center' }}
                             body={(row) => {
                                 const isSettled = (row.balance || 0) <= 0;
                                 return (
@@ -334,22 +346,25 @@ const TamuMenginapPage = () => {
                                     />
                                 );
                             }}
-                            style={{ minWidth: '120px', textAlign: 'center' }}
+                            style={{ minWidth: '120px' }}
                         />
 
                         {/* Aksi */}
                         <Column
                             header="Aksi"
+                            align="center"
+                            alignHeader="center"
+                            headerStyle={{ textAlign: 'center' }}
                             body={(row) => (
-                                <div className="flex align-items-center gap-1">
+                                <div className="flex align-items-center justify-content-center gap-1">
                                     <Button
                                         icon="pi pi-receipt"
                                         tooltip="Rincian Folio & Billing"
                                         tooltipOptions={{ position: 'top' }}
                                         className="p-button-rounded p-button-text p-button-secondary"
                                         onClick={() => {
-                                            setSelectedRow(row);
-                                            setShowFolioDialog(true);
+                                             setSelectedRow(row);
+                                             setShowFolioDialog(true);
                                         }}
                                     />
                                     <Button
@@ -381,7 +396,7 @@ const TamuMenginapPage = () => {
                                     />
                                 </div>
                             )}
-                            style={{ minWidth: '160px', textAlign: 'center' }}
+                            style={{ minWidth: '160px' }}
                         />
                     </DataTable>
                 </div>
