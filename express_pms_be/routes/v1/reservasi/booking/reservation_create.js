@@ -251,29 +251,43 @@ router.post("/", async (req, res) => {
                 await trx("trx_folio_charge").insert({
                     kode_folio_charge: noFolioCharge,
                     kode_folio: lastFolioCode,
-                    kode_reservasi_room: r.kode_reservasi_room,
                     charge_type: "room",
                     description: `Sewa Kamar (${nights} Malam)`,
+                    qty: nights,
+                    unit_price: r.rate_per_night,
                     amount: r.subtotal,
-                    tax_amount: Math.round(r.subtotal * (totalTaxAmount / (totalSubtotal || 1))),
-                    service_charge_amount: Math.round(r.subtotal * (totalServiceCharge / (totalSubtotal || 1))),
+                    ref_source_type: "trx_reservation_room",
+                    kode_ref_source: r.kode_reservasi_room,
+                    posted_by: userId,
+                    posted_at: tNow,
                     created_by: userId,
-                    created_at: tNow
+                    created_at: tNow,
+                    is_active: 1
                 });
             }
 
             // Insert charges untuk fasilitas tambahan
             for (const fac of activeExtraFacs) {
                 const noFolioCharge = await generateSequence("FMT-FOLIOCHARGE", trx);
+                const qty = Number(fac.qty) || 1;
+                const chargeType = fac.id === 'laundry' ? 'laundry' 
+                                 : fac.id === 'sarapan' ? 'restaurant' 
+                                 : 'other';
                 await trx("trx_folio_charge").insert({
                     kode_folio_charge: noFolioCharge,
                     kode_folio: lastFolioCode,
-                    kode_fasilitas: fac.kode_fasilitas,
-                    charge_type: "facility",
-                    description: `Fasilitas Tambahan: ${fac.nama} (${fac.qty}x)`,
+                    charge_type: chargeType,
+                    description: `Fasilitas Tambahan: ${fac.nama || 'Layanan'}${qty > 1 ? ` (${qty}x)` : ''}`,
+                    qty: qty,
+                    unit_price: fac.harga || fac.subtotal,
                     amount: fac.subtotal,
+                    ref_source_type: "trx_reservation",
+                    kode_ref_source: noReservasi,
+                    posted_by: userId,
+                    posted_at: tNow,
                     created_by: userId,
-                    created_at: tNow
+                    created_at: tNow,
+                    is_active: 1
                 });
             }
 

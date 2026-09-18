@@ -160,45 +160,73 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
         folioCode = noFolio;
     } else {
         folioCode = targetFolio.kode_folio;
-        const newSubtotal = parseFloat(targetFolio.subtotal || 0) + totalRoomCharge;
-        let taxAmount = 0;
-        let serviceChargeAmount = 0;
-        activeTaxes.forEach((t) => {
-            const pct = parseFloat(t.percentage) || 0;
-            const nominal = Math.round(newSubtotal * (pct / 100));
-            if (t.tax_type === "service_charge") serviceChargeAmount += nominal;
-            else taxAmount += nominal;
-        });
-        const newGrandTotal = newSubtotal + taxAmount + serviceChargeAmount;
-
-        await trx("trx_folio")
+        const existingRoomCharge = await trx("trx_folio_charge")
             .where("kode_folio", folioCode)
-            .update({
-                subtotal: newSubtotal,
-                tax_amount: taxAmount,
-                service_charge_amount: serviceChargeAmount,
-                grand_total: newGrandTotal,
-                updated_by: userId,
-                updated_at: tNow
+            .where("ref_source_type", "trx_reservation_room")
+            .where("kode_ref_source", kode_reservasi_room)
+            .where("is_active", 1)
+            .first();
+
+        // Hanya tambahkan ke subtotal folio jika charge kamar ini BELUM PERNAH dimasukkan sebelumnya
+        if (!existingRoomCharge) {
+            const newSubtotal = parseFloat(targetFolio.subtotal || 0) + totalRoomCharge;
+            let taxAmount = 0;
+            let serviceChargeAmount = 0;
+            activeTaxes.forEach((t) => {
+                const pct = parseFloat(t.percentage) || 0;
+                const nominal = Math.round(newSubtotal * (pct / 100));
+                if (t.tax_type === "service_charge") serviceChargeAmount += nominal;
+                else taxAmount += nominal;
             });
+            const newGrandTotal = newSubtotal + taxAmount + serviceChargeAmount;
+
+            await trx("trx_folio")
+                .where("kode_folio", folioCode)
+                .update({
+                    subtotal: newSubtotal,
+                    tax_amount: taxAmount,
+                    service_charge_amount: serviceChargeAmount,
+                    grand_total: newGrandTotal,
+                    updated_by: userId,
+                    updated_at: tNow
+                });
+        }
     }
 
-    // 8. Insert trx_folio_charge
-    await trx("trx_folio_charge").insert({
-        kode_folio_charge: noFolioCharge,
-        kode_folio: folioCode,
-        charge_type: "room",
-        description: `Room Charge (${computedNights} night/s) - Kamar ${kamarAvailable.nomor_kamar || assignedKamar}`,
-        qty: computedNights,
-        unit_price: ratePerNight,
-        amount: totalRoomCharge,
-        ref_source_type: "trx_reservation_room",
-        kode_ref_source: kode_reservasi_room,
-        posted_by: userId,
-        posted_at: tNow,
-        created_by: userId,
-        created_at: tNow
-    });
+    // 8. Insert atau Update trx_folio_charge
+    const existingRoomCharge = await trx("trx_folio_charge")
+        .where("kode_folio", folioCode)
+        .where("ref_source_type", "trx_reservation_room")
+        .where("kode_ref_source", kode_reservasi_room)
+        .where("is_active", 1)
+        .first();
+
+    if (!existingRoomCharge) {
+        await trx("trx_folio_charge").insert({
+            kode_folio_charge: noFolioCharge,
+            kode_folio: folioCode,
+            charge_type: "room",
+            description: `Room Charge (${computedNights} night/s) - Kamar ${kamarAvailable.nomor_kamar || assignedKamar}`,
+            qty: computedNights,
+            unit_price: ratePerNight,
+            amount: totalRoomCharge,
+            ref_source_type: "trx_reservation_room",
+            kode_ref_source: kode_reservasi_room,
+            posted_by: userId,
+            posted_at: tNow,
+            created_by: userId,
+            created_at: tNow,
+            is_active: 1
+        });
+    } else {
+        await trx("trx_folio_charge")
+            .where("id", existingRoomCharge.id)
+            .update({
+                description: `Room Charge (${computedNights} night/s) - Kamar ${kamarAvailable.nomor_kamar || assignedKamar}`,
+                posted_by: userId,
+                posted_at: tNow
+            });
+    }
 
     // 9. Update Kamar (occupancy_status)
     await trx("mst_kamar")
