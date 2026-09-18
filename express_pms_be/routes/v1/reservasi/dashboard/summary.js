@@ -293,6 +293,101 @@ router.post("/", async (req, res) => {
       departures_today: parseInt(departuresCount?.total || 0, 10)
     };
 
+    // 7. Ambil Daftar Kamar Fisik (Front Office Room Rack) dengan info tamu in-house
+    let rackQuery = DB("mst_kamar as k")
+      .join("mst_tipe_kamar as tk", "k.kode_tipe_kamar", "tk.kode_tipe_kamar")
+      .leftJoin("mst_lantai as l", "k.kode_lantai", "l.kode_lantai")
+      .where("k.is_active", 1)
+      .whereNull("k.deleted_at")
+      .select(
+        "k.kode_kamar",
+        "k.nomor_kamar",
+        "k.kode_tipe_kamar",
+        "tk.nama_tipe",
+        "k.occupancy_status",
+        "k.housekeeping_status",
+        "k.tipe_pemandangan",
+        "l.nama_lantai as lantai"
+      )
+      .orderBy("k.nomor_kamar", "asc");
+
+    if (kode_cabang) rackQuery.where("k.kode_cabang", kode_cabang);
+    const physicalRooms = await rackQuery;
+
+    // Ambil data tamu yang sedang in-house di setiap kamar
+    let inHouseQuery = DB("trx_reservation_room as rr")
+      .join("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
+      .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
+      .leftJoin("trx_folio as f", "r.kode_reservasi", "f.kode_reservation")
+      .where("rr.status", "checked_in")
+      .where("r.status", "checked_in")
+      .whereNull("rr.deleted_at")
+      .where("rr.is_active", 1)
+      .select(
+        "rr.kode_kamar",
+        "r.kode_reservasi",
+        "r.check_in_date",
+        "r.check_out_date",
+        "g.full_name as guest_name",
+        "g.phone as guest_phone",
+        "f.kode_folio"
+      );
+
+    if (kode_cabang) inHouseQuery.where("r.kode_cabang", kode_cabang);
+    const inHouseList = await inHouseQuery;
+
+    const inHouseMap = new Map();
+    inHouseList.forEach((ih) => {
+      if (ih.kode_kamar) inHouseMap.set(ih.kode_kamar, ih);
+    });
+
+    const roomRack = physicalRooms.map((rm) => {
+      const activeStay = inHouseMap.get(rm.kode_kamar);
+      let displayStatus = "ready";
+      let statusLabel = "Siap Check-In";
+
+      if (rm.occupancy_status === "occupied" || activeStay) {
+        displayStatus = "occupied";
+        statusLabel = "Terisi (In-House)";
+      } else if (
+        rm.occupancy_status === "blocked" ||
+        rm.housekeeping_status === "out_of_service" ||
+        rm.housekeeping_status === "maintenance"
+      ) {
+        displayStatus = "maintenance";
+        statusLabel = "Perawatan";
+      } else if (
+        rm.housekeeping_status === "dirty" ||
+        rm.housekeeping_status === "in_progress" ||
+        rm.housekeeping_status === "inspection"
+      ) {
+        displayStatus = "dirty";
+        statusLabel = "Pembersihan (Dirty)";
+      }
+
+      return {
+        kode_kamar: rm.kode_kamar,
+        nomor_kamar: rm.nomor_kamar,
+        nama_tipe: rm.nama_tipe,
+        kode_tipe_kamar: rm.kode_tipe_kamar,
+        lantai: rm.lantai || "Lantai 1",
+        occupancy_status: rm.occupancy_status,
+        housekeeping_status: rm.housekeeping_status,
+        display_status: displayStatus,
+        status_label: statusLabel,
+        active_stay: activeStay
+          ? {
+              guest_name: activeStay.guest_name || "Tamu Hotel",
+              phone: activeStay.guest_phone || "-",
+              check_in_date: formatDateSystem(new Date(activeStay.check_in_date), "dd/MM/yyyy"),
+              check_out_date: formatDateSystem(new Date(activeStay.check_out_date), "dd/MM/yyyy"),
+              kode_reservasi: activeStay.kode_reservasi,
+              kode_folio: activeStay.kode_folio
+            }
+          : null
+      };
+    });
+
     return res.status(200).json({
       status: status.SUKSES,
       message: "Data ringkasan dashboard berhasil dimuat",
@@ -301,6 +396,7 @@ router.post("/", async (req, res) => {
         filter: filterInfo,
         kpi_period: kpiPeriodData,
         kpi_today: kpiTodayData,
+        room_rack: roomRack,
         // Kompatibilitas backwards:
         period_metrics: {
           check_in_date: checkinStr,
