@@ -239,7 +239,6 @@ router.post("/", async (req, res) => {
           .where("kode_reservasi_room", roomItem.kode_reservasi_room)
           .update({
             status: "checked_out",
-            actual_check_out: tNow,
             updated_by: user_id,
             updated_at: tNow
           });
