@@ -110,7 +110,9 @@ const Form = ({ getData, toast, state, setState, formik }: FormProps) => {
             {/* Form Add / Edit */}
             <Dialog
                 visible={state.add || state.edit}
-                style={{ width: '450px' }}
+                style={{ width: '650px', maxWidth: '95vw' }}
+                breakpoints={{ '960px': '75vw', '641px': '95vw' }}
+                contentStyle={{ overflowX: 'hidden' }}
                 header={state.edit ? 'Edit Ruang Event' : 'Tambah Ruang Event'}
                 modal
                 className="p-fluid"
@@ -256,6 +258,8 @@ const Form = ({ getData, toast, state, setState, formik }: FormProps) => {
                         optionValue="kode_fasilitas"
                         placeholder="Pilih Fasilitas"
                         display="chip"
+                        maxSelectedLabels={3}
+                        selectedItemsLabel="{0} fasilitas dipilih"
                         filter
                         className="w-full"
                     />

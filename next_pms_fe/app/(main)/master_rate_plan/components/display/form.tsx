@@ -135,8 +135,9 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 visible={state.add || state.edit}
                 header={state.edit ? 'Edit Data Rate Plan' : 'Tambah Rate Plan Baru'}
                 modal
-                style={{ width: '100%', maxWidth: '700px' }}
-                breakpoints={{ '641px': '90vw' }}
+                style={{ width: '750px', maxWidth: '95vw' }}
+                breakpoints={{ '960px': '85vw', '641px': '95vw' }}
+                contentStyle={{ overflowX: 'hidden' }}
                 onHide={() => {
                     setState((p) => ({ ...p, add: false, edit: false, delete: false }));
                     formik?.resetForm();
