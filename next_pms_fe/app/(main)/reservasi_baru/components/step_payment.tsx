@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { ReservasiBaruState, initValue } from './interfaces';
 import { FormikProps } from 'formik';
@@ -28,7 +30,6 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
                 });
                 const shifts = res.data.data || [];
                 setState(p => ({ ...p, cashierShiftOptions: shifts }));
-                // Auto-pilih shift pertama jika belum terpilih
                 if (shifts.length > 0 && !formik.values.kode_cashier_shift) {
                     formik.setFieldValue('kode_cashier_shift', shifts[0].kode_cashier_shift);
                 }
@@ -49,19 +50,6 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
         { label: 'Mesin EDC', value: 'edc', icon: 'pi pi-calculator' }
     ];
 
-    const isDepositActive = (formik.values.deposit_amount || 0) > 0;
-
-    const applyDepositPreset = (val: number) => {
-        formik.setFieldValue('deposit_amount', val);
-        if (val > 0 && !formik.values.payment_method) {
-            formik.setFieldValue('payment_method', 'cash');
-        }
-    };
-
-    const isPresetActive = (val: number) => {
-        return (formik.values.deposit_amount || 0) === val;
-    };
-
     const selectedRooms = formik.values.selected_rooms || [];
     const hasMultiRooms = selectedRooms.length > 0;
     const activeExtraFacilities = (formik.values.extra_facilities || []).filter(f => f.qty > 0 || f.subtotal > 0);
@@ -71,16 +59,32 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
         : (state.rateInfo?.price_per_night || 0) * formik.values.nights;
     const totalTagihan = totalKamar + totalFasilitas;
 
+    const paymentAmount = formik.values.deposit_amount || 0;
+    const sisaTagihan = Math.max(0, totalTagihan - paymentAmount);
+    const isLunas = paymentAmount >= totalTagihan && totalTagihan > 0;
+    const isPartial = paymentAmount > 0 && paymentAmount < totalTagihan;
+
+    const applyPaymentPreset = (val: number) => {
+        formik.setFieldValue('deposit_amount', val);
+        if (val > 0 && !formik.values.payment_method) {
+            formik.setFieldValue('payment_method', 'cash');
+        }
+    };
+
+    const isPresetActive = (val: number) => {
+        return paymentAmount === val;
+    };
+
     return (
         <div className="flex flex-column gap-3">
-            {/* 1. Hero Summary Card: Tagihan Folio & Konsep Uang Jaminan */}
+            {/* 1. Hero Summary Card: Tagihan Folio & Status Pelunasan */}
             <div className="surface-card border-round-xl border-1 surface-border p-4 shadow-1">
                 <div className="grid align-items-center">
-                    {/* Sisi Kiri: Rincian Tagihan Kamar & Layanan */}
+                    {/* Sisi Kiri: Rincian Tagihan */}
                     <div className="col-12 md:col-7 pr-0 md:pr-4 border-none md:border-right-1 surface-border">
                         <div className="flex align-items-center gap-2 mb-2 flex-wrap">
                             <span className="text-xs uppercase font-bold text-color-secondary tracking-wider flex align-items-center gap-1">
-                                <i className="pi pi-receipt text-primary"></i> Total Tagihan Folio
+                                <i className="pi pi-receipt text-primary"></i> Total Tagihan Walk-In
                             </span>
                             <Tag severity="info" value={`${hasMultiRooms ? selectedRooms.length : 1} Kamar`} className="text-xs font-semibold" />
                             <Tag severity="secondary" value={`${formik.values.nights} Malam`} className="text-xs font-semibold" />
@@ -96,132 +100,112 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
                             {totalFasilitas > 0 && (
                                 <div className="flex align-items-center gap-1">
                                     <i className="pi pi-sparkles text-blue-500"></i>
-                                    <span>Fasilitas Tambahan: <strong className="text-blue-600">+ Rp {totalFasilitas.toLocaleString('id-ID')}</strong></span>
+                                    <span>Fasilitas: <strong className="text-blue-600">+ Rp {totalFasilitas.toLocaleString('id-ID')}</strong></span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Sisi Kanan: Status Uang Jaminan & Prinsip SOP */}
+                    {/* Sisi Kanan: Status Pelunasan Transaksi */}
                     <div className="col-12 md:col-5 pl-0 md:pl-4 mt-3 md:mt-0">
                         <div className="flex align-items-center justify-content-between mb-2">
                             <span className="font-bold text-sm text-900 flex align-items-center gap-2">
-                                <i className="pi pi-shield text-green-600 text-lg"></i> Uang Jaminan (Deposit)
+                                <i className="pi pi-credit-card text-primary text-lg"></i> Status Pelunasan
                             </span>
                             <Tag 
-                                severity={isDepositActive ? "success" : "secondary"} 
-                                value={isDepositActive ? `Diterima (Rp ${formik.values.deposit_amount.toLocaleString('id-ID')})` : "Opsional (Rp 0)"} 
-                                className="text-xs font-semibold" 
+                                severity={isLunas ? "success" : isPartial ? "warning" : "danger"} 
+                                value={isLunas ? "LUNAS (100%)" : isPartial ? "DIBAYAR SEBAGIAN" : "BELUM DIBAYAR"} 
+                                className="text-xs font-bold" 
                             />
                         </div>
                         <p className="text-xs text-color-secondary m-0 line-height-3">
-                            Deposit berfungsi sebagai garansi insidentil/kunci dan <strong>tidak memotong total tagihan</strong>. Uang jaminan dapat dikembalikan utuh (*refund*) saat check-out.
+                            {isLunas ? (
+                                <span className="text-green-700 font-medium">
+                                    Tamu membayar lunas seluruh tagihan menginap di muka. Status invoice otomatis terbit <strong>LUNAS</strong>.
+                                </span>
+                            ) : isPartial ? (
+                                <span className="text-orange-700 font-medium">
+                                    Tamu membayar sebagian tagihan (DP Rp {paymentAmount.toLocaleString('id-ID')}). Sisa <strong>Rp {sisaTagihan.toLocaleString('id-ID')}</strong> akan diselesaikan saat checkout.
+                                </span>
+                            ) : (
+                                <span className="text-500">
+                                    Tamu memilih bayar saat checkout. Seluruh tagihan <strong>Rp {totalTagihan.toLocaleString('id-ID')}</strong> akan dilunasi pada saat checkout.
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* 2. Pilihan Cepat Nominal Deposit (Horizontal Interactive Cards) */}
+            {/* 2. Pilihan Cepat Skema Pembayaran */}
             <div className="surface-card border-round-xl border-1 surface-border p-4 shadow-1">
                 <div className="flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                     <div className="font-bold text-900 text-base flex align-items-center gap-2">
                         <i className="pi pi-wallet text-primary text-lg"></i>
-                        Penerimaan Deposit / Uang Jaminan
+                        Pilihan Skema Pembayaran
                     </div>
                     <span className="text-xs text-color-secondary">
-                        Pilih nominal cepat atau sesuaikan langsung pada input di bawah
+                        Pilih nominal cepat atau sesuaikan langsung pada kolom input
                     </span>
                 </div>
 
                 <div className="grid mb-3">
-                    {/* Preset 0: Pelunasan Penuh 100% */}
-                    <div className="col-12 sm:col-6 md:col-4 lg:col mb-2">
+                    {/* Preset 1: Bayar Lunas 100% */}
+                    <div className="col-12 sm:col-4 mb-2">
                         <div
                             className={`p-3 border-round-xl border-2 cursor-pointer transition-all transition-duration-200 text-center h-full flex flex-column justify-content-center align-items-center select-none ${
                                 isPresetActive(totalTagihan) && totalTagihan > 0
-                                    ? 'border-primary surface-0 shadow-2 bg-primary-50'
+                                    ? 'border-green-600 surface-0 shadow-2 bg-green-50'
                                     : 'border-200 surface-0 hover:surface-100 hover:border-300'
                             }`}
-                            onClick={() => applyDepositPreset(totalTagihan)}
+                            onClick={() => applyPaymentPreset(totalTagihan)}
                         >
-                            <i className={`pi pi-check-circle text-2xl mb-2 ${isPresetActive(totalTagihan) && totalTagihan > 0 ? 'text-primary font-bold' : 'text-primary-400'}`}></i>
-                            <span className={`text-sm font-bold block ${isPresetActive(totalTagihan) && totalTagihan > 0 ? 'text-primary-700' : 'text-900'}`}>Lunas di Awal (100%)</span>
-                            <span className="text-xs text-color-secondary mt-1">Rp {totalTagihan.toLocaleString('id-ID')}</span>
+                            <i className={`pi pi-check-circle text-2xl mb-2 ${isPresetActive(totalTagihan) && totalTagihan > 0 ? 'text-green-600 font-bold' : 'text-400'}`}></i>
+                            <span className={`text-sm font-bold block ${isPresetActive(totalTagihan) && totalTagihan > 0 ? 'text-green-800' : 'text-900'}`}>Bayar Lunas (100%)</span>
+                            <span className="text-xs text-color-secondary mt-1">Rp {totalTagihan.toLocaleString('id-ID')} (Rekomendasi)</span>
                         </div>
                     </div>
 
-                    {/* Preset 1: Tanpa Deposit */}
-                    <div className="col-12 sm:col-6 md:col-4 lg:col mb-2">
+                    {/* Preset 2: Uang Muka 50% */}
+                    <div className="col-12 sm:col-4 mb-2">
+                        <div
+                            className={`p-3 border-round-xl border-2 cursor-pointer transition-all transition-duration-200 text-center h-full flex flex-column justify-content-center align-items-center select-none ${
+                                isPresetActive(Math.round(totalTagihan * 0.5)) && totalTagihan > 0
+                                    ? 'border-orange-500 surface-0 shadow-2 bg-orange-50'
+                                    : 'border-200 surface-0 hover:surface-100 hover:border-300'
+                            }`}
+                            onClick={() => applyPaymentPreset(Math.round(totalTagihan * 0.5))}
+                        >
+                            <i className={`pi pi-percentage text-2xl mb-2 ${isPresetActive(Math.round(totalTagihan * 0.5)) && totalTagihan > 0 ? 'text-orange-600 font-bold' : 'text-400'}`}></i>
+                            <span className={`text-sm font-bold block ${isPresetActive(Math.round(totalTagihan * 0.5)) && totalTagihan > 0 ? 'text-orange-800' : 'text-900'}`}>Uang Muka (DP 50%)</span>
+                            <span className="text-xs text-color-secondary mt-1">Rp {Math.round(totalTagihan * 0.5).toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+
+                    {/* Preset 3: Bayar Nanti saat Checkout (Rp 0) */}
+                    <div className="col-12 sm:col-4 mb-2">
                         <div
                             className={`p-3 border-round-xl border-2 cursor-pointer transition-all transition-duration-200 text-center h-full flex flex-column justify-content-center align-items-center select-none ${
                                 isPresetActive(0)
                                     ? 'border-blue-600 surface-0 shadow-2 bg-blue-50'
                                     : 'border-200 surface-0 hover:surface-100 hover:border-300'
                             }`}
-                            onClick={() => applyDepositPreset(0)}
+                            onClick={() => applyPaymentPreset(0)}
                         >
-                            <i className={`pi pi-times-circle text-2xl mb-2 ${isPresetActive(0) ? 'text-blue-600 font-bold' : 'text-400'}`}></i>
-                            <span className={`text-sm font-bold block ${isPresetActive(0) ? 'text-blue-700' : 'text-900'}`}>Tanpa Deposit</span>
-                            <span className="text-xs text-color-secondary mt-1">Rp 0 (Lewati)</span>
-                        </div>
-                    </div>
-
-                    {/* Preset 2: Rp 100.000 */}
-                    <div className="col-12 sm:col-6 md:col-4 lg:col mb-2">
-                        <div
-                            className={`p-3 border-round-xl border-2 cursor-pointer transition-all transition-duration-200 text-center h-full flex flex-column justify-content-center align-items-center select-none ${
-                                isPresetActive(100000)
-                                    ? 'border-green-600 surface-0 shadow-2 bg-green-50'
-                                    : 'border-200 surface-0 hover:surface-100 hover:border-300'
-                            }`}
-                            onClick={() => applyDepositPreset(100000)}
-                        >
-                            <i className={`pi pi-wallet text-2xl mb-2 ${isPresetActive(100000) ? 'text-green-600 font-bold' : 'text-400'}`}></i>
-                            <span className={`text-sm font-bold block ${isPresetActive(100000) ? 'text-green-700' : 'text-900'}`}>Rp 100.000</span>
-                            <span className="text-xs text-color-secondary mt-1">Jaminan Standar</span>
-                        </div>
-                    </div>
-
-                    {/* Preset 3: Rp 200.000 */}
-                    <div className="col-12 sm:col-6 md:col-3 mb-2">
-                        <div
-                            className={`p-3 border-round-xl border-2 cursor-pointer transition-all transition-duration-200 text-center h-full flex flex-column justify-content-center align-items-center select-none ${
-                                isPresetActive(200000)
-                                    ? 'border-green-600 surface-0 shadow-2 bg-green-50'
-                                    : 'border-200 surface-0 hover:surface-100 hover:border-300'
-                            }`}
-                            onClick={() => applyDepositPreset(200000)}
-                        >
-                            <i className={`pi pi-shield text-2xl mb-2 ${isPresetActive(200000) ? 'text-green-600 font-bold' : 'text-400'}`}></i>
-                            <span className={`text-sm font-bold block ${isPresetActive(200000) ? 'text-green-700' : 'text-900'}`}>Rp 200.000</span>
-                            <span className="text-xs text-color-secondary mt-1">Rekomendasi</span>
-                        </div>
-                    </div>
-
-                    {/* Preset 4: Rp 500.000 */}
-                    <div className="col-12 sm:col-6 md:col-3 mb-2">
-                        <div
-                            className={`p-3 border-round-xl border-2 cursor-pointer transition-all transition-duration-200 text-center h-full flex flex-column justify-content-center align-items-center select-none ${
-                                isPresetActive(500000)
-                                    ? 'border-green-600 surface-0 shadow-2 bg-green-50'
-                                    : 'border-200 surface-0 hover:surface-100 hover:border-300'
-                            }`}
-                            onClick={() => applyDepositPreset(500000)}
-                        >
-                            <i className={`pi pi-star text-2xl mb-2 ${isPresetActive(500000) ? 'text-green-600 font-bold' : 'text-400'}`}></i>
-                            <span className={`text-sm font-bold block ${isPresetActive(500000) ? 'text-green-700' : 'text-900'}`}>Rp 500.000</span>
-                            <span className="text-xs text-color-secondary mt-1">Suite / VIP</span>
+                            <i className={`pi pi-clock text-2xl mb-2 ${isPresetActive(0) ? 'text-blue-600 font-bold' : 'text-400'}`}></i>
+                            <span className={`text-sm font-bold block ${isPresetActive(0) ? 'text-blue-700' : 'text-900'}`}>Bayar Nanti (Rp 0)</span>
+                            <span className="text-xs text-color-secondary mt-1">Pelunasan saat Checkout</span>
                         </div>
                     </div>
                 </div>
 
-                {/* 3. Form Input & Metode Pembayaran (Langsung Ditampilkan) */}
+                {/* 3. Metode Pembayaran & Input Nominal */}
                 <div className="p-3 border-round-xl surface-50 border-1 surface-border">
                     <div className="font-semibold text-xs text-color-secondary uppercase tracking-wider mb-2">
-                        Pilih Metode Pembayaran Deposit:
+                        Pilih Metode Pembayaran:
                     </div>
 
-                    {/* Payment Method Visual Selector */}
+                    {/* Payment Method Selector */}
                     <div className="grid mb-3">
                         {paymentMethods.map(m => {
                             const isSelected = (formik.values.payment_method || 'cash') === m.value;
@@ -247,7 +231,7 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
                     <div className="grid">
                         <div className="col-12 md:col-6">
                             <label className="font-semibold text-sm block mb-1">
-                                Nominal Uang Jaminan (Rp)
+                                Nominal Pembayaran Diterima (Rp)
                             </label>
                             <InputNumber
                                 value={formik.values.deposit_amount}
@@ -265,7 +249,7 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
                                 placeholder="Rp 0"
                                 className="w-full"
                             />
-                            <small className="text-color-secondary">Pilih preset di atas atau ketik nominal secara manual (isi 0 jika tanpa deposit).</small>
+                            <small className="text-color-secondary">Gunakan tombol preset di atas atau ketik nominal khusus.</small>
                         </div>
 
                         <div className="col-12 md:col-6">
@@ -288,42 +272,33 @@ const StepPayment: React.FC<StepPaymentProps> = ({ state, setState, formik, toas
                         </div>
                     </div>
 
-                    {/* Live Confirmation Banner */}
-                    {isDepositActive ? (
-                        <div className="mt-3 p-3 border-round-lg bg-green-100 border-1 border-green-300 flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div className="flex align-items-center gap-2">
-                                <i className="pi pi-check-circle text-green-700 text-lg"></i>
-                                <div>
-                                    <span className="text-sm font-bold text-green-950">
-                                        Deposit Tercatat: Rp {formik.values.deposit_amount.toLocaleString('id-ID')} via {(formik.values.payment_method || 'cash').toUpperCase()}
-                                    </span>
-                                    <span className="text-xs text-green-800 block mt-1">
-                                        Disimpan terpisah di kasir sebagai jaminan • Tidak memotong total tagihan akomodasi ({totalTagihan > 0 ? `Rp ${totalTagihan.toLocaleString('id-ID')}` : 'berjalan'})
-                                    </span>
-                                </div>
+                    {/* Rekonsiliasi Saldo Real-Time */}
+                    <div className="mt-3 p-3 border-round-lg surface-card border-1 surface-border">
+                        <div className="grid text-center">
+                            <div className="col-4 border-right-1 surface-border">
+                                <span className="text-xs text-500 block">Total Tagihan</span>
+                                <span className="text-base font-bold text-900 block mt-1">
+                                    Rp {totalTagihan.toLocaleString('id-ID')}
+                                </span>
                             </div>
-                            <Tag severity="success" value="Jaminan Terpisah" icon="pi pi-shield" className="text-xs font-semibold px-2 py-1" />
-                        </div>
-                    ) : (
-                        <div className="mt-3 p-3 border-round-lg bg-blue-50 border-1 border-blue-200 flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div className="flex align-items-center gap-2">
-                                <i className="pi pi-info-circle text-blue-600 text-lg"></i>
-                                <div>
-                                    <span className="text-sm font-bold text-blue-950">
-                                        Tanpa Deposit Awal (Rp 0)
-                                    </span>
-                                    <span className="text-xs text-blue-800 block mt-1">
-                                        Tamu tidak menitipkan deposit • Seluruh tagihan akan diselesaikan saat proses check-in atau check-out
-                                    </span>
-                                </div>
+                            <div className="col-4 border-right-1 surface-border">
+                                <span className="text-xs text-500 block">Pembayaran Diterima</span>
+                                <span className="text-base font-bold text-green-600 block mt-1">
+                                    Rp {paymentAmount.toLocaleString('id-ID')}
+                                </span>
                             </div>
-                            <Tag severity="info" value="Tanpa Deposit" icon="pi pi-check" className="text-xs font-semibold px-2 py-1" />
+                            <div className="col-4">
+                                <span className="text-xs text-500 block">Sisa Tagihan (Saldo)</span>
+                                <span className={`text-base font-bold block mt-1 ${sisaTagihan === 0 ? 'text-green-700' : 'text-red-600'}`}>
+                                    Rp {sisaTagihan.toLocaleString('id-ID')}
+                                </span>
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
 
-            {/* 4. Bottom Navigation (Sleek Horizontal Alignment) */}
+            {/* 4. Bottom Navigation */}
             <div className="flex justify-content-between align-items-center flex-wrap gap-3 mt-3 pt-3 border-top-1 surface-border">
                 <Button
                     type="button"
