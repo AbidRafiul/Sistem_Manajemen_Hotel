@@ -205,7 +205,7 @@ router.post("/", async (req, res) => {
 
         let hkTask = activeTask;
         if (!activeTask) {
-          const hkTaskCode = await generateSequence("FMT-HKT", trx);
+          const hkTaskCode = await generateSequence("FMT-TASK", trx);
           const idleStaff = await findIdleHousekeeper(folio.kode_cabang, trx);
           await trx("trx_housekeeping_task").insert({
             kode_housekeeping_task: hkTaskCode,
