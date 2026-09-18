@@ -68,7 +68,7 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                     </div>
 
                     <div className="py-2">
-                        <TabView className="browser-style-tabs" activeIndex={state.activeStep} onTabChange={(e) => setState((p) => ({ ...p, activeStep: e.index }))}>
+                        <TabView className="browser-style-tabs" scrollable activeIndex={state.activeStep} onTabChange={(e) => setState((p) => ({ ...p, activeStep: e.index }))}>
                             <TabPanel
                                 header={
                                     <div className={`flex align-items-center gap-2 ${hasTabErrors(0) ? 'text-red-500' : ''}`}>

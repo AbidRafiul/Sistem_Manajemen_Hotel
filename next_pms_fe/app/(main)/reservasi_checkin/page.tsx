@@ -7,20 +7,24 @@ import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { Tag } from 'primereact/tag';
+import { IconField } from 'primereact/iconfield';
+import { InputIcon } from 'primereact/inputicon';
+import { InputText } from 'primereact/inputtext';
+import { Dialog } from 'primereact/dialog';
 import postData from '@/lib/axios/postData';
 import { apiReservationData, apiCabangDropdown, apiCheckinSubmit, apiShiftCurrent } from './components/endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
-    const [data, setData] = useState([]);
+    const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [cabangOptions, setCabangOptions] = useState([]);
     const [filterCabang, setFilterCabang] = useState('');
     const [filterDate, setFilterDate] = useState<Date | null>(new Date());
+    const [globalFilter, setGlobalFilter] = useState('');
+    const [showFilter, setShowFilter] = useState(true);
     
     // Deposit handling dialog
     const [showDepositDialog, setShowDepositDialog] = useState(false);
@@ -63,11 +67,19 @@ const Page = () => {
                 check_in_date: filterDate ? formatDateSystem(filterDate, "yyyy-MM-dd") : null,
                 status: ['reserved', 'confirmed', 'booked']
             });
-            setData(res.data.data);
+            setData(res.data.data || []);
         } catch (e: any) {
             showError(toast, e?.response?.data?.message || "Gagal memuat data reservasi");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResetFilter = () => {
+        setGlobalFilter('');
+        setFilterDate(new Date());
+        if (cabangOptions.length > 0) {
+            setFilterCabang((cabangOptions[0] as any).kode_cabang);
         }
     };
 
@@ -129,33 +141,49 @@ const Page = () => {
 
     const statusBody = (rowData: any) => {
         const sev = rowData.room_status === 'confirmed' ? 'success' : 'warning';
-        return <Tag severity={sev} value={rowData.room_status.toUpperCase()} />;
+        return <Tag severity={sev} value={rowData.room_status ? rowData.room_status.toUpperCase() : 'RESERVED'} />;
     };
 
-    const headerTemplate = (
-        <div className="flex flex-wrap align-items-center justify-content-between gap-3">
-            <div className="flex align-items-center flex-wrap gap-2">
-                <div className="flex align-items-center gap-2">
-                    <span className="text-xs font-bold text-600">Pilih Tanggal:</span>
-                    <Calendar 
-                        value={filterDate} 
-                        onChange={(e) => setFilterDate(e.value as Date)} 
-                        dateFormat="dd/mm/yy" 
-                        showIcon 
-                        className="w-11rem text-sm"
-                    />
-                </div>
-            </div>
+    const filteredData = data.filter((item) => {
+        if (!globalFilter) return true;
+        const search = globalFilter.toLowerCase();
+        return (
+            (item.kode_reservasi && item.kode_reservasi.toLowerCase().includes(search)) ||
+            (item.guest_name && item.guest_name.toLowerCase().includes(search)) ||
+            (item.tipe_kamar_name && item.tipe_kamar_name.toLowerCase().includes(search)) ||
+            (item.room_status && item.room_status.toLowerCase().includes(search))
+        );
+    });
 
+    const headerTemplate = (
+        <div className="flex flex-wrap align-items-center justify-content-between gap-3 p-1">
+            <span className="text-xl font-bold text-900">Daftar Kedatangan Tamu</span>
             <div className="flex align-items-center gap-2 ml-auto w-full md:w-auto">
-                <Dropdown 
-                    value={filterCabang} 
-                    options={cabangOptions} 
-                    onChange={(e) => setFilterCabang(e.value)} 
-                    optionLabel="name" 
-                    optionValue="kode_cabang" 
-                    className="w-full md:w-15rem text-sm"
-                    placeholder="Pilih Cabang"
+                <Button
+                    type="button"
+                    label="Filter"
+                    icon="pi pi-filter"
+                    outlined
+                    className={showFilter ? 'p-button-primary' : 'p-button-secondary'}
+                    onClick={() => setShowFilter(!showFilter)}
+                />
+                <IconField iconPosition="left" className="w-full md:w-18rem">
+                    <InputIcon className="pi pi-search" />
+                    <InputText
+                        value={globalFilter}
+                        onChange={(e) => setGlobalFilter(e.target.value)}
+                        placeholder="Cari Data..."
+                        className="w-full"
+                    />
+                </IconField>
+                <Button
+                    type="button"
+                    icon="pi pi-filter-slash"
+                    outlined
+                    severity="danger"
+                    tooltip="Reset Filter"
+                    tooltipOptions={{ position: 'bottom' }}
+                    onClick={handleResetFilter}
                 />
             </div>
         </div>
@@ -165,40 +193,79 @@ const Page = () => {
         <div className="card">
             <Toast ref={toast} position="top-right" />
             
-            <div className="flex justify-content-between items-start mb-6">
+            <div className="flex justify-content-between align-items-start mb-4">
                 <div className="flex flex-column">
-                    <h3 className="text-2xl font-semibold flex align-items-center gap-2">
+                    <h3 className="text-2xl font-semibold flex align-items-center gap-2 m-0">
                         <i className="pi pi-sign-in text-blue-600 text-3xl"></i>Kedatangan Tamu (Arrivals)
                     </h3>
-                    <p className="text-gray-500">Daftar tamu yang akan check-in hari ini. Klik Check-in untuk assign kamar dan membuka folio.</p>
+                    <p className="text-gray-500 mt-1 mb-0">Daftar tamu yang akan check-in. Klik Check-in untuk assign kamar dan membuka folio.</p>
                 </div>
             </div>
 
-            <div className="flex flex-row flex-wrap items-center gap-2 mb-4">
-                <Button
-                    size="small"
-                    label="Refresh"
-                    icon="pi pi-refresh"
-                    outlined
-                    onClick={() => loadData()}
-                    loading={loading}
-                />
-            </div>
+            {showFilter && (
+                <div className="flex flex-wrap align-items-center justify-content-between gap-3 p-3 surface-50 border-round border-1 surface-border mb-4 animation-duration-200 fadein">
+                    <div className="flex flex-wrap align-items-center gap-3">
+                        <div className="flex align-items-center gap-2">
+                            <span className="text-sm font-bold text-700">Pilih Tanggal:</span>
+                            <Calendar 
+                                value={filterDate} 
+                                onChange={(e) => setFilterDate(e.value as Date)} 
+                                dateFormat="dd/mm/yy" 
+                                showIcon 
+                                className="w-11rem text-sm"
+                            />
+                        </div>
+                        <div className="flex align-items-center gap-2">
+                            <span className="text-sm font-bold text-700">Cabang:</span>
+                            <Dropdown 
+                                value={filterCabang} 
+                                options={cabangOptions} 
+                                onChange={(e) => setFilterCabang(e.value)} 
+                                optionLabel="name" 
+                                optionValue="kode_cabang" 
+                                className="w-14rem text-sm"
+                                placeholder="Pilih Cabang"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex align-items-center gap-2 ml-auto">
+                        <Button
+                            size="small"
+                            label="Refresh"
+                            icon="pi pi-refresh"
+                            outlined
+                            onClick={() => loadData()}
+                            loading={loading}
+                        />
+                    </div>
+                </div>
+            )}
 
             <DataTable 
-                value={data} 
+                value={filteredData} 
                 loading={loading} 
-                emptyMessage="Tidak ada reservasi yang ditemukan" 
+                emptyMessage="Data Kosong" 
                 scrollable 
                 responsiveLayout="scroll"
                 header={headerTemplate}
+                paginator
+                rows={10}
+                rowsPerPageOptions={[10, 20, 50, 100]}
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data"
+                className="p-datatable-sm"
             >
-                <Column field="kode_reservasi" header="No. Reservasi" />
-                <Column field="guest_name" header="Nama Tamu" />
-                <Column field="tipe_kamar_name" header="Tipe Kamar" />
-                <Column field="nights" header="Malam" />
-                <Column field="deposit_amount" header="Deposit" body={(r) => r.deposit_amount ? `Rp ${r.deposit_amount.toLocaleString('id-ID')}` : '-'} />
-                <Column field="room_status" header="Status" body={statusBody} />
+                <Column field="kode_reservasi" header="No. Reservasi" sortable />
+                <Column field="guest_name" header="Nama Tamu" sortable />
+                <Column field="tipe_kamar_name" header="Tipe Kamar" sortable />
+                <Column field="nights" header="Malam" sortable align="center" />
+                <Column 
+                    field="deposit_amount" 
+                    header="Deposit" 
+                    sortable 
+                    body={(r) => r.deposit_amount ? `Rp ${parseFloat(r.deposit_amount).toLocaleString('id-ID')}` : '-'} 
+                />
+                <Column field="room_status" header="Status" sortable body={statusBody} align="center" />
                 <Column header="Aksi" body={actionBody} align="center" />
             </DataTable>
 
@@ -255,3 +322,4 @@ const Page = () => {
 };
 
 export default Page;
+

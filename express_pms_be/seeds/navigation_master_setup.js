@@ -54,6 +54,14 @@ export async function seed(knex) {
           ]
         },
         {
+          label: "Master Tamu",
+          icon: "pi pi-fw pi-users",
+          items: [
+            { label: "Data Tamu", icon: "pi pi-fw pi-user", to: "/master_tamu" },
+            { label: "Dashboard Tamu", icon: "pi pi-fw pi-chart-bar", to: "/master_tamu/dashboard" }
+          ]
+        },
+        {
           label: "Konfigurasi Sistem",
           icon: "pi pi-fw pi-sliders-h",
           items: [

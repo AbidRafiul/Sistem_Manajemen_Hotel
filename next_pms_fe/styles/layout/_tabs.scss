@@ -10,13 +10,58 @@ $browser-tab-gap: 6px;                 // Jarak konstan antar-tab (aktif maupun 
 
 // --- CLASS UTAMA BROWSER STYLE TABS ---
 .browser-style-tabs {
+    width: 100% !important;
+    
+    // Container pembungkus utama bilah tab (Nav Container & Content)
+    .p-tabview-nav-container,
+    .p-tabview-nav-content {
+        background: $browser-tab-bar-bg !important;
+        border-top-left-radius: $browser-tab-radius;
+        border-top-right-radius: $browser-tab-radius;
+        overflow-x: auto !important;
+        width: 100% !important;
+        min-width: 100% !important;
+
+        // Sembunyikan scrollbar agar tampilan browser tab tetap rapi dan bersih
+        &::-webkit-scrollbar {
+            display: none !important;
+            height: 0 !important;
+        }
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    // Tombol Navigasi Scroll (apabila prop scrollable diaktifkan)
+    .p-tabview-nav-btn {
+        background: $browser-tab-bar-bg !important;
+        color: $browser-tab-text-inactive !important;
+        border: none !important;
+        box-shadow: -4px 0 10px rgba(0, 0, 0, 0.08) !important;
+        z-index: 20 !important;
+        height: 100% !important;
+        min-width: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        &.p-tabview-nav-prev {
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        &:hover {
+            background: darken($browser-tab-bar-bg, 6%) !important;
+            color: $browser-tab-text-active !important;
+        }
+    }
     
     // 1. Bilah Jalur Tab (Tab Strip)
     .p-tabview-nav {
         background: $browser-tab-bar-bg !important;
+        min-width: 100% !important;
+        width: max-content !important;
         padding-top: 10px !important;
         padding-left: 16px !important;
-        padding-right: 16px !important;
+        padding-right: 60px !important; // Ruang ekstra di kanan agar tab terakhir tidak tertutup tombol scroll '>'
         border-bottom: none !important;
         display: flex !important;
         align-items: flex-end !important;
@@ -31,10 +76,15 @@ $browser-tab-gap: 6px;                 // Jarak konstan antar-tab (aktif maupun 
             position: relative;
             background: transparent !important;
             border: none !important;
+            flex-shrink: 0 !important; // Memastikan judul tab tidak pernah mengkerut/gepeng
             
             // FORMULA SIMETRIS: Membagi rata jarak ke kanan dan kiri untuk SEMUA jenis tab
             margin-left: calc(#{$browser-tab-gap} / 2) !important;
             margin-right: calc(#{$browser-tab-gap} / 2) !important;
+
+            &:last-child {
+                margin-right: 32px !important; // Spasi ekstra khusus tab paling kanan
+            }
 
             // Keadaan: TAB TIDAK AKTIF (Melayang Dekat Dasar & Kapsul)
             &:not(.p-highlight) {
@@ -119,6 +169,7 @@ $browser-tab-gap: 6px;                 // Jarak konstan antar-tab (aktif maupun 
         box-shadow: none !important;
         height: 36px !important;
         padding: 0 20px !important;
+        white-space: nowrap !important;
     }
 
     // 3. Matikan Garis Highlight Penunjuk Bawaan PrimeReact

@@ -168,7 +168,7 @@ const Form = ({ state, setState, formik, toast, getData, getDropdownData }: Form
 
             <form onSubmit={formik?.handleSubmit}>
                 <div className="py-2">
-                    <TabView className="browser-style-tabs" activeIndex={state.activeStep} onTabChange={(e) => setState((p) => ({ ...p, activeStep: e.index }))}>
+                    <TabView className="browser-style-tabs" scrollable activeIndex={state.activeStep} onTabChange={(e) => setState((p) => ({ ...p, activeStep: e.index }))}>
                         {/* TAB 0: INFORMASI DASAR */}
                         <TabPanel
                             header={
