@@ -92,14 +92,58 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Group rows by folio / reservation (1 baris per PIC/Folio)
+    const folioGroupMap = new Map();
+
+    for (const row of rows) {
+      const key = row.kode_folio || row.kode_reservation;
+      if (!folioGroupMap.has(key)) {
+        folioGroupMap.set(key, {
+          kode_folio: row.kode_folio,
+          kode_reservation: row.kode_reservation,
+          kode_reservasi_room: row.kode_reservasi_room,
+          kode_tipe_kamar: row.kode_tipe_kamar,
+          kode_cabang: row.kode_cabang,
+          kode_tamu: row.kode_tamu,
+          guest_name: row.guest_name,
+          guest_phone: row.guest_phone,
+          check_in_date: row.check_in_date,
+          check_out_date: row.check_out_date,
+          nights: row.nights,
+          booking_type: row.booking_type,
+          group_code: row.group_code,
+          subtotal: parseFloat(row.subtotal || 0),
+          tax_amount: parseFloat(row.tax_amount || 0),
+          service_charge_amount: parseFloat(row.service_charge_amount || 0),
+          grand_total: parseFloat(row.grand_total || 0),
+          rooms: []
+        });
+      }
+
+      const group = folioGroupMap.get(key);
+      group.rooms.push({
+        kode_reservasi_room: row.kode_reservasi_room,
+        kode_kamar: row.kode_kamar,
+        nomor_kamar: row.nomor_kamar,
+        kode_tipe_kamar: row.kode_tipe_kamar,
+        nama_tipe_kamar: row.nama_tipe_kamar,
+        rate_per_night: parseFloat(row.rate_per_night || 0)
+      });
+    }
+
     // Format data dan kalkulasi balance real-time
-    const data = rows.map((item) => {
-      const grandTotal = parseFloat(item.grand_total || 0);
-      const totalPaid = paymentsMap[item.kode_folio] || 0;
+    const data = Array.from(folioGroupMap.values()).map((group) => {
+      const grandTotal = group.grand_total;
+      const totalPaid = paymentsMap[group.kode_folio] || 0;
       const balance = grandTotal - totalPaid;
+      const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
+      const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe_kamar).filter(Boolean))];
 
       return {
-        ...item,
+        ...group,
+        room_count: group.rooms.length,
+        nomor_kamar: roomNumbers.join(", "),
+        nama_tipe_kamar: roomTypes.join(", "),
         grand_total: grandTotal,
         total_paid: totalPaid,
         balance: balance,

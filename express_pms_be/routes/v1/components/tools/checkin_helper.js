@@ -123,10 +123,26 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
         .where("status", "open")
         .first();
 
+    const activeTaxes = await trx("mst_tax")
+        .where("kode_cabang", resRoom.kode_cabang)
+        .where("is_active", 1)
+        .whereNull("deleted_at");
+
     let folioCode;
     if (!targetFolio) {
         const noFolio = await generateSequence("FMT-FOLIO", trx);
         if (!noFolio) throw new Error("Gagal membuat nomor transaksi folio");
+
+        let taxAmount = 0;
+        let serviceChargeAmount = 0;
+        activeTaxes.forEach((t) => {
+            const pct = parseFloat(t.percentage) || 0;
+            const nominal = Math.round(totalRoomCharge * (pct / 100));
+            if (t.tax_type === "service_charge") serviceChargeAmount += nominal;
+            else taxAmount += nominal;
+        });
+
+        const initialGrandTotal = totalRoomCharge + taxAmount + serviceChargeAmount;
 
         await trx("trx_folio").insert({
             kode_cabang: resRoom.kode_cabang,
@@ -135,20 +151,33 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
             folio_owner_type: "guest",
             status: "open",
             subtotal: totalRoomCharge,
-            tax_amount: 0, // akan dihitung saat checkout
-            service_charge_amount: 0,
-            grand_total: totalRoomCharge,
+            tax_amount: taxAmount,
+            service_charge_amount: serviceChargeAmount,
+            grand_total: initialGrandTotal,
             created_by: userId,
             created_at: tNow
         });
         folioCode = noFolio;
     } else {
         folioCode = targetFolio.kode_folio;
+        const newSubtotal = parseFloat(targetFolio.subtotal || 0) + totalRoomCharge;
+        let taxAmount = 0;
+        let serviceChargeAmount = 0;
+        activeTaxes.forEach((t) => {
+            const pct = parseFloat(t.percentage) || 0;
+            const nominal = Math.round(newSubtotal * (pct / 100));
+            if (t.tax_type === "service_charge") serviceChargeAmount += nominal;
+            else taxAmount += nominal;
+        });
+        const newGrandTotal = newSubtotal + taxAmount + serviceChargeAmount;
+
         await trx("trx_folio")
             .where("kode_folio", folioCode)
             .update({
-                subtotal: trx.raw('subtotal + ?', [totalRoomCharge]),
-                grand_total: trx.raw('grand_total + ?', [totalRoomCharge]),
+                subtotal: newSubtotal,
+                tax_amount: taxAmount,
+                service_charge_amount: serviceChargeAmount,
+                grand_total: newGrandTotal,
                 updated_by: userId,
                 updated_at: tNow
             });

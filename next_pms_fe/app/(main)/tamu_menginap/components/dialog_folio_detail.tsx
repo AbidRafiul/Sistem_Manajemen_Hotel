@@ -11,6 +11,8 @@ import postData from '@/lib/axios/postData';
 import { apiFolioDetail } from './endpoints';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 
+import DialogInvoice from '@/app/components/dialogComponents/dialog_invoice';
+
 interface DialogFolioDetailProps {
     visible: boolean;
     onHide: () => void;
@@ -20,6 +22,7 @@ interface DialogFolioDetailProps {
 export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, onHide, roomData }) => {
     const [loading, setLoading] = useState(false);
     const [folioData, setFolioData] = useState<any>(null);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
 
     const fetchFolioDetail = async () => {
@@ -59,30 +62,40 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
     const isSettled = (header?.balance || 0) <= 0;
 
     return (
-        <Dialog
-            visible={visible}
-            onHide={onHide}
-            header={
-                <div className="flex align-items-center gap-2">
-                    <i className="pi pi-receipt text-primary text-xl"></i>
-                    <span className="font-bold text-lg">Kartu Tagihan Folio Tamu (Guest Folio)</span>
-                </div>
-            }
-            style={{ width: '90vw', maxWidth: '950px' }}
-            modal
-            footer={
-                <div className="flex justify-content-between align-items-center flex-wrap gap-2">
-                    <Button
-                        label="Cetak Tagihan"
-                        icon="pi pi-print"
-                        className="p-button-outlined"
-                        onClick={handlePrint}
-                        disabled={loading || !folioData}
-                    />
-                    <Button label="Tutup" icon="pi pi-times" className="p-button-secondary" onClick={onHide} />
-                </div>
-            }
-        >
+        <>
+            <Dialog
+                visible={visible}
+                onHide={onHide}
+                header={
+                    <div className="flex align-items-center gap-2">
+                        <i className="pi pi-receipt text-primary text-xl"></i>
+                        <span className="font-bold text-lg">Kartu Tagihan Folio Tamu (Guest Folio)</span>
+                    </div>
+                }
+                style={{ width: '90vw', maxWidth: '950px' }}
+                modal
+                footer={
+                    <div className="flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div className="flex gap-2">
+                            <Button
+                                label="Cetak Folio Sederhana"
+                                icon="pi pi-print"
+                                className="p-button-outlined"
+                                onClick={handlePrint}
+                                disabled={loading || !folioData}
+                            />
+                            <Button
+                                label="Lihat / Cetak Invoice Resmi"
+                                icon="pi pi-file-pdf"
+                                severity="success"
+                                onClick={() => setShowInvoiceModal(true)}
+                                disabled={loading || !folioData}
+                            />
+                        </div>
+                        <Button label="Tutup" icon="pi pi-times" className="p-button-secondary" onClick={onHide} />
+                    </div>
+                }
+            >
             {loading && <ProgressBar mode="indeterminate" style={{ height: '4px' }} className="mb-3" />}
 
             {folioData && (
@@ -91,11 +104,23 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                     <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-1">
                         <div className="grid">
                             <div className="col-12 md:col-6">
-                                <div className="text-xs text-color-secondary uppercase font-semibold">Tamu & Kamar</div>
-                                <div className="text-xl font-bold text-900 mt-1">
-                                    {header?.nomor_kamar ? `Kamar ${header.nomor_kamar}` : 'Kamar -'} ({header?.nama_tipe_kamar || 'Tipe Kamar'})
+                                <div className="text-xs text-color-secondary uppercase font-semibold">Tamu & Kamar (PIC)</div>
+                                <div className="text-xl font-bold text-900 mt-1 flex align-items-center gap-2 flex-wrap">
+                                    <span>
+                                        {folioData.rooms && folioData.rooms.length > 1
+                                            ? `Kamar ${folioData.rooms.map((r: any) => r.nomor_kamar).join(', ')}`
+                                            : header?.nomor_kamar ? `Kamar ${header.nomor_kamar}` : 'Kamar -'}
+                                    </span>
+                                    {folioData.rooms && folioData.rooms.length > 1 && (
+                                        <Tag severity="info" value={`${folioData.rooms.length} Kamar`} className="text-xs" />
+                                    )}
                                 </div>
-                                <div className="text-sm font-semibold text-700 mt-1">
+                                <div className="text-xs text-color-secondary mt-1">
+                                    {folioData.rooms && folioData.rooms.length > 1
+                                        ? [...new Set(folioData.rooms.map((r: any) => r.nama_tipe_kamar || r.nama_tipe))].join(', ')
+                                        : header?.nama_tipe_kamar || 'Tipe Kamar'}
+                                </div>
+                                <div className="text-sm font-semibold text-700 mt-2">
                                     <i className="pi pi-user mr-1 text-color-secondary"></i>
                                     {header?.guest_name || '-'}
                                 </div>
@@ -124,13 +149,64 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                         </div>
                     </div>
 
+                    {/* Section 0: Daftar Kamar Terdaftar (Multi-Room Support) */}
+                    {folioData.rooms && folioData.rooms.length > 0 && (
+                        <div className="surface-card border-round-xl border-1 surface-border p-3">
+                            <div className="font-bold text-base text-900 mb-2 flex align-items-center gap-2">
+                                <i className="pi pi-home text-primary"></i>
+                                Daftar Kamar Ditempati ({folioData.rooms.length} Kamar)
+                            </div>
+                            <DataTable value={folioData.rooms} size="small" responsiveLayout="scroll">
+                                <Column
+                                    header="Kamar"
+                                    body={(rowData) => (
+                                        <div className="flex align-items-center gap-2">
+                                            <div className="w-2rem h-2rem border-round bg-primary-100 text-primary font-bold flex align-items-center justify-content-center">
+                                                {rowData.nomor_kamar}
+                                            </div>
+                                            <span className="font-semibold text-900">{rowData.nama_tipe_kamar || rowData.nama_tipe}</span>
+                                        </div>
+                                    )}
+                                    style={{ width: '220px' }}
+                                />
+                                <Column
+                                    header="Status"
+                                    body={(rowData) => (
+                                        <Tag
+                                            severity={rowData.status_room === 'checked_in' || rowData.status === 'checked_in' ? 'success' : 'warning'}
+                                            value={rowData.status_room === 'checked_in' || rowData.status === 'checked_in' ? 'CHECKED IN' : String(rowData.status_room || rowData.status || '-').toUpperCase()}
+                                            className="text-xs"
+                                        />
+                                    )}
+                                    style={{ width: '130px' }}
+                                />
+                                <Column
+                                    header="Tarif / Malam"
+                                    body={(rowData) => (
+                                        <span>Rp {Number(rowData.rate_per_night || 0).toLocaleString('id-ID')}</span>
+                                    )}
+                                    style={{ textAlign: 'right', width: '150px' }}
+                                />
+                                <Column
+                                    header="Subtotal Sewa"
+                                    body={(rowData) => (
+                                        <span className="font-bold text-900">
+                                            Rp {Number(rowData.subtotal || rowData.total_charges || rowData.rate_per_night || 0).toLocaleString('id-ID')}
+                                        </span>
+                                    )}
+                                    style={{ textAlign: 'right', width: '160px' }}
+                                />
+                            </DataTable>
+                        </div>
+                    )}
+
                     {/* Section 1: Daftar Tagihan (Charges) */}
                     <div className="surface-card border-round-xl border-1 surface-border p-3">
                         <div className="font-bold text-base text-900 mb-2 flex align-items-center gap-2">
                             <i className="pi pi-list text-primary"></i>
-                            Rincian Tagihan Kamar & Layanan (Charges)
+                            Rincian Tagihan Layanan & Fasilitas Tambahan (Charges)
                         </div>
-                        <DataTable value={charges} size="small" emptyMessage="Belum ada tagihan." responsiveLayout="scroll">
+                        <DataTable value={charges} size="small" emptyMessage="Belum ada tagihan fasilitas tambahan." responsiveLayout="scroll">
                             <Column
                                 header="Waktu"
                                 body={(rowData) => formatDateSystem(rowData.posted_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
@@ -244,6 +320,14 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                 </div>
             )}
         </Dialog>
+
+        <DialogInvoice
+            visible={showInvoiceModal}
+            onHide={() => setShowInvoiceModal(false)}
+            kodeFolio={header?.kode_folio || roomData?.kode_folio}
+            kodeReservasi={header?.kode_reservasi || roomData?.kode_reservasi}
+        />
+        </>
     );
 };
 export default DialogFolioDetail;

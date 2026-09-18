@@ -2,10 +2,10 @@
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file folio_detail.js
- * @description Endpoint rincian kartu tagihan folio (charges & payments) per kamar/reservasi
- * @author Fadil <risqullah.s.fadhilah@gmail.com>
- * @created 2026-09-16
- * @version 1.0.0
+ * @description Endpoint rincian kartu tagihan folio (charges & payments) per kamar/reservasi via calculateFolioBilling
+ * @author Antigravity
+ * @created 2026-09-18
+ * @version 1.0.1
  */
 
 import express from "express";
@@ -13,6 +13,7 @@ import { status } from "../../components/tools/general.js";
 import DB from "../../../../core/config/knex.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
 
 const router = express.Router();
 
@@ -21,47 +22,24 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
 
   try {
-    const { kode_reservasi_room, kode_folio } = oPayload;
+    const { kode_reservasi_room, kode_folio, kode_reservation } = oPayload;
 
-    if (!kode_reservasi_room && !kode_folio) {
+    if (!kode_reservasi_room && !kode_folio && !kode_reservation) {
       return res.status(400).json({
         status: status.BAD_REQUEST,
-        message: "Parameter kode_reservasi_room atau kode_folio wajib dikirim",
+        message: "Parameter kode_reservasi_room, kode_folio, atau kode_reservation wajib dikirim",
         datetime: formatDateSystem()
       });
     }
 
-    // 1. Ambil info reservasi room & folio
-    let folioQuery = DB("trx_folio as f")
-      .select(
-        "f.*",
-        "r.kode_reservasi",
-        "r.kode_cabang",
-        "r.check_in_date",
-        "r.check_out_date",
-        "r.booking_type",
-        "g.kode_tamu",
-        "g.full_name as guest_name",
-        "g.phone as guest_phone",
-        "g.email as guest_email",
-        "mk.nomor_kamar",
-        "tk.nama_tipe as nama_tipe_kamar"
-      )
-      .join("trx_reservation as r", "f.kode_reservation", "r.kode_reservasi")
-      .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
-      .leftJoin("trx_reservation_room as rr", "r.kode_reservasi", "rr.kode_reservation")
-      .leftJoin("mst_kamar as mk", "rr.kode_kamar", "mk.kode_kamar")
-      .leftJoin("mst_tipe_kamar as tk", "rr.kode_tipe_kamar", "tk.kode_tipe_kamar");
+    const billing = await calculateFolioBilling({
+      kode_folio,
+      kode_reservation,
+      kode_reservasi_room,
+      trx: DB
+    });
 
-    if (kode_folio) {
-      folioQuery.where("f.kode_folio", kode_folio);
-    } else if (kode_reservasi_room) {
-      folioQuery.where("rr.kode_reservasi_room", kode_reservasi_room);
-    }
-
-    const folioInfo = await folioQuery.first();
-
-    if (!folioInfo) {
+    if (!billing) {
       return res.status(404).json({
         status: status.NOT_FOUND,
         message: "Data folio tidak ditemukan",
@@ -69,48 +47,44 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // 2. Ambil daftar tagihan (charges)
-    const charges = await DB("trx_folio_charge")
-      .where("kode_folio", folioInfo.kode_folio)
-      .andWhere("is_active", 1)
-      .orderBy("created_at", "asc");
-
-    // 3. Ambil daftar pembayaran (payments)
-    const payments = await DB("trx_payment")
-      .where("kode_folio", folioInfo.kode_folio)
-      .orderBy("paid_at", "asc");
-
-    const grandTotal = parseFloat(folioInfo.grand_total || 0);
-    const totalPaid = payments.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
-    const balance = grandTotal - totalPaid;
+    // Ambil nomor kamar dan tipe kamar utama untuk header single-room display compatibility
+    const primaryRoom = billing.rooms && billing.rooms.length > 0 ? billing.rooms[0] : null;
 
     return res.status(200).json({
       status: status.SUKSES,
       message: "Rincian folio berhasil dimuat",
       datetime: formatDateSystem(),
       data: {
+        hotel: billing.hotel,
         folio: {
-          kode_folio: folioInfo.kode_folio,
-          kode_reservation: folioInfo.kode_reservation,
-          kode_cabang: folioInfo.kode_cabang,
-          nomor_kamar: folioInfo.nomor_kamar,
-          nama_tipe_kamar: folioInfo.nama_tipe_kamar,
-          guest_name: folioInfo.guest_name,
-          guest_phone: folioInfo.guest_phone,
-          guest_email: folioInfo.guest_email,
-          check_in_date: folioInfo.check_in_date,
-          check_out_date: folioInfo.check_out_date,
-          status: folioInfo.status,
-          subtotal: parseFloat(folioInfo.subtotal || 0),
-          tax_amount: parseFloat(folioInfo.tax_amount || 0),
-          service_charge_amount: parseFloat(folioInfo.service_charge_amount || 0),
-          grand_total: grandTotal,
-          total_paid: totalPaid,
-          balance: balance,
-          billing_status: balance <= 0 ? "settled" : "outstanding"
+          kode_folio: billing.folio.kode_folio,
+          kode_reservation: billing.folio.kode_reservation,
+          kode_cabang: billing.folio.kode_cabang,
+          nomor_kamar: primaryRoom ? primaryRoom.nomor_kamar : "-",
+          nama_tipe_kamar: primaryRoom ? primaryRoom.nama_tipe_kamar : "-",
+          guest_name: billing.guest.full_name,
+          guest_phone: billing.guest.phone,
+          guest_email: billing.guest.email,
+          check_in_date: billing.reservation.check_in_date,
+          check_out_date: billing.reservation.check_out_date,
+          status: billing.folio.status,
+          subtotal: billing.folio.subtotal,
+          tax_amount: billing.folio.tax_amount,
+          service_charge_amount: billing.folio.service_charge_amount,
+          grand_total: billing.folio.grand_total,
+          total_paid: billing.folio.total_paid,
+          balance: billing.folio.balance,
+          is_settled: billing.folio.is_settled,
+          billing_status: billing.folio.is_settled ? "settled" : "outstanding",
+          payment_status: billing.folio.payment_status,
+          payment_status_label: billing.folio.payment_status_label
         },
-        charges: charges,
-        payments: payments
+        reservation: billing.reservation,
+        guest: billing.guest,
+        rooms: billing.rooms,
+        charges: billing.charges,
+        tax_breakdown: billing.tax_breakdown,
+        payments: billing.payments
       }
     });
   } catch (error) {

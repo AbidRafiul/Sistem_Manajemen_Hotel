@@ -11,7 +11,7 @@ import express from "express";
 import { status } from "../../components/tools/general.js";
 import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
-import { Logging, validatePayload, ChangesLog } from "../../components/tools/servertool.js";
+import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
@@ -158,7 +158,6 @@ router.post("/", async (req, res) => {
         });
 
         let lastFolioCode = null;
-        let totalChargeAll = 0;
         const processedRooms = [];
 
         for (const rm of roomsToProcess) {
@@ -212,7 +211,6 @@ router.post("/", async (req, res) => {
             });
 
             lastFolioCode = checkinData.kode_folio;
-            totalChargeAll += checkinData.total_charge;
             processedRooms.push({
                 kode_reservasi_room: noResRoom,
                 kode_kamar: rm.kode_kamar,
@@ -248,33 +246,54 @@ router.post("/", async (req, res) => {
                         created_at: tNow,
                         is_active: 1
                     });
-
-                    // Update subtotal & grand_total pada trx_folio
-                    await trx("trx_folio")
-                        .where("kode_folio", lastFolioCode)
-                        .update({
-                            subtotal: trx.raw('subtotal + ?', [subtotal]),
-                            grand_total: trx.raw('grand_total + ?', [subtotal]),
-                            updated_by: userId,
-                            updated_at: tNow
-                        });
-
-                    totalChargeAll += subtotal;
                 }
             }
         }
 
-        // Insert trx_payment (Deposit) jika ada
-        if (oPayload.deposit_amount > 0 && lastFolioCode) {
+        // 4. Rekonsiliasi total folio, pajak, dan service charge secara menyeluruh
+        const allCharges = await trx("trx_folio_charge").where("kode_folio", lastFolioCode).where("is_active", 1);
+        const totalSubtotal = allCharges.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
+
+        const activeTaxes = await trx("mst_tax")
+            .where("kode_cabang", oPayload.kode_cabang)
+            .where("is_active", 1)
+            .whereNull("deleted_at");
+
+        let totalTaxAmount = 0;
+        let totalServiceCharge = 0;
+        activeTaxes.forEach((t) => {
+            const pct = parseFloat(t.percentage) || 0;
+            const nominal = Math.round(totalSubtotal * (pct / 100));
+            if (t.tax_type === "service_charge") totalServiceCharge += nominal;
+            else totalTaxAmount += nominal;
+        });
+
+        const finalGrandTotal = totalSubtotal + totalTaxAmount + totalServiceCharge;
+
+        await trx("trx_folio")
+            .where("kode_folio", lastFolioCode)
+            .update({
+                subtotal: totalSubtotal,
+                tax_amount: totalTaxAmount,
+                service_charge_amount: totalServiceCharge,
+                grand_total: finalGrandTotal,
+                updated_by: userId,
+                updated_at: tNow
+            });
+
+        // Insert trx_payment (Deposit / Pelunasan) jika ada
+        const paymentAmount = parseFloat(oPayload.deposit_amount || oPayload.payment_amount || 0);
+        if (paymentAmount > 0 && lastFolioCode) {
             const noPayment = await generateSequence("FMT-PAYMENT", trx);
-            if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
+            if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
 
             await trx("trx_payment").insert({
                 kode_payment: noPayment,
                 kode_folio: lastFolioCode,
-                payment_method: oPayload.payment_method,
-                amount: oPayload.deposit_amount,
-                kode_cashier_shift: oPayload.kode_cashier_shift,
+                payment_method: oPayload.payment_method || 'cash',
+                amount: paymentAmount,
+                kode_cashier_shift: oPayload.kode_cashier_shift || null,
+                reference_no: oPayload.reference_no || null,
                 received_by: userId,
                 paid_at: tNow,
                 created_by: userId,
@@ -282,13 +301,42 @@ router.post("/", async (req, res) => {
             });
         }
 
+        const finalBalance = finalGrandTotal - paymentAmount;
+        const isSettled = finalBalance <= 0;
+
+        // Inisialisasi dokumen invoice unik di trx_fiscal_document
+        const invoiceNumber = await generateSequence("FMT-INVOICE", trx);
+        const fiscalDocCode = `FDC-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
+        await trx("trx_fiscal_document").insert({
+            kode_fiscal_document: fiscalDocCode,
+            kode_cabang: oPayload.kode_cabang,
+            kode_folio: lastFolioCode,
+            doc_type: "invoice",
+            doc_number: invoiceNumber,
+            amount: finalGrandTotal,
+            issued_by: userId,
+            issued_at: tNow,
+            created_by: userId,
+            created_at: tNow,
+            is_active: 1
+        });
+
         reservationData = {
             kode_reservasi: noReservasi,
             booking_type: bookingType,
             group_code: groupCode,
             kode_folio: lastFolioCode,
+            invoice_number: invoiceNumber,
             nights: computedNights,
-            total_charge: totalChargeAll,
+            subtotal: totalSubtotal,
+            tax_amount: totalTaxAmount,
+            service_charge_amount: totalServiceCharge,
+            grand_total: finalGrandTotal,
+            total_paid: paymentAmount,
+            balance: finalBalance,
+            is_settled: isSettled,
+            payment_status: isSettled ? "paid" : (paymentAmount > 0 ? "partially_paid" : "unpaid"),
+            payment_status_label: isSettled ? "Lunas" : (paymentAmount > 0 ? "Dibayar Sebagian" : "Belum Dibayar"),
             rooms: processedRooms
         };
     });
