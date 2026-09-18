@@ -67,7 +67,8 @@ app.use(
   APIV1
 );
 
-app.use('/uploads', express.static('public/uploads'))
+app.use('/uploads', express.static('public/uploads'));
+app.use('/api/assets/uploads', express.static('public/uploads'));
 
 app.use((req, res, next) => {
   console.log(req.url)

@@ -103,7 +103,20 @@ router.post("/", async (req, res) => {
                 const rooms = ketersediaan.all_rooms || [];
 
                 const coverFilename = coverMap.get(tk.kode_tipe_kamar) || null;
-                const fotoCoverUrl = coverFilename ? `${assetsPath}/uploads/tipe_kamar/${coverFilename}` : null;
+                let fotoCoverUrl = null;
+                if (coverFilename) {
+                    if (coverFilename.startsWith("http://") || coverFilename.startsWith("https://")) {
+                        fotoCoverUrl = coverFilename;
+                    } else if (coverFilename.startsWith("/api/assets/")) {
+                        fotoCoverUrl = coverFilename;
+                    } else if (coverFilename.startsWith("/uploads/")) {
+                        fotoCoverUrl = `${assetsPath}${coverFilename}`;
+                    } else if (coverFilename.startsWith("uploads/")) {
+                        fotoCoverUrl = `${assetsPath}/${coverFilename}`;
+                    } else {
+                        fotoCoverUrl = `${assetsPath}/uploads/tipe_kamar/${coverFilename}`;
+                    }
+                }
                 const jumlahFoto = countMap.get(tk.kode_tipe_kamar) || 0;
 
                 // Buat item master Tipe Kamar

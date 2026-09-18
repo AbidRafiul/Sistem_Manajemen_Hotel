@@ -61,11 +61,27 @@ router.post("/", async (req, res) => {
             );
 
         const assetsPath = process.env.ASSETS_PATH || "";
-        const formattedPhotos = photos.map((p) => ({
-            ...p,
-            file_name: p.foto_url,
-            foto_url: `${assetsPath}/uploads/tipe_kamar/${p.foto_url}`,
-        }));
+        const formattedPhotos = photos.map((p) => {
+            let finalUrl = p.foto_url;
+            if (p.foto_url) {
+                if (p.foto_url.startsWith("http://") || p.foto_url.startsWith("https://")) {
+                    finalUrl = p.foto_url;
+                } else if (p.foto_url.startsWith("/api/assets/")) {
+                    finalUrl = p.foto_url;
+                } else if (p.foto_url.startsWith("/uploads/")) {
+                    finalUrl = `${assetsPath}${p.foto_url}`;
+                } else if (p.foto_url.startsWith("uploads/")) {
+                    finalUrl = `${assetsPath}/${p.foto_url}`;
+                } else {
+                    finalUrl = `${assetsPath}/uploads/tipe_kamar/${p.foto_url}`;
+                }
+            }
+            return {
+                ...p,
+                file_name: p.foto_url,
+                foto_url: finalUrl,
+            };
+        });
 
         return res.status(200).json({
             status: status.SUKSES,

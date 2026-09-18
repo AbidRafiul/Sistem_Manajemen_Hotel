@@ -338,6 +338,9 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                                     alt={tk.nama_tipe}
                                                     style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block', cursor: 'pointer' }}
                                                     onClick={() => openGallery(tk)}
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                                                    }}
                                                 />
                                             ) : (
                                                 <div 
@@ -632,6 +635,9 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                         src={item.foto_url}
                                         alt="Foto Kamar"
                                         style={{ width: '100%', height: '380px', objectFit: 'cover', display: 'block' }}
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                                        }}
                                     />
                                     {item.is_cover === 1 && (
                                         <div className="absolute top-0 left-0 m-2">
@@ -646,6 +652,9 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                     src={item.foto_url}
                                     alt="Thumbnail"
                                     style={{ width: '80px', height: '55px', objectFit: 'cover', display: 'block', borderRadius: '4px' }}
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                                    }}
                                 />
                             )}
                         />
