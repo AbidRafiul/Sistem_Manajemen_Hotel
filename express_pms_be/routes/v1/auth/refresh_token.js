@@ -20,6 +20,7 @@ import { formatDateSystem } from "../components/tools/date_tools.js";
 import { generateUserTokens, Logging, validatePayload } from "../components/tools/servertool.js";
 import DB from "../../../core/config/knex.js";
 import { status } from "../components/tools/general.js";
+import { getUserScopeDetails } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -65,7 +66,7 @@ router.post("/", async (req, res) => {
 
         const oUser = await DB("mst_user")
             .where("user_code", oPayload.user_code)
-            .select("user_code", "username", "role", "fullname", "status")
+            .select("id", "user_code", "username", "role", "fullname", "status")
             .first();
 
         if (!oUser || oUser.status != "1") {
@@ -76,12 +77,12 @@ router.post("/", async (req, res) => {
                 status: status.GAGAL,
                 message: "Akun Anda dinonaktifkan atau tidak ditemukan.",
                 datetime: formatDateSystem()
-
             });
         }
 
+        const branchContext = await getUserScopeDetails(oUser.id);
         const isRememberMe = oPayload.remember_me === '1' || oPayload.remember_me === 'true' || oPayload.remember_me === true || oPayload.remember_me === 1;
-        const oToken = await generateUserTokens(oUser, isRememberMe);
+        const oToken = await generateUserTokens(oUser, isRememberMe, branchContext);
 
         return res.status(200).json({
             status: status.SUKSES,

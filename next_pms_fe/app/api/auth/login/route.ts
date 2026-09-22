@@ -36,14 +36,27 @@ interface AuthResponse {
     message?: string;
     datetime?: string;
     data?: {
-        access_token: string,
-        refresh_token: string,
+        access_token: string;
+        refresh_token: string;
         user_info: {
-            user_code: string,
-            username: string,
-            fullname: string,
-            role: string,
-        }
+            user_code: string;
+            username: string;
+            fullname: string;
+            role: string;
+            company_id?: number | null;
+            company_name?: string | null;
+            company_code?: string | null;
+            default_branch_id?: number | null;
+            default_kode_cabang?: string | null;
+            default_branch_name?: string | null;
+            active_branch_id?: number | null;
+            active_kode_cabang?: string | null;
+            active_branch_name?: string | null;
+            allowed_branches?: any[];
+            allowed_kode_cabang?: string[];
+            can_switch_branch?: boolean;
+            [key: string]: any;
+        };
     };
 }
 
@@ -87,6 +100,18 @@ export const POST = async (req: NextRequest) => {
                 remember_me: credentials?.remember_me === '1',
                 access_token: oData.access_token,
                 refresh_token: oData.refresh_token,
+                company_id: oData?.user_info?.company_id,
+                company_name: oData?.user_info?.company_name,
+                company_code: oData?.user_info?.company_code,
+                default_branch_id: oData?.user_info?.default_branch_id,
+                default_kode_cabang: oData?.user_info?.default_kode_cabang,
+                default_branch_name: oData?.user_info?.default_branch_name,
+                active_branch_id: oData?.user_info?.active_branch_id,
+                active_kode_cabang: oData?.user_info?.active_kode_cabang,
+                active_branch_name: oData?.user_info?.active_branch_name,
+                allowed_branches: oData?.user_info?.allowed_branches || [],
+                allowed_kode_cabang: oData?.user_info?.allowed_kode_cabang || [],
+                can_switch_branch: Boolean(oData?.user_info?.can_switch_branch),
             };
 
             return NextResponse.json(

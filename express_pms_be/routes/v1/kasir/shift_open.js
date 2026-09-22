@@ -16,6 +16,7 @@ import DB from "../../../core/config/knex.js";
 import { Logging, validatePayload } from "../components/tools/servertool.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
 import { generateSequence } from "../components/tools/generateCode.js";
+import { assertBranchScope } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -55,6 +56,9 @@ router.post("/", async (req, res) => {
         message: cValidation,
         datetime: formatDateSystem(),
       });
+
+    // Validasi otorisasi branch scope
+    assertBranchScope(req, oPayload.kode_cabang);
 
     let cUniqueCode = "";
     await DB.transaction(async (trx) => {
@@ -106,9 +110,12 @@ router.post("/", async (req, res) => {
       username: username,
     });
     
-    return res.status(500).json({
+    const isKnownError = error.message === "Anda masih memiliki shift aktif. Tutup shift sebelumnya sebelum membuka yang baru." || error.message.includes("Akses ditolak");
+    const httpStatus = error.status || error.statusCode || 500;
+    
+    return res.status(httpStatus).json({
       status: status.GAGAL,
-      message: error.message === "Anda masih memiliki shift aktif. Tutup shift sebelumnya sebelum membuka yang baru." ? error.message : "Terjadi kesalahan sistem.",
+      message: isKnownError ? error.message : "Terjadi kesalahan sistem.",
       datetime: formatDateSystem(),
       data: null,
     });

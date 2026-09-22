@@ -41,7 +41,7 @@ export const POST = async (request: NextRequest) => {
             );
         }
 
-        return await postCRUD(request, session.access_token);
+        return await postCRUD(request, session);
 
     } catch (error: any) {
         console.error("BFF FormData Interceptor Error:", error);
@@ -73,7 +73,7 @@ export const POST = async (request: NextRequest) => {
     }
 };
 
-async function postCRUD(request: NextRequest, accessToken: string) {
+async function postCRUD(request: NextRequest, session: any) {
     try {
         const headers: CustomHeaders = {};
         const formData = await request.formData();
@@ -102,9 +102,12 @@ async function postCRUD(request: NextRequest, accessToken: string) {
             }
         }
 
+        const activeBranch = (headers as any)['x-branch-code'] || (session?.user as any)?.active_kode_cabang || '';
+
         let requestHeaders: Record<string, string> = {
             'X-Timestamp': formatDateISO(new Date()) as string,
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Branch-Code': activeBranch,
             ...customHeader,
         };
 

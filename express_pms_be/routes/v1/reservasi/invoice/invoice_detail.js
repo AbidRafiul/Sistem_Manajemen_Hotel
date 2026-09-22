@@ -15,6 +15,7 @@ import { Logging } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -49,6 +50,9 @@ router.post("/", async (req, res) => {
         datetime: formatDateSystem(),
       });
     }
+
+    // Validasi otorisasi branch scope
+    assertBranchScope(req, billing.folio.kode_cabang);
 
     // 2. Kelola Nomor Invoice Unik di trx_fiscal_document (Idempoten: cetak ulang tidak membuat nomor baru)
     let fiscalDoc = await DB("trx_fiscal_document")
@@ -123,7 +127,8 @@ router.post("/", async (req, res) => {
       username: username,
     });
 
-    return res.status(500).json({
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal saat memuat invoice.",
       datetime: formatDateSystem(),

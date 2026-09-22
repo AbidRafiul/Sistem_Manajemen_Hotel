@@ -17,6 +17,7 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { findIdleHousekeeper } from "../../components/tools/housekeeping_helper.js";
 import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -123,6 +124,9 @@ router.post("/", async (req, res) => {
       if (!billing) throw new Error("Data folio billing tidak ditemukan");
       const folio = billing.folio;
       sFolioCode = folio.kode_folio;
+
+      // Validasi branch scope
+      assertBranchScope(req, folio.kode_cabang);
 
       let totalPaid = billing.folio.total_paid;
       const tNow = formatDateSystem();
@@ -344,12 +348,14 @@ router.post("/", async (req, res) => {
       "Data folio tidak ditemukan",
       "Folio sudah ditutup",
       "Masih ada tagihan belum lunas:",
-      "Shift kasir"
+      "Shift kasir",
+      "Akses ditolak"
     ];
 
     const isFriendly = friendlyErrors.some(fe => error.message.includes(fe));
+    const httpStatus = error.status || error.statusCode || 500;
 
-    return res.status(500).json({
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: isFriendly ? error.message : "Terjadi kesalahan sistem.",
       datetime: formatDateSystem(),

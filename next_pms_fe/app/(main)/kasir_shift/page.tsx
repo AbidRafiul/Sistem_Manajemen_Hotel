@@ -6,6 +6,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
 import { useFormik } from 'formik';
+import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
@@ -29,6 +30,7 @@ interface ShiftData {
 
 const Page = () => {
     const toast = useRef<Toast>(null);
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
     const [shiftAktif, setShiftAktif] = useState<ShiftData | null>(null);
     const [cabangOptions, setCabangOptions] = useState<any[]>([]);
@@ -138,16 +140,17 @@ const Page = () => {
     };
 
     useEffect(() => {
-        fetchCurrentShift();
+        if (session?.user?.active_kode_cabang) {
+            formikOpen.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+            getCounter(session.user.active_kode_cabang);
+            fetchCurrentShift();
+        }
+    }, [session?.user?.active_kode_cabang]);
+
+    useEffect(() => {
         getCabang();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    useEffect(() => {
-        if (formikOpen.values.kode_cabang) {
-            getCounter(formikOpen.values.kode_cabang);
-        }
-    }, [formikOpen.values.kode_cabang]);
 
     const formatCurrency = (val: number | string) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(val));
@@ -163,7 +166,16 @@ const Page = () => {
             <Toast ref={toast} />
             <div className="col-12">
                 <div className="card">
-                    <h5>Manajemen Shift Kasir</h5>
+                    <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center mb-3 gap-2">
+                        <h5 className="m-0">Manajemen Shift Kasir</h5>
+                        <div className="inline-flex align-items-center gap-2 px-3 py-2 border-round-lg surface-ground border-1 surface-border">
+                            <i className="pi pi-building text-primary font-bold"></i>
+                            <span className="text-xs text-500 font-medium">Cabang Aktif:</span>
+                            <span className="text-sm font-semibold text-900">
+                                {session?.user?.active_kode_cabang || '-'} {session?.user?.active_branch_name ? `(${session.user.active_branch_name})` : ''}
+                            </span>
+                        </div>
+                    </div>
                     
                     {loading ? (
                         <div className="flex justify-content-center align-items-center" style={{ height: '200px' }}>
@@ -184,17 +196,25 @@ const Page = () => {
                                     <form onSubmit={formikOpen.handleSubmit}>
                                         <div className="field">
                                             <label htmlFor="kode_cabang">Cabang <span className="text-red-500">*</span></label>
-                                            <Dropdown
-                                                id="kode_cabang"
-                                                value={formikOpen.values.kode_cabang}
-                                                options={cabangOptions}
-                                                optionLabel="name"
-                                                optionValue="kode_cabang"
-                                                onChange={formikOpen.handleChange}
-                                                placeholder="Pilih Cabang"
-                                                className={isFormFieldInvalidOpen('kode_cabang') ? 'p-invalid' : ''}
-                                            />
-                                            {getFormErrorMessageOpen('kode_cabang')}
+                                            <div className="p-inputgroup">
+                                                <span className="p-inputgroup-addon bg-primary-50">
+                                                    <i className="pi pi-building text-primary font-bold"></i>
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    id="kode_cabang"
+                                                    className="p-inputtext p-component p-disabled font-semibold"
+                                                    value={`${session?.user?.active_kode_cabang || '-'} - ${session?.user?.active_branch_name || 'Semua Cabang'}`}
+                                                    disabled
+                                                    readOnly
+                                                />
+                                                <span className="p-inputgroup-addon bg-gray-100 text-500">
+                                                    <i className="pi pi-lock"></i>
+                                                </span>
+                                            </div>
+                                            <small className="text-500 block mt-1">
+                                                Mengikuti cabang aktif pada topbar header.
+                                            </small>
                                         </div>
                                         
                                         <div className="field">

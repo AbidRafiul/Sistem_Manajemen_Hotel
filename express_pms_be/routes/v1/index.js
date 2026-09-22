@@ -18,6 +18,8 @@
 import express from "express";
 import RefreshToken from "./auth/refresh_token.js";
 import Login from "./auth/login.js";
+import Me from "./auth/me.js";
+import SwitchBranch from "./auth/switch_branch.js";
 import Setup from "./setup/index.js";
 import Master from "./master/index.js";
 import Contoh from "./contoh/index.js";
@@ -35,6 +37,8 @@ const router = express.Router();
 //auth
 router.use("/auth/refresh-token", [], RefreshToken);
 router.use("/auth/login", [], Login);
+router.use("/auth/me", [validateAccessToken, contextMiddleware], Me);
+router.use("/auth/switch-branch", [validateAccessToken, contextMiddleware], SwitchBranch);
 
 // Modul
 // Setup

@@ -168,13 +168,19 @@ const Page = () => {
     }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword]);
 
     useEffect(() => {
-        if (session) {
+        if (session?.user?.active_kode_cabang) {
+            setState((prev) => ({
+                ...prev,
+                session: session
+            }));
+            formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+        } else if (session) {
             setState((prev) => ({
                 ...prev,
                 session: session
             }));
         }
-    }, [session]);
+    }, [session?.user?.active_kode_cabang, session]);
 
     return (
         <>

@@ -15,6 +15,7 @@ import { Tag } from 'primereact/tag';
 import { Divider } from 'primereact/divider';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
@@ -26,6 +27,7 @@ import StatusLegend from '@/app/components/status/StatusLegend';
 const CheckoutPage = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
+    const { data: session } = useSession();
 
     const [loading, setLoading] = useState(false);
     const [submitLoad, setSubmitLoad] = useState(false);
@@ -71,7 +73,10 @@ const CheckoutPage = () => {
     const searchRooms = async (keyword: string = '') => {
         setLoading(true);
         try {
-            const res = await postData(apiCheckoutSearch, { keyword });
+            const res = await postData(apiCheckoutSearch, { 
+                keyword,
+                kode_cabang: session?.user?.active_kode_cabang 
+            });
             const list = res?.data?.data || [];
             setRooms(list);
 
@@ -94,8 +99,10 @@ const CheckoutPage = () => {
 
     useEffect(() => {
         fetchShift();
-        searchRooms();
-    }, []);
+        if (session?.user?.active_kode_cabang) {
+            searchRooms();
+        }
+    }, [session?.user?.active_kode_cabang]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
@@ -194,7 +201,8 @@ const CheckoutPage = () => {
             const payload: any = {
                 kode_folio: selectedRoom.kode_folio,
                 kode_reservasi_rooms: targetIds,
-                kode_reservasi_room: targetIds[0]
+                kode_reservasi_room: targetIds[0],
+                kode_cabang: session?.user?.active_kode_cabang || selectedRoom.kode_cabang
             };
 
             if (withPayment || outstanding > 0) {
@@ -399,14 +407,21 @@ const CheckoutPage = () => {
             {/* Master Tamu Styled Card */}
             <div className="card">
                 {/* Page Title & Subtitle */}
-                <div className="flex justify-content-between align-items-start mb-4">
+                <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center mb-4 gap-2">
                     <div className="flex flex-column">
-                        <h3 className="text-2xl font-semibold flex align-items-center gap-2">
+                        <h3 className="text-2xl font-semibold flex align-items-center gap-2 m-0">
                             <i className="pi pi-sign-out text-blue-600 text-3xl"></i>Checkout & Penyelesaian Tagihan
                         </h3>
-                        <p className="text-gray-500">
+                        <p className="text-gray-500 m-0 mt-1">
                             Kelola checkout kamar, pelunasan sisa tagihan folio, dan penerbitan invoice resmi tamu.
                         </p>
+                    </div>
+                    <div className="inline-flex align-items-center gap-2 px-3 py-2 border-round-lg surface-ground border-1 surface-border">
+                        <i className="pi pi-building text-primary font-bold"></i>
+                        <span className="text-xs text-500 font-medium">Cabang Aktif:</span>
+                        <span className="text-sm font-semibold text-900">
+                            {session?.user?.active_kode_cabang || '-'} {session?.user?.active_branch_name ? `(${session.user.active_branch_name})` : ''}
+                        </span>
                     </div>
                 </div>
 

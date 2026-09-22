@@ -12,6 +12,7 @@ import { TabView, TabPanel } from 'primereact/tabview';
 import { Tooltip } from 'primereact/tooltip';
 import { Dialog } from 'primereact/dialog';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { showError } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
@@ -24,6 +25,7 @@ import {
 const ReservasiDashboardPage = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
+    const { data: session } = useSession();
 
     // Branch selection
     const [cabangOptions, setCabangOptions] = useState<any[]>([]);
@@ -47,27 +49,13 @@ const ReservasiDashboardPage = () => {
     const [selectedRoomModal, setSelectedRoomModal] = useState<any>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-    // Load initial dropdowns
-    const loadDropdowns = async () => {
-        try {
-            const resCabang = await postData(apiCabangDropdown, {});
-            const rawCabang = resCabang?.data?.data || [];
-            const cabangList = rawCabang.map((c: any) => ({
-                kode_cabang: c.kode_cabang,
-                nama_cabang: c.name || c.nama_hotel || c.kode_cabang
-            }));
-            setCabangOptions(cabangList);
-            const defaultCabang = cabangList.length > 0 ? cabangList[0].kode_cabang : '';
-            if (defaultCabang) {
-                setSelectedCabang(defaultCabang);
-            }
-
-            fetchSummary(defaultCabang);
-            fetchMonitoring(defaultCabang, matrixDays);
-        } catch (error) {
-            console.error('Failed to load initial dropdowns', error);
-            fetchSummary('');
-            fetchMonitoring('', matrixDays);
+    // Load data for active branch
+    const loadActiveBranchData = async () => {
+        const activeCabang = session?.user?.active_kode_cabang || '';
+        if (activeCabang) {
+            setSelectedCabang(activeCabang);
+            fetchSummary(activeCabang);
+            fetchMonitoring(activeCabang, matrixDays);
         }
     };
 
@@ -110,8 +98,8 @@ const ReservasiDashboardPage = () => {
     };
 
     useEffect(() => {
-        loadDropdowns();
-    }, []);
+        loadActiveBranchData();
+    }, [session?.user?.active_kode_cabang]);
 
     useEffect(() => {
         if (selectedCabang) {
@@ -225,15 +213,12 @@ const ReservasiDashboardPage = () => {
                         <div className="flex align-items-center gap-2 flex-wrap w-full lg:w-auto justify-content-start lg:justify-content-end">
                             {/* Compact Cabang Hotel Dropdown */}
                             <div className="flex align-items-center gap-1">
-                                <Dropdown
-                                    value={selectedCabang}
-                                    options={cabangOptions}
-                                    optionLabel="nama_cabang"
-                                    optionValue="kode_cabang"
-                                    onChange={(e) => setSelectedCabang(e.value)}
-                                    placeholder="Pilih Cabang"
-                                    className="w-14rem sm:w-16rem text-sm"
-                                />
+                                <div className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border">
+                                    <i className="pi pi-building text-primary font-bold"></i>
+                                    <span className="text-sm font-bold text-900">
+                                        {session?.user?.active_kode_cabang || selectedCabang || '-'} - {session?.user?.active_branch_name || 'Cabang Aktif'}
+                                    </span>
+                                </div>
                                 <Button
                                     icon="pi pi-refresh"
                                     className="p-button-outlined p-button-sm"

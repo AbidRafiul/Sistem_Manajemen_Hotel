@@ -173,13 +173,20 @@ const Page = () => {
     }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword, state.kode_cabang]);
 
     useEffect(() => {
-        if (session) {
+        if (session?.user?.active_kode_cabang) {
+            setState((prev) => ({
+                ...prev,
+                session: session,
+                kode_cabang: session.user.active_kode_cabang || ''
+            }));
+            formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+        } else if (session) {
             setState((prev) => ({
                 ...prev,
                 session: session
             }));
         }
-    }, [session]);
+    }, [session?.user?.active_kode_cabang, session]);
 
     return (
         <>

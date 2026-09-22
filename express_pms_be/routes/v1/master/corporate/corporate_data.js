@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file corporate_data.js
@@ -35,6 +35,7 @@ router.post("/", async (req, res) => {
     const baseQuery = DB("mst_corporate_account as c")
       .whereNull("c.deleted_at")
       .modify((qb) => {
+        if (oPayload.kode_cabang) qb.where("c.kode_cabang", oPayload.kode_cabang);
         if (keyword)
           qb.where(function () {
             this.whereRaw("LOWER(c.name) LIKE ?", [`%${keyword.toLowerCase()}%`])

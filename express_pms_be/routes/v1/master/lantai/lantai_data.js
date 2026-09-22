@@ -37,6 +37,7 @@ router.post("/", async (req, res) => {
       .join("mst_cabang as h", "b.kode_cabang", "h.kode_cabang")
       .whereNull("f.deleted_at")
       .modify((qb) => {
+        if (oPayload.kode_cabang) qb.where("b.kode_cabang", oPayload.kode_cabang);
         if (oPayload.kode_gedung) qb.where("f.kode_gedung", oPayload.kode_gedung);
         if (keyword)
           qb.where(function () {

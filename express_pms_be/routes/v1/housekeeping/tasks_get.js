@@ -13,6 +13,7 @@ import express from "express";
 import { status } from "../components/tools/general.js";
 import DB from "../../../core/config/knex.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
+import { applyBranchFilter, assertBranchScope } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -28,13 +29,13 @@ router.get("/", async (req, res) => {
         "k.nomor_kamar",
         "t.task_type",
         "t.assigned_to",
-        "u.name as assigned_to_name",
+        "u.fullname as assigned_to_name",
         "t.priority",
         "t.status",
         "t.created_at"
       )
       .leftJoin("mst_kamar as k", "t.kode_kamar", "k.kode_kamar")
-      .leftJoin("user_credential as u", "t.assigned_to", "u.id")
+      .leftJoin("mst_user as u", "t.assigned_to", "u.id")
       .where("t.is_active", 1)
       .whereNull("t.deleted_at")
       .orderBy("t.created_at", "desc");
@@ -42,9 +43,8 @@ router.get("/", async (req, res) => {
     if (taskStatus) {
       query.where("t.status", taskStatus);
     }
-    if (cabang) {
-      query.where("t.kode_cabang", cabang);
-    }
+    // Terapkan branch scope filter
+    applyBranchFilter(query, req, "t.kode_cabang", cabang);
 
     const tasks = await query;
     return res.status(200).json({
@@ -54,7 +54,8 @@ router.get("/", async (req, res) => {
       data: tasks,
     });
   } catch (error) {
-    return res.status(500).json({
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal",
       datetime: formatDateSystem(),
@@ -71,10 +72,10 @@ router.get("/:id", async (req, res) => {
         "k.nomor_kamar",
         "k.occupancy_status",
         "k.housekeeping_status",
-        "u.name as assigned_to_name"
+        "u.fullname as assigned_to_name"
       )
       .leftJoin("mst_kamar as k", "t.kode_kamar", "k.kode_kamar")
-      .leftJoin("user_credential as u", "t.assigned_to", "u.id")
+      .leftJoin("mst_user as u", "t.assigned_to", "u.id")
       .where("t.kode_housekeeping_task", id)
       .where("t.is_active", 1)
       .whereNull("t.deleted_at")
@@ -88,6 +89,9 @@ router.get("/:id", async (req, res) => {
       });
     }
 
+    // Validasi scope cabang untuk detail task
+    assertBranchScope(req, task.kode_cabang);
+
     return res.status(200).json({
       status: status.SUKSES,
       message: "Data berhasil diambil",
@@ -95,7 +99,8 @@ router.get("/:id", async (req, res) => {
       data: task,
     });
   } catch (error) {
-    return res.status(500).json({
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal",
       datetime: formatDateSystem(),

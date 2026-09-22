@@ -39,6 +39,7 @@ router.post("/", async (req, res) => {
       .join("mst_cabang as h", "t.kode_cabang", "h.kode_cabang")
       .whereNull("t.deleted_at")
       .modify((qb) => {
+        if (oPayload.kode_cabang) qb.where("t.kode_cabang", oPayload.kode_cabang);
         if (keyword)
           qb.where(function () {
             this.whereRaw("LOWER(t.name) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw(

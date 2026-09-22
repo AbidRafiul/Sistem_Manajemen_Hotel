@@ -2,6 +2,7 @@
 import { Toast } from 'primereact/toast';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
 import FormBooking from './components/form_booking';
@@ -9,6 +10,7 @@ import FormBooking from './components/form_booking';
 const BookingContent = () => {
     const toast = useRef<Toast>(null);
     const searchParams = useSearchParams();
+    const { data: session } = useSession();
 
     const [state, setState] = useState<ReservasiBaruState>({
         load: false,
@@ -93,15 +95,17 @@ const BookingContent = () => {
         }
     });
 
-    // Auto populate dari query parameters jika datang dari dashboard
+    // Sinkronisasi otomatis kode_cabang dengan active branch dari toggle header
     useEffect(() => {
+        if (session?.user?.active_kode_cabang) {
+            formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+        }
+
         if (!searchParams) return;
-        const cabang = searchParams.get('cabang');
         const tipe = searchParams.get('tipe');
         const inDate = searchParams.get('in');
         const outDate = searchParams.get('out');
 
-        if (cabang) formik.setFieldValue('kode_cabang', cabang);
         if (tipe) formik.setFieldValue('kode_tipe_kamar', tipe);
         if (inDate) {
             const dIn = new Date(inDate);
@@ -117,7 +121,7 @@ const BookingContent = () => {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams]);
+    }, [searchParams, session?.user?.active_kode_cabang]);
 
     return (
         <div className="p-0">
