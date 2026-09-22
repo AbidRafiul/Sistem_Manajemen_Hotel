@@ -13,25 +13,16 @@ import { status } from "../../components/tools/general.js";
 import DB from "../../../../core/config/knex.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { resolveEffectiveBranch } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   const oPayload = req.body || {};
-  const username = req?.auth?.username || "";
-  let kode_cabang = oPayload.kode_cabang || req?.auth?.kode_cabang || "";
-
   try {
-    // 1. Tentukan cabang default jika belum dipilih
-    if (!kode_cabang) {
-      const firstCabang = await DB("mst_cabang")
-        .where("is_active", 1)
-        .whereNull("deleted_at")
-        .first();
-      if (firstCabang) {
-        kode_cabang = firstCabang.kode_cabang;
-      }
-    }
+    // 1. Tentukan cabang efektif berdasarkan scope kewenangan user
+    const effective = resolveEffectiveBranch(req, oPayload.kode_cabang);
+    const kode_cabang = effective.kodeCabang;
 
     const today = new Date();
     const todayStr = formatDateSystem(today, "yyyy-MM-dd");
@@ -431,7 +422,8 @@ router.post("/", async (req, res) => {
       username: username,
     });
 
-    return res.status(500).json({
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal saat memuat summary dashboard.",
       datetime: formatDateSystem(),

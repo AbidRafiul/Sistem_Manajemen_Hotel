@@ -14,6 +14,7 @@ import DB from "../../../../core/config/knex.js";
 import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -55,6 +56,9 @@ router.post("/", async (req, res) => {
       return res
         .status(422)
         .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+
+    // Validasi branch scope
+    assertBranchScope(req, oPayload.kode_cabang);
 
     // 1. Cek Kamar Fisik yang Kosong dan Bersih
     // Simplifikasi Walk-In: Hanya mengecek status saat ini (tidak cek kalender ke depan)
@@ -125,7 +129,8 @@ router.post("/", async (req, res) => {
       response: oResult,
       user: username,
     });
-    return res.status(500).json(oResult);
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json(oResult);
   }
 });
 

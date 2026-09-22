@@ -15,6 +15,7 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 import express from "express";
 
 const router = express.Router();
@@ -61,6 +62,9 @@ router.post("/", async (req, res) => {
                 datetime: formatDateSystem()
             });
         }
+
+        // Validasi branch scope
+        assertBranchScope(req, oPayload.kode_cabang);
 
         const userId = req?.auth?.user_id || null; 
 
@@ -356,7 +360,8 @@ router.post("/", async (req, res) => {
             data: result
         });
     } catch (e) {
-        return res.status(500).json({
+        const httpStatus = e.status || e.statusCode || 500;
+        return res.status(httpStatus).json({
             status: status.GAGAL,
             message: e.message,
             datetime: formatDateSystem()

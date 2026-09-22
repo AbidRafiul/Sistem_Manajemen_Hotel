@@ -13,13 +13,15 @@ import { status } from "../../components/tools/general.js";
 import DB from "../../../../core/config/knex.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { resolveEffectiveBranch } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   const oPayload = req.body || {};
   const username = req?.auth?.username || "";
-  const kode_cabang = oPayload.kode_cabang || req?.auth?.kode_cabang || "";
+  const effective = resolveEffectiveBranch(req, oPayload.kode_cabang);
+  const kode_cabang = effective.kodeCabang;
 
   try {
     let query = DB("trx_reservation_room as rr")

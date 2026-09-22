@@ -63,14 +63,18 @@ router.post("/", async (req, res) => {
         }
 
         if (oPayload.status) {
-            if (Array.isArray(oPayload.status)) {
-                query.whereIn('rr.status', oPayload.status);
-            } else {
-                query.where('rr.status', oPayload.status);
+            const statusArr = Array.isArray(oPayload.status) ? oPayload.status : [oPayload.status];
+            // Include 'assigned' when searching for confirmed/reserved/booked rooms
+            if (statusArr.some(s => ['reserved', 'confirmed', 'booked'].includes(s)) && !statusArr.includes('assigned')) {
+                statusArr.push('assigned');
             }
+            query.where(function() {
+                this.whereIn('rr.status', statusArr)
+                    .orWhereIn('r.status', statusArr);
+            });
         } else {
-            // Default filter yang belum check-in tapi sudah dibook
-            query.whereIn('rr.status', ['booked', 'reserved', 'confirmed']);
+            // Default filter yang belum check-in tapi sudah dibook / assigned
+            query.whereIn('rr.status', ['booked', 'assigned', 'reserved', 'confirmed']);
         }
 
         if (oPayload.check_in_date) {

@@ -35,6 +35,7 @@ router.post("/", async (req, res) => {
     const baseQuery = DB("mst_paket_harga as rp")
       .whereNull("rp.deleted_at")
       .modify((qb) => {
+        if (oPayload.kode_cabang) qb.where("rp.kode_cabang", oPayload.kode_cabang);
         if (keyword)
           qb.where(function () {
             this.whereRaw("LOWER(rp.nama_paket) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw(

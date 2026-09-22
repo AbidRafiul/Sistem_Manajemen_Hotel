@@ -13,11 +13,12 @@ import express from "express";
 import { status } from "../components/tools/general.js";
 import DB from "../../../core/config/knex.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
+import { applyBranchFilter } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
-  const { cabang } = req.body;
+  const cabang = req.body?.cabang || req.body?.kode_cabang || null;
 
   try {
     // Subquery untuk mengambil ID task aktif terbaru per kamar agar 1 baris hanya 1 kamar unik
@@ -47,9 +48,8 @@ router.post("/", async (req, res) => {
       .whereNull("k.deleted_at")
       .orderBy("k.nomor_kamar", "asc");
 
-    if (cabang) {
-      query.where("k.kode_cabang", cabang);
-    }
+    // Terapkan isolasi branch scope
+    applyBranchFilter(query, req, "k.kode_cabang", cabang);
 
     const rooms = await query;
 
@@ -60,7 +60,8 @@ router.post("/", async (req, res) => {
       data: rooms,
     });
   } catch (error) {
-    return res.status(500).json({
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal",
       datetime: formatDateSystem(),

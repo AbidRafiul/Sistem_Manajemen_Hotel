@@ -14,6 +14,7 @@ import { status } from "../../components/tools/general.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { processCheckIn } from "../../components/tools/checkin_helper.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 import express from "express";
 
@@ -59,6 +60,9 @@ router.post("/", async (req, res) => {
             if (!resRoom) {
                 throw new Error("Data reservasi tidak ditemukan");
             }
+
+            // Validasi otorisasi branch scope
+            assertBranchScope(req, resRoom.kode_cabang);
 
             if (resRoom.status === 'checked_in') {
                 throw new Error("Kamar ini sudah di-check-in");
@@ -120,7 +124,8 @@ router.post("/", async (req, res) => {
             data: result
         });
     } catch (e) {
-        return res.status(500).json({
+        const httpStatus = e.status || e.statusCode || 500;
+        return res.status(httpStatus).json({
             status: status.GAGAL,
             message: e.message,
             datetime: formatDateSystem()

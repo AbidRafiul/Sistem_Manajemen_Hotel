@@ -17,6 +17,7 @@ import { generateSequence } from "../../components/tools/generateCode.js";
 import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { processCheckIn } from "../../components/tools/checkin_helper.js";
 import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -34,6 +35,10 @@ router.post("/", async (req, res) => {
           message: "Invalid request body",
           datetime: formatDateSystem(),
         });
+    }
+
+    if (oPayload.kode_cabang) {
+      assertBranchScope(req, oPayload.kode_cabang);
     }
 
     const schema = {
@@ -81,6 +86,9 @@ router.post("/", async (req, res) => {
       return res
         .status(422)
         .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+
+    // Validasi otorisasi branch scope
+    assertBranchScope(req, oPayload.kode_cabang);
 
     // 1. Cek Blacklist Tamu
     const guestInfo = await DB("mst_guest").where("kode_tamu", oPayload.kode_guest).first();
@@ -360,7 +368,8 @@ router.post("/", async (req, res) => {
       response: oResult,
       user: username,
     });
-    return res.status(500).json(oResult);
+    const httpStatus = error.status || error.statusCode || 500;
+    return res.status(httpStatus).json(oResult);
   }
 });
 
