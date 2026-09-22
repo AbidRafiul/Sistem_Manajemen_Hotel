@@ -77,7 +77,8 @@ const Page = () => {
                 perPage: state.rows,
                 keyword: state.keyword,
                 sortField: state.sortField || 'updated_at',
-                sortOrder: state.sortOrder || 'desc'
+                sortOrder: state.sortOrder || 'desc',
+                kode_cabang: session?.user?.active_kode_cabang
             };
 
             const res = await postData(apiEndpoint, oPayload);
@@ -152,9 +153,14 @@ const Page = () => {
     };
 
     useEffect(() => {
-        getData(apiEndpointGet);
+        if (session?.user?.active_kode_cabang) {
+            formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+            getData(apiEndpointGet);
+        } else {
+            getData(apiEndpointGet);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword]);
+    }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword, session?.user?.active_kode_cabang]);
 
     useEffect(() => {
         if (session) {

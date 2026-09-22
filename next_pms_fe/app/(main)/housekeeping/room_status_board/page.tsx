@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useContext } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Toast } from 'primereact/toast';
+import { useSession } from 'next-auth/react';
 import { State, RoomStatusData } from './components/interfaces';
 import Table from './components/display/table';
 import ActionDialog from './components/display/action_dialog';
@@ -13,6 +14,7 @@ import HistoryDialog from './components/display/history_dialog';
 
 const RoomStatusBoard = () => {
     const toast = useRef<Toast>(null);
+    const { data: session } = useSession();
     const [state, setState] = useState<State>({
         load: false,
         data: [],
@@ -30,13 +32,25 @@ const RoomStatusBoard = () => {
     });
 
     useEffect(() => {
-        getData();
+        if (session?.user?.active_kode_cabang) {
+            setState((p) => ({ ...p, kode_cabang: session.user.active_kode_cabang || '' }));
+        }
+    }, [session?.user?.active_kode_cabang]);
+
+    useEffect(() => {
+        if (state.kode_cabang) {
+            getData();
+        }
     }, [state.kode_cabang]);
 
     const getData = async () => {
         try {
             setState((p) => ({ ...p, load: true }));
-            const res = await postData(apiEndpointGetRoomStatus, { cabang: state.kode_cabang });
+            const targetCabang = state.kode_cabang || session?.user?.active_kode_cabang;
+            const res = await postData(apiEndpointGetRoomStatus, { 
+                cabang: targetCabang,
+                kode_cabang: targetCabang 
+            });
             
             // Transform data: add custom 'ready_to_sell' boolean flag for filtering
             const rawData = res?.data?.data || [];
@@ -106,10 +120,21 @@ const RoomStatusBoard = () => {
             <Toast ref={toast} />
             <div className="col-12">
                 <div className="card">
-                    <h4>Room Status Board</h4>
-                    <p className="text-gray-600 mb-4">
-                        Monitor status kamar secara real-time. Terdapat filter untuk mempermudah operasional Housekeeping.
-                    </p>
+                    <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center mb-4 gap-2">
+                        <div>
+                            <h4 className="m-0">Room Status Board</h4>
+                            <p className="text-gray-600 m-0 mt-1">
+                                Monitor status kamar secara real-time. Terdapat filter untuk mempermudah operasional Housekeeping.
+                            </p>
+                        </div>
+                        <div className="inline-flex align-items-center gap-2 px-3 py-2 border-round-lg surface-ground border-1 surface-border">
+                            <i className="pi pi-building text-primary font-bold"></i>
+                            <span className="text-xs text-500 font-medium">Cabang Aktif:</span>
+                            <span className="text-sm font-semibold text-900">
+                                {session?.user?.active_kode_cabang || '-'} {session?.user?.active_branch_name ? `(${session.user.active_branch_name})` : ''}
+                            </span>
+                        </div>
+                    </div>
                     
                     {renderCounters()}
 

@@ -11,16 +11,17 @@ import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { InputText } from 'primereact/inputtext';
 import { Dialog } from 'primereact/dialog';
+import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
-import { apiReservationData, apiCabangDropdown, apiCheckinSubmit, apiShiftCurrent } from './components/endpoints';
+import { apiReservationData, apiCheckinSubmit, apiShiftCurrent } from './components/endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
+    const { data: session } = useSession();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [cabangOptions, setCabangOptions] = useState([]);
     const [filterCabang, setFilterCabang] = useState('');
     const [filterDate, setFilterDate] = useState<Date | null>(new Date());
     const [globalFilter, setGlobalFilter] = useState('');
@@ -44,13 +45,10 @@ const Page = () => {
 
     useEffect(() => {
         fetchShift();
-        postData(apiCabangDropdown, {}).then(res => {
-            setCabangOptions(res.data.data);
-            if (res.data.data.length > 0) {
-                setFilterCabang(res.data.data[0].kode_cabang);
-            }
-        }).catch(e => console.error(e));
-    }, []);
+        if (session?.user?.active_kode_cabang) {
+            setFilterCabang(session.user.active_kode_cabang);
+        }
+    }, [session?.user?.active_kode_cabang]);
 
     useEffect(() => {
         if (filterCabang) {
@@ -78,8 +76,8 @@ const Page = () => {
     const handleResetFilter = () => {
         setGlobalFilter('');
         setFilterDate(new Date());
-        if (cabangOptions.length > 0) {
-            setFilterCabang((cabangOptions[0] as any).kode_cabang);
+        if (session?.user?.active_kode_cabang) {
+            setFilterCabang(session.user.active_kode_cabang);
         }
     };
 
@@ -217,15 +215,12 @@ const Page = () => {
                         </div>
                         <div className="flex align-items-center gap-2">
                             <span className="text-sm font-bold text-700">Cabang:</span>
-                            <Dropdown 
-                                value={filterCabang} 
-                                options={cabangOptions} 
-                                onChange={(e) => setFilterCabang(e.value)} 
-                                optionLabel="name" 
-                                optionValue="kode_cabang" 
-                                className="w-14rem text-sm"
-                                placeholder="Pilih Cabang"
-                            />
+                            <div className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border">
+                                <i className="pi pi-building text-primary font-bold"></i>
+                                <span className="text-sm font-bold text-900">
+                                    {session?.user?.active_kode_cabang || filterCabang || '-'} - {session?.user?.active_branch_name || 'Cabang Aktif'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div className="flex align-items-center gap-2 ml-auto">

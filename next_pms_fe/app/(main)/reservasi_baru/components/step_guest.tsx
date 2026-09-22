@@ -11,6 +11,7 @@ import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { apiGuestList, apiGuestCreate, apiCabangDropdown } from './endpoints';
 import { FilterMatchMode } from 'primereact/api';
+import { useSession } from 'next-auth/react';
 
 interface StepGuestProps {
     state: ReservasiBaruState;
@@ -20,7 +21,7 @@ interface StepGuestProps {
 }
 
 const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast }) => {
-    
+
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -33,13 +34,32 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
         setFilters(_filters);
         setGlobalFilterValue(value);
     };
-    
+
+    const { data: session } = useSession();
+
     useEffect(() => {
         const getCabang = async () => {
             setState(p => ({ ...p, cabangLoad: true }));
             try {
+                const allowed = session?.user?.allowed_branches;
+                if (allowed && allowed.length > 0) {
+                    const canSwitch = Boolean(session?.user?.can_switch_branch);
+                    const branches = canSwitch ? allowed : [{
+                        kode_cabang: session?.user?.active_kode_cabang || allowed[0].kode_cabang,
+                        nama_hotel: session?.user?.active_branch_name || allowed[0].nama_hotel || 'Cabang'
+                    }];
+                    setState(p => ({ ...p, cabangOptions: branches }));
+                    if (!formik.values.kode_cabang && session?.user?.active_kode_cabang) {
+                        formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+                    }
+                    return;
+                }
+
                 const res = await postData(apiCabangDropdown, {});
                 setState(p => ({ ...p, cabangOptions: res.data.data }));
+                if (!formik.values.kode_cabang && session?.user?.active_kode_cabang) {
+                    formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+                }
             } catch (e: any) {
                 showError(toast, "Gagal memuat cabang: " + (e?.response?.data?.message || e.message));
             } finally {
@@ -48,22 +68,23 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
         };
         getCabang();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [session?.user?.active_kode_cabang]);
 
     useEffect(() => {
-        if (formik.values.kode_cabang) {
-            getGuestList();
+        const effectiveCabang = formik.values.kode_cabang || session?.user?.active_kode_cabang;
+        if (effectiveCabang) {
+            getGuestList(effectiveCabang);
         } else {
             setState(p => ({ ...p, guestList: [] }));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [formik.values.kode_cabang]);
+    }, [formik.values.kode_cabang, session?.user?.active_kode_cabang]);
 
-    const getGuestList = async () => {
+    const getGuestList = async (cabang = formik.values.kode_cabang || session?.user?.active_kode_cabang) => {
         setState(p => ({ ...p, guestListLoad: true, isGuestNew: false }));
         try {
             const res = await postData(apiGuestList, {
-                kode_cabang: formik.values.kode_cabang
+                kode_cabang: cabang
             });
             setState(p => ({ ...p, guestList: res.data.data || [] }));
         } catch (e: any) {
@@ -149,26 +170,20 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
 
     return (
         <div className="p-fluid formgrid grid">
-            <div className="field col-12 md:col-6">
-                <label>Pilih Cabang</label>
-                <Dropdown 
-                    value={formik.values.kode_cabang} 
-                    options={state.cabangOptions} 
-                    onChange={(e) => {
-                        formik.setFieldValue('kode_cabang', e.value);
-                        // reset selected guest when branch changes
-                        setState(p => ({ ...p, foundGuest: null, isGuestNew: false }));
-                        formik.setFieldValue('kode_guest', '');
-                        formik.setFieldValue('full_name', '');
-                    }}
-                    optionLabel="name" 
-                    optionValue="kode_cabang"
-                    placeholder="-- Pilih Cabang --" 
-                    disabled={state.cabangLoad}
-                    className={formik.errors.kode_cabang && formik.touched.kode_cabang ? 'p-invalid' : ''}
-                />
-                {formik.errors.kode_cabang && formik.touched.kode_cabang && <small className="p-error">{formik.errors.kode_cabang}</small>}
-            </div>
+            {/* <div className="field col-12 md:col-6">
+                <label className="font-semibold text-sm">Cabang Aktif</label>
+                <div className="p-inputgroup">
+                    <span className="p-inputgroup-addon bg-primary-50 border-1 border-primary-200">
+                        <i className="pi pi-building text-primary font-bold"></i>
+                    </span>
+                    <InputText 
+                        value={`${session?.user?.active_kode_cabang || formik.values.kode_cabang || '-'} - ${session?.user?.active_branch_name || 'Cabang Aktif'}`}
+                        disabled
+                        className="font-bold text-900 bg-surface-100"
+                    />
+                </div>
+                <small className="text-500">Cabang transaksi otomatis mengikuti cabang aktif pada toggle header atas.</small>
+            </div> */}
 
             {state.foundGuest && !state.isGuestNew && (
                 <div className="field col-12">
@@ -209,16 +224,16 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                             <Column field="id_number" header="Nomor ID" />
                             <Column body={(rowData) => {
                                 if (rowData.is_blacklisted === 1) {
-                                    return <span className="text-red-500 font-bold text-xs"><i className="pi pi-ban text-xs mr-1"/>BLACKLIST</span>;
+                                    return <span className="text-red-500 font-bold text-xs"><i className="pi pi-ban text-xs mr-1" />BLACKLIST</span>;
                                 }
                                 return <span className="text-green-500 text-xs">Aman</span>;
                             }} header="Status" />
                             <Column body={(rowData) => (
-                                <Button 
-                                    label="Pilih" 
-                                    size="small" 
-                                    severity={rowData.is_blacklisted === 1 ? 'danger' : 'info'} 
-                                    onClick={() => handleSelectGuest(rowData)} 
+                                <Button
+                                    label="Pilih"
+                                    size="small"
+                                    severity={rowData.is_blacklisted === 1 ? 'danger' : 'info'}
+                                    onClick={() => handleSelectGuest(rowData)}
                                     disabled={rowData.is_blacklisted === 1}
                                 />
                             )} headerStyle={{ width: '10%' }} align="center" />
@@ -231,17 +246,17 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                 <div className="col-12 mt-3 grid p-3 border-round border-1 surface-border bg-blue-50">
                     <div className="col-12 flex justify-content-between align-items-center mb-2">
                         <h6 className="m-0">Form Tamu Baru</h6>
-                        <Button 
-                            icon="pi pi-times" 
-                            label="Batal, kembali ke pencarian" 
+                        <Button
+                            icon="pi pi-times"
+                            label="Batal, kembali ke pencarian"
                             className="p-button-text p-button-sm p-button-danger"
                             onClick={handleCancelNewGuest}
                         />
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>Nama Lengkap</label>
-                        <InputText 
-                            value={formik.values.full_name} 
+                        <InputText
+                            value={formik.values.full_name}
                             onChange={(e) => formik.setFieldValue('full_name', e.target.value)}
                             className={formik.errors.full_name && formik.touched.full_name ? 'p-invalid' : ''}
                         />
@@ -249,16 +264,16 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>Tipe ID</label>
-                        <Dropdown 
-                            value={formik.values.id_type} 
-                            options={[{label:'KTP', value:'ktp'}, {label:'Passport', value:'passport'}, {label:'SIM', value:'sim'}]} 
+                        <Dropdown
+                            value={formik.values.id_type}
+                            options={[{ label: 'KTP', value: 'ktp' }, { label: 'Passport', value: 'passport' }, { label: 'SIM', value: 'sim' }]}
                             onChange={(e) => formik.setFieldValue('id_type', e.value)}
                         />
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>Nomor ID</label>
-                        <InputText 
-                            value={formik.values.id_number} 
+                        <InputText
+                            value={formik.values.id_number}
                             onChange={(e) => formik.setFieldValue('id_number', e.target.value)}
                             className={formik.errors.id_number && formik.touched.id_number ? 'p-invalid' : ''}
                         />
@@ -266,8 +281,8 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>No. Telepon</label>
-                        <InputText 
-                            value={formik.values.phone} 
+                        <InputText
+                            value={formik.values.phone}
                             onChange={(e) => formik.setFieldValue('phone', e.target.value)}
                             className={formik.errors.phone && formik.touched.phone ? 'p-invalid' : ''}
                         />
@@ -275,15 +290,15 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>Email (Opsional)</label>
-                        <InputText 
-                            value={formik.values.email} 
+                        <InputText
+                            value={formik.values.email}
                             onChange={(e) => formik.setFieldValue('email', e.target.value)}
                         />
                     </div>
                     <div className="field col-12 md:col-6">
                         <label>Kewarganegaraan (Opsional)</label>
-                        <InputText 
-                            value={formik.values.nationality} 
+                        <InputText
+                            value={formik.values.nationality}
                             onChange={(e) => formik.setFieldValue('nationality', e.target.value)}
                         />
                     </div>
@@ -292,11 +307,11 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
 
             {state.isGuestNew && (
                 <div className="col-12 flex justify-content-end mt-4">
-                    <Button 
-                        label="Simpan Tamu Baru" 
-                        icon="pi pi-save" 
+                    <Button
+                        label="Simpan Tamu Baru"
+                        icon="pi pi-save"
                         severity="success"
-                        onClick={handleSaveNewGuest} 
+                        onClick={handleSaveNewGuest}
                         loading={state.load}
                     />
                 </div>

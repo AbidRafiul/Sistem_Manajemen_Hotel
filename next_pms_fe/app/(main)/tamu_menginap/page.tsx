@@ -11,8 +11,9 @@ import { InputIcon } from 'primereact/inputicon';
 import { Dropdown } from 'primereact/dropdown';
 import { Tag } from 'primereact/tag';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
-import { apiInhouseList, apiCabangDropdown } from './components/endpoints';
+import { apiInhouseList } from './components/endpoints';
 import { DialogFolioDetail } from './components/dialog_folio_detail';
 import { DialogTambahFasilitas } from './components/dialog_tambah_fasilitas';
 import { DialogExtendStay } from './components/dialog_extend_stay';
@@ -22,13 +23,13 @@ import { formatDateSystem } from '@/lib/tools/dateTools';
 const TamuMenginapPage = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
+    const { data: session } = useSession();
 
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any[]>([]);
     
     // Filters
     const [searchKeyword, setSearchKeyword] = useState('');
-    const [cabangOptions, setCabangOptions] = useState<any[]>([]);
     const [selectedCabang, setSelectedCabang] = useState<string>('');
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -38,19 +39,11 @@ const TamuMenginapPage = () => {
     const [showFasilitasDialog, setShowFasilitasDialog] = useState(false);
     const [showExtendDialog, setShowExtendDialog] = useState(false);
 
-    const loadCabang = async () => {
-        try {
-            const res = await postData(apiCabangDropdown, {});
-            if (res?.data?.data) {
-                setCabangOptions(res.data.data);
-                if (res.data.data.length > 0) {
-                    setSelectedCabang(res.data.data[0].kode_cabang);
-                }
-            }
-        } catch (e) {
-            console.error('Failed to fetch cabang', e);
+    useEffect(() => {
+        if (session?.user?.active_kode_cabang) {
+            setSelectedCabang(session.user.active_kode_cabang);
         }
-    };
+    }, [session?.user?.active_kode_cabang]);
 
     const loadInhouseData = async (keyword: string = searchKeyword, cabang: string = selectedCabang) => {
         setLoading(true);
@@ -68,10 +61,6 @@ const TamuMenginapPage = () => {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        loadCabang();
-    }, []);
 
     useEffect(() => {
         if (selectedCabang) {
@@ -112,6 +101,12 @@ const TamuMenginapPage = () => {
                             </span>
                         </div>
                         <div className="flex align-items-center gap-2 flex-wrap">
+                            <div className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border">
+                                <i className="pi pi-building text-primary font-bold"></i>
+                                <span className="text-sm font-bold text-900">
+                                    {session?.user?.active_kode_cabang || selectedCabang || '-'} - {session?.user?.active_branch_name || 'Cabang Aktif'}
+                                </span>
+                            </div>
                             <Button
                                 label="Segarkan Data"
                                 icon="pi pi-refresh"
@@ -193,15 +188,13 @@ const TamuMenginapPage = () => {
                     {/* Toolbar Filters */}
                     <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center gap-2 mb-3">
                         <div className="flex align-items-center gap-2 w-full sm:w-auto">
-                            <Dropdown
-                                value={selectedCabang}
-                                options={cabangOptions}
-                                optionLabel="name"
-                                optionValue="kode_cabang"
-                                onChange={(e) => setSelectedCabang(e.value)}
-                                placeholder="Pilih Cabang Hotel"
-                                className="w-full sm:w-16rem"
-                            />
+                            <div className="inline-flex align-items-center gap-2 px-3 py-2 border-round-lg surface-ground border-1 surface-border">
+                                <i className="pi pi-building text-primary font-bold"></i>
+                                <span className="text-xs text-500 font-medium">Cabang Aktif:</span>
+                                <span className="text-sm font-semibold text-900">
+                                    {session?.user?.active_kode_cabang || '-'} {session?.user?.active_branch_name ? `(${session.user.active_branch_name})` : ''}
+                                </span>
+                            </div>
                         </div>
                         <div className="w-full sm:w-auto">
                             <IconField iconPosition="left" className="w-full sm:w-18rem">

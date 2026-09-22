@@ -15,27 +15,6 @@ import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 
 const Table = ({ state, setState, toast, getData }: TableProps) => {
-    const [cabangList, setCabangList] = useState<any[]>([]);
-
-    const fetchCabang = async (keyword = '') => {
-        try {
-            const res = await postData('/master/cabang/cabang-data', {
-                perPage: 50,
-                keyword: keyword
-            });
-            const cabangs = res?.data?.data || [];
-            setCabangList(cabangs);
-            if (cabangs.length > 0 && !state.kode_cabang) {
-                setState(p => ({ ...p, kode_cabang: cabangs[0].kode_cabang }));
-            }
-        } catch (error) {
-            console.error('Gagal mengambil data cabang:', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchCabang();
-    }, []);
 
     const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -200,21 +179,14 @@ const Table = ({ state, setState, toast, getData }: TableProps) => {
 
     const header = (
         <div className="flex flex-column md:flex-row justify-content-between gap-3">
-            <div className="flex gap-3 w-full md:w-auto">
-                <Dropdown
-                    value={state.kode_cabang}
-                    options={cabangList}
-                    onChange={(e) => setState(p => ({ ...p, kode_cabang: e.value }))}
-                    optionLabel="name"
-                    optionValue="kode_cabang"
-                    placeholder="Semua Cabang"
-                    filter
-                    showClear
-                    onFilter={(e) => fetchCabang(e.filter)}
-                    className="w-full md:w-15rem"
-                    emptyMessage="Cabang tidak ditemukan"
-                    emptyFilterMessage="Cabang tidak ditemukan"
-                />
+            <div className="flex align-items-center gap-3 w-full md:w-auto">
+                <div className="inline-flex align-items-center gap-2 px-3 py-2 border-round-lg surface-ground border-1 surface-border">
+                    <i className="pi pi-building text-primary font-bold"></i>
+                    <span className="text-xs text-500 font-medium">Cabang:</span>
+                    <span className="text-sm font-semibold text-900">
+                        {state.kode_cabang || '-'}
+                    </span>
+                </div>
                 <span className="p-input-icon-left w-full md:w-auto">
                     <i className="pi pi-search" />
                     <InputText 
