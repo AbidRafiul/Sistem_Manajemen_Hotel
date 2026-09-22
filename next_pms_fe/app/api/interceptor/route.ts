@@ -40,7 +40,7 @@ export const POST = async (request: NextRequest) => {
             );
         }
 
-        return await postCRUD(request, session.access_token);
+        return await postCRUD(request, session);
 
     } catch (error: any) {
         console.error("BFF Interceptor Error:", error);
@@ -58,7 +58,7 @@ export const POST = async (request: NextRequest) => {
     }
 };
 
-async function postCRUD(request: NextRequest, accessToken: string) {
+async function postCRUD(request: NextRequest, session: any) {
     try {
         const headers: CustomHeaders = {};
 
@@ -87,10 +87,13 @@ async function postCRUD(request: NextRequest, accessToken: string) {
             }
         }
 
+        const activeBranch = (headers as any)['x-branch-code'] || (session?.user as any)?.active_kode_cabang || '';
+
         let requestHeaders: Record<string, string> = {
             'Content-Type': 'application/json',
             'X-Timestamp': formatDateISO(new Date()) as string,
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Branch-Code': activeBranch,
             ...customHeader,
         };
 

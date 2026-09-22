@@ -121,7 +121,31 @@ export const validateAccessToken = async (req, res, next) => {
       user_code: payload.user_code,
       username: payload.username,
       role: payload.role,
+      company_id: payload.company_id || 1,
+      company_name: payload.company_name || "",
+      company_code: payload.company_code || "",
+      default_branch_id: payload.default_branch_id || null,
+      default_kode_cabang: payload.default_kode_cabang || "",
+      active_branch_id: payload.active_branch_id || null,
+      active_kode_cabang: payload.active_kode_cabang || "",
+      active_branch_name: payload.active_branch_name || "",
+      allowed_branch_ids: payload.allowed_branch_ids || [],
+      allowed_kode_cabang: payload.allowed_kode_cabang || [],
+      allowed_branches: payload.allowed_branches || [],
+      can_switch_branch: Boolean(payload.can_switch_branch),
     };
+
+    // Validasi header override cabang jika dikirim client
+    const headerBranchCode = req.headers["x-branch-code"];
+    if (headerBranchCode && req.auth.allowed_kode_cabang && req.auth.allowed_kode_cabang.length > 0) {
+      if (!req.auth.allowed_kode_cabang.includes(headerBranchCode)) {
+        return res.status(403).json({
+          status: status.BAD_REQUEST,
+          message: `Akses ditolak: Header branch '${headerBranchCode}' di luar scope kewenangan Anda.`,
+          datetime: formatDateSystem(),
+        });
+      }
+    }
 
     return next();
   } catch (error) {

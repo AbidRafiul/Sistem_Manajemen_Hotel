@@ -194,7 +194,7 @@ export const validatePayload = async (
     uniqueField = [],
     table = "",
     excludedField = "",
-    allowUnknown = false,
+    allowUnknown = true,
   } = {},
 ) => {
   try {
@@ -328,7 +328,7 @@ export const ChangesLog = async (
   }
 };
 
-export const generateUserTokens = async (user, rememberMe = false) => {
+export const generateUserTokens = async (user, rememberMe = false, branchContext = null) => {
   if (!user || !user.user_code || !user.role) {
     throw new Error("FATAL: Data user tidak lengkap untuk pembuatan token. Pastikan user_code dan role tersedia.");
   }
@@ -338,12 +338,26 @@ export const generateUserTokens = async (user, rememberMe = false) => {
   const accessExpireTime = rememberMe ? "1d" : "7h";
   const refreshExpireInSeconds = rememberMe ? (7 * 24 * 60 * 60) : (24 * 60 * 60);
 
-  const accessToken = await new SignJWT({
+  const jwtPayload = {
     user_id: user.id || 1,
     user_code: user.user_code,
     username: user.username,
     role: user.role,
-  })
+    company_id: branchContext?.company_id || user.company_id || 1,
+    company_name: branchContext?.company_name || "Grand Marstech Hotel & Resort",
+    company_code: branchContext?.company_code || "CMP001",
+    default_branch_id: branchContext?.default_branch_id || user.default_branch_id || null,
+    default_kode_cabang: branchContext?.default_kode_cabang || "",
+    active_branch_id: branchContext?.active_branch_id || user.default_branch_id || null,
+    active_kode_cabang: branchContext?.active_kode_cabang || "",
+    active_branch_name: branchContext?.active_branch_name || "",
+    allowed_branch_ids: branchContext?.allowed_branch_ids || [],
+    allowed_kode_cabang: branchContext?.allowed_kode_cabang || [],
+    allowed_branches: branchContext?.allowed_branches || [],
+    can_switch_branch: branchContext !== null ? Boolean(branchContext.can_switch_branch) : Boolean(user.can_switch_branch),
+  };
+
+  const accessToken = await new SignJWT(jwtPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(accessExpireTime)
