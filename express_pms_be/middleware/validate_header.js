@@ -137,13 +137,23 @@ export const validateAccessToken = async (req, res, next) => {
 
     // Validasi header override cabang jika dikirim client
     const headerBranchCode = req.headers["x-branch-code"];
-    if (headerBranchCode && req.auth.allowed_kode_cabang && req.auth.allowed_kode_cabang.length > 0) {
-      if (!req.auth.allowed_kode_cabang.includes(headerBranchCode)) {
-        return res.status(403).json({
-          status: status.BAD_REQUEST,
-          message: `Akses ditolak: Header branch '${headerBranchCode}' di luar scope kewenangan Anda.`,
-          datetime: formatDateSystem(),
-        });
+    if (headerBranchCode) {
+      if (req.auth.allowed_kode_cabang && req.auth.allowed_kode_cabang.length > 0) {
+        if (!req.auth.allowed_kode_cabang.includes(headerBranchCode)) {
+          return res.status(403).json({
+            status: status.BAD_REQUEST,
+            message: `Akses ditolak: Header branch '${headerBranchCode}' di luar scope kewenangan Anda.`,
+            datetime: formatDateSystem(),
+          });
+        }
+      }
+      req.auth.active_kode_cabang = headerBranchCode;
+      const activeBranchObj = (req.auth.allowed_branches || []).find(
+        (b) => b.kode_cabang === headerBranchCode
+      );
+      if (activeBranchObj) {
+        req.auth.active_branch_id = activeBranchObj.id;
+        req.auth.active_branch_name = activeBranchObj.nama_hotel;
       }
     }
 
