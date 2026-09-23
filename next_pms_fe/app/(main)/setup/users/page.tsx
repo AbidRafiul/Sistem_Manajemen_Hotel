@@ -71,7 +71,9 @@ const Page = () => {
             password: '',
             telp: '',
             status: '0',
-            role: 'employee',
+            role: '',
+            default_branch_id: null,
+            org_node_id: null,
         },
         validate: (data: initValue) => {
             let errors = {} as initValue;
@@ -82,6 +84,11 @@ const Page = () => {
                 errors.fullname = 'Nama harus terdiri dari minimal 3 karakter';
             } else if (!/^[a-zA-Z\s]+$/.test(data.fullname)) {
                 errors.fullname = 'Nama hanya boleh berisi huruf dan spasi';
+            }
+
+            // Validasi role
+            if (!data.role || !String(data.role).trim()) {
+                errors.role = 'Role wajib dipilih';
             }
 
             // Validasi username
@@ -115,7 +122,6 @@ const Page = () => {
                 errors.telp = 'Nomor HP harus dimulai dengan 08 dan panjang 9-13 digit';
             }
 
-            console.log(errors)
             return errors;
         },
         onSubmit: (data) => {

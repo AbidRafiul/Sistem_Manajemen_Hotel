@@ -225,7 +225,9 @@ const Table = ({
                         password: '',
                         telp: rowData.telp,
                         status: rowData.status,
-                        role: rowData.role
+                        role: rowData.role,
+                        default_branch_id: rowData.default_branch_id || null,
+                        org_node_id: rowData.org_node_id || null
                     });
 
                     setState(p => ({ ...p, add: false, delete: false, edit: true }));
@@ -361,6 +363,20 @@ const Table = ({
                     <Column field="username" header="Username" className="font-medium"></Column>
                     <Column field="telp" header="Phone" style={{ width: '150px' }}></Column>
                     <Column field="role" body={roleBodyTemplate} header="Role" style={{ width: '130px' }}></Column>
+                    <Column
+                        header="Cabang / Wilayah"
+                        body={(rowData: TableData) => (
+                            <div className="flex flex-column gap-1">
+                                <span className="font-semibold text-sm text-900">
+                                    {rowData.nama_cabang ? rowData.nama_cabang : (rowData.role === 'superadmin' ? 'Semua Cabang (Global)' : '-')}
+                                </span>
+                                <span className="text-xs text-500">
+                                    Wilayah: {rowData.nama_wilayah || 'Wilayah Jawa Timur'}
+                                </span>
+                            </div>
+                        )}
+                        style={{ minWidth: '180px' }}
+                    ></Column>
                     <Column field="created_at" sortable body={rowData => formatDateSystem(rowData.created_at)} header="Datetime" style={{ width: '150px' }}></Column>
                     <Column headerStyle={{ textAlign: 'center' }} header="Action" body={actionBodyTemplate} style={{ width: '120px' }}></Column>
                 </DataTable>

@@ -128,6 +128,25 @@ router.post("/", async (req, res) => {
 
     let cUserCode = "";
 
+    // Resolve branch and wilayah assignment automatically
+    let nDefaultBranchId = oPayload.default_branch_id !== undefined && oPayload.default_branch_id !== null && oPayload.default_branch_id !== ""
+      ? Number(oPayload.default_branch_id)
+      : (req?.auth?.active_branch_id || req?.auth?.default_branch_id || null);
+
+    let nOrgNodeId = oPayload.org_node_id !== undefined && oPayload.org_node_id !== null && oPayload.org_node_id !== ""
+      ? Number(oPayload.org_node_id)
+      : null;
+
+    // Jika org_node_id belum ditentukan namun cabang dipilih, otomatis ambil dari cabang tersebut
+    if (!nOrgNodeId && nDefaultBranchId) {
+      const oBranch = await DB("mst_cabang").where("id", nDefaultBranchId).select("org_node_id").first();
+      if (oBranch && oBranch.org_node_id) {
+        nOrgNodeId = Number(oBranch.org_node_id);
+      }
+    }
+
+    const nCompanyId = req?.auth?.company_id || 1;
+
     // Memulai Transaksi Database
     await DB.transaction(async (trx) => {
       cUserCode = await generateSequence("FMT-USR", trx);
@@ -138,6 +157,9 @@ router.post("/", async (req, res) => {
         telp: oPayload.telp,
         role: oPayload.role,
         status: oPayload.status,
+        company_id: nCompanyId,
+        default_branch_id: nDefaultBranchId,
+        org_node_id: nOrgNodeId,
         tz: oPayload.tz || "UTC",
         user_code: cUserCode,
         created_at: formatDateSystem(),
