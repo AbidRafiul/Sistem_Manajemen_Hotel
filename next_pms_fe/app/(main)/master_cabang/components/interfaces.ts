@@ -19,6 +19,8 @@ export interface TableData {
     id?: number;
     cabang_id?: number;
     kode_cabang?: string;
+    org_node_id?: number | null;
+    nama_wilayah?: string;
     name: string;
     address?: string | null;
     telepon?: string | null;
@@ -33,6 +35,7 @@ export interface TableData {
 
 export interface initValue {
     kode_cabang?: string;
+    org_node_id?: number | null;
     name: string;
     address?: string;
     telepon?: string;

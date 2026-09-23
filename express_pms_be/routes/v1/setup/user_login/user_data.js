@@ -63,6 +63,10 @@ router.post("/", async (req, res) => {
 
     // Inisiasi Query Builder
     let oQuery = DB("mst_user as u")
+      .leftJoin("mst_cabang as c", "u.default_branch_id", "c.id")
+      .leftJoin("org_nodes as o", function () {
+        this.on("o.id", "=", DB.raw("COALESCE(u.org_node_id, c.org_node_id)"));
+      })
       .select(
         "u.id",
         "u.user_code",
@@ -72,6 +76,13 @@ router.post("/", async (req, res) => {
         "u.role",
         "u.status",
         "u.telp",
+        "u.default_branch_id",
+        "c.nama_hotel as nama_cabang",
+        "c.kode_cabang",
+        DB.raw("COALESCE(u.org_node_id, c.org_node_id) as org_node_id"),
+        DB.raw("COALESCE(o.name, 'Wilayah Jawa Timur') as nama_wilayah"),
+        "o.code as kode_wilayah",
+        "u.can_switch_branch",
         "u.tz",
         "u.created_at"
       );

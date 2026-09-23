@@ -31,6 +31,8 @@ export interface initValue {
     telp: string;
     status: '0' | '1';
     role: UserRole;
+    default_branch_id?: number | null;
+    org_node_id?: number | null;
 }
 
 export interface TableData {
@@ -40,6 +42,13 @@ export interface TableData {
     telp: string;
     status: '0' | '1';
     role: UserRole;
+    default_branch_id?: number | null;
+    nama_cabang?: string | null;
+    kode_cabang?: string | null;
+    org_node_id?: number | null;
+    nama_wilayah?: string | null;
+    kode_wilayah?: string | null;
+    can_switch_branch?: number;
     created_at: string | Date;
 }
 

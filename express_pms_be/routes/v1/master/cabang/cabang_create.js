@@ -39,6 +39,8 @@ router.post("/", async (req, res) => {
     await DB.transaction(async (trx) => {
       const cUniqueCode = await generateSequence("FMT-CABANG", trx);
       const dataToInsert = {
+        company_id: req?.auth?.company_id || 1,
+        org_node_id: oPayload.org_node_id || null,
         kode_cabang: cUniqueCode,
         nama_hotel: oPayload.name,
         alamat: oPayload.address || "",

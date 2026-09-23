@@ -123,6 +123,56 @@ router.post("/", async (req, res) => {
       updated_at: formatDateSystem(),
     };
 
+    // Best practice permission check for branch mutation (pindah tugas cabang):
+    const cUserRole = String(req?.auth?.role || "").toLowerCase();
+    const canMutateBranch = [
+      "superadmin",
+      "admin",
+      "corporate_manager",
+      "regional_manager",
+    ].includes(cUserRole);
+
+    let isBranchMutated = false;
+
+    if (oPayload.default_branch_id !== undefined) {
+      const newBranchId = oPayload.default_branch_id ? Number(oPayload.default_branch_id) : null;
+      if (
+        newBranchId &&
+        oDataBefore.default_branch_id &&
+        newBranchId !== oDataBefore.default_branch_id &&
+        !canMutateBranch
+      ) {
+        return res.status(403).json({
+          status: status.GAGAL,
+          message:
+            "Anda tidak memiliki wewenang untuk memindahkan/memutasikan cabang penugasan user. Hanya Corporate / Regional Manager yang dapat melakukan mutasi cabang.",
+          datetime: formatDateSystem(),
+        });
+      }
+
+      if (newBranchId !== oDataBefore.default_branch_id) {
+        isBranchMutated = true;
+      }
+
+      oData.default_branch_id = newBranchId;
+
+      // Sinkronisasi otomatis wilayah ke wilayah cabang baru
+      if (newBranchId) {
+        const oBranch = await DB("mst_cabang").where("id", newBranchId).select("org_node_id").first();
+        if (oBranch && oBranch.org_node_id) {
+          oData.org_node_id = Number(oBranch.org_node_id);
+        }
+      }
+    }
+
+    if (oPayload.org_node_id !== undefined && !oData.org_node_id) {
+      oData.org_node_id = oPayload.org_node_id ? Number(oPayload.org_node_id) : null;
+    }
+
+    if (oPayload.can_switch_branch !== undefined) {
+      oData.can_switch_branch = oPayload.can_switch_branch ? 1 : 0;
+    }
+
     // Logika enkripsi password jika dikirimkan oleh client
     if (oPayload.password) {
       const cPassword = process.env.USER_KEY + oPayload.user_code + oPayload.password;
@@ -151,7 +201,7 @@ router.post("/", async (req, res) => {
 
       await ChangesLog(
         {
-          description: "Update User",
+          description: isBranchMutated ? "Mutasi Cabang User" : "Update User",
           tableName: "mst_user",
           referenceCode: oPayload.user_code,
           action: "UPDATE",

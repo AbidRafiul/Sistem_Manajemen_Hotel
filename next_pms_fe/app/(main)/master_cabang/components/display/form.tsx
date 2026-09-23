@@ -9,12 +9,30 @@ import { Dropdown } from 'primereact/dropdown';
 import { apiEndpointCreate, apiEndpointDelete, apiEndpointGet, apiEndpointUpdate } from '../endpoints';
 import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDateSystem, getTzUser } from '@/lib/tools/dateTools';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Calendar } from 'primereact/calendar';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
+    const [wilayahOptions, setWilayahOptions] = useState<{ label: string; value: number }[]>([]);
+
+    useEffect(() => {
+        const loadWilayah = async () => {
+            try {
+                const res = await postData('/master/wilayah/wilayah-dropdown', {});
+                if (res?.data?.status === '00' && Array.isArray(res?.data?.data)) {
+                    setWilayahOptions(res.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to load wilayah options:', err);
+            }
+        };
+
+        if (state.add || state.edit) {
+            loadWilayah();
+        }
+    }, [state.add, state.edit]);
     const handleSave = async (input: initValue) => {
         setState((p) => ({ ...p, load: true }));
 
@@ -51,6 +69,7 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
 
             const oBody: Record<string, any> = {
                 name: input.name,
+                org_node_id: input.org_node_id || null,
                 address: input.address || '',
                 telepon: input.telepon || '',
                 check_in_time: checkInTimeStr,
@@ -180,6 +199,26 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                 className={isFormFieldInvalid('name') ? 'p-invalid w-full' : 'w-full'}
                             />
                             {getFormErrorMessage('name')}
+                        </div>
+
+                        {/* Wilayah / Regional */}
+                        <div className="flex flex-column gap-1 w-full">
+                            <label htmlFor="org_node_id" className="font-semibold text-sm">
+                                Wilayah / Regional
+                            </label>
+                            <Dropdown
+                                id="org_node_id"
+                                name="org_node_id"
+                                options={wilayahOptions}
+                                optionLabel="label"
+                                optionValue="value"
+                                value={formik?.values.org_node_id}
+                                onChange={(e) => formik?.setFieldValue('org_node_id', e.value)}
+                                placeholder="Pilih Wilayah / Regional"
+                                showClear
+                                className="w-full"
+                            />
+                            <small className="text-gray-500">Cabang akan dikelompokkan ke dalam wilayah ini untuk pelaporan hierarki.</small>
                         </div>
 
                         {/* Alamat */}

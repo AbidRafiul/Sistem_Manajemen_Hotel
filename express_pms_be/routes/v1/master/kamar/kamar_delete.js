@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
  * @file kamar_delete.js
@@ -15,6 +15,7 @@ import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
 import { Logging, ChangesLog, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
@@ -43,6 +44,9 @@ router.post("/", async (req, res) => {
         const e = new Error("Data tidak ditemukan");
         e.statusCode = 404;
         throw e;
+      }
+      for (const r of records) {
+        assertBranchScope(req, r.kode_cabang);
       }
       await trx("mst_kamar")
         .whereIn("kode_kamar", oPayload.kode_kamar)
@@ -76,6 +80,13 @@ router.post("/", async (req, res) => {
         datetime: formatDateSystem(),
       });
   } catch (error) {
+    if (error?.status === 403 || error?.statusCode === 403) {
+      return res.status(403).json({
+        status: status.BAD_REQUEST,
+        message: error.message,
+        datetime: formatDateSystem(),
+      });
+    }
     if (error.statusCode === 404)
       return res
         .status(404)

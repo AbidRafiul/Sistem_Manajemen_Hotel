@@ -9,6 +9,8 @@ export interface BranchInfo {
     alamat?: string;
     timezone?: string;
     is_active?: number;
+    org_node_id?: number | null;
+    nama_wilayah?: string | null;
 }
 
 declare module 'next-auth' {
@@ -24,6 +26,9 @@ declare module 'next-auth' {
         company_id?: number;
         company_name?: string;
         company_code?: string;
+        org_node_id?: number | null;
+        wilayah_name?: string;
+        wilayah_code?: string;
         default_branch_id?: number | string;
         default_kode_cabang?: string;
         default_branch_name?: string;
@@ -45,6 +50,9 @@ declare module 'next-auth' {
             company_id?: number;
             company_name?: string;
             company_code?: string;
+            org_node_id?: number | null;
+            wilayah_name?: string;
+            wilayah_code?: string;
             default_branch_id?: number | string;
             default_kode_cabang?: string;
             default_branch_name?: string;
@@ -77,6 +85,9 @@ declare module 'next-auth/jwt' {
         company_id?: number;
         company_name?: string;
         company_code?: string;
+        org_node_id?: number | null;
+        wilayah_name?: string;
+        wilayah_code?: string;
         default_branch_id?: number | string;
         default_kode_cabang?: string;
         default_branch_name?: string;

@@ -55,6 +55,7 @@ const Page = () => {
     const formik = useFormik<initValue>({
         initialValues: {
             name: '',
+            org_node_id: null,
             address: '',
             telepon: '',
             check_in_time: '14:00',

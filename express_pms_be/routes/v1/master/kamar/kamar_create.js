@@ -16,6 +16,7 @@ import DB from "../../../../core/config/knex.js";
 import { Logging, ChangesLog, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
@@ -53,6 +54,8 @@ router.post("/", async (req, res) => {
       return res
         .status(422)
         .json({ status: status.BAD_REQUEST, message: cValidation, datetime: formatDateSystem() });
+
+    assertBranchScope(req, oPayload.kode_cabang);
 
     let cUniqueCode = "";
     await DB.transaction(async (trx) => {
@@ -104,6 +107,13 @@ router.post("/", async (req, res) => {
         data: { kode_kamar: cUniqueCode },
       });
   } catch (error) {
+    if (error?.status === 403 || error?.statusCode === 403) {
+      return res.status(403).json({
+        status: status.BAD_REQUEST,
+        message: error.message,
+        datetime: formatDateSystem(),
+      });
+    }
     if (error.message === "DUPLICATE_CODE") {
       return res
         .status(400)

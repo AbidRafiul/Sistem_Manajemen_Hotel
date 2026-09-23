@@ -13,6 +13,12 @@ import express from "express";
 const router = express.Router();
 
 // Imports
+import wilayahData from "./wilayah/wilayah_data.js";
+import wilayahDropdown from "./wilayah/wilayah_dropdown.js";
+import wilayahCreate from "./wilayah/wilayah_create.js";
+import wilayahUpdate from "./wilayah/wilayah_update.js";
+import wilayahDelete from "./wilayah/wilayah_delete.js";
+
 import cabangData from "./cabang/cabang_data.js";
 import cabangCreate from "./cabang/cabang_create.js";
 import cabangUpdate from "./cabang/cabang_update.js";
@@ -116,6 +122,13 @@ import hargaRuangEventUpdate from "./harga_ruang_event/harga_ruang_event_update.
 import hargaRuangEventDelete from "./harga_ruang_event/harga_ruang_event_delete.js";
 
 // Routes
+// Master Wilayah
+router.use("/wilayah/wilayah-data", wilayahData);
+router.use("/wilayah/wilayah-dropdown", wilayahDropdown);
+router.use("/wilayah/wilayah-create", wilayahCreate);
+router.use("/wilayah/wilayah-update", wilayahUpdate);
+router.use("/wilayah/wilayah-delete", wilayahDelete);
+
 // Master Cabang
 router.use("/cabang/cabang-data", cabangData);
 router.use("/cabang/cabang-create", cabangCreate);

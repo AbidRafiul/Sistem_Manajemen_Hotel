@@ -48,7 +48,16 @@ router.post("/", async (req, res) => {
     }
 
     // 1. Validasi hak berpindah cabang
-    if (!req.auth?.can_switch_branch) {
+    const roleLower = (req.auth?.role || "").toLowerCase();
+    const isManagerOrAdmin = [
+      "superadmin",
+      "admin",
+      "master",
+      "corporate_manager",
+      "regional_manager",
+    ].includes(roleLower);
+
+    if (!req.auth?.can_switch_branch && !isManagerOrAdmin) {
       return res.status(403).json({
         status: status.BAD_REQUEST,
         message: "Akses ditolak: User Anda tidak memiliki izin untuk berpindah cabang.",
