@@ -14,6 +14,7 @@ import DB from "../../../../core/config/knex.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { status } from "../../components/tools/general.js";
+import { resolveEffectiveBranch } from "../../components/tools/scope_helper.js";
 const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
@@ -34,16 +35,20 @@ router.post("/", async (req, res) => {
     : "updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
   try {
-    // if (!oPayload.kode_cabang) {
-    //     return res.status(400).json({ status: status.BAD_REQUEST, message: "kode_cabang wajib dikirim", datetime: formatDateSystem() });
-    // }
+    const effectiveBranch = resolveEffectiveBranch(req, oPayload.kode_cabang);
+    const targetKodeCabang = effectiveBranch?.kodeCabang || "";
+
     const baseQuery = DB("mst_kamar as r")
       .join("mst_cabang as h", "r.kode_cabang", "h.kode_cabang")
       .join("mst_lantai as f", "r.kode_lantai", "f.kode_lantai")
       .join("mst_tipe_kamar as rt", "r.kode_tipe_kamar", "rt.kode_tipe_kamar")
       .whereNull("r.deleted_at")
       .modify((qb) => {
-        if (oPayload.kode_cabang) qb.where("r.kode_cabang", oPayload.kode_cabang);
+        if (targetKodeCabang) {
+          qb.where("r.kode_cabang", targetKodeCabang);
+        } else {
+          qb.whereRaw("1 = 0");
+        }
         if (oPayload.kode_lantai) qb.where("r.kode_lantai", oPayload.kode_lantai);
         if (oPayload.kode_tipe_kamar) qb.where("r.kode_tipe_kamar", oPayload.kode_tipe_kamar);
         if (keyword)
@@ -111,6 +116,13 @@ router.post("/", async (req, res) => {
         total_data: totalRecords,
       });
   } catch (error) {
+    if (error?.status === 403 || error?.statusCode === 403) {
+      return res.status(403).json({
+        status: status.BAD_REQUEST,
+        message: error.message,
+        datetime: formatDateSystem(),
+      });
+    }
     const oResult = {
       status: status.BAD_REQUEST,
       message: "Sistem sedang maintenance harap tunggu sebentar",

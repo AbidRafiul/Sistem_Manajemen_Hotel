@@ -15,6 +15,7 @@ import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
 import { Logging, ChangesLog, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { assertBranchScope } from "../../components/tools/scope_helper.js";
 const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
@@ -58,6 +59,9 @@ router.post("/", async (req, res) => {
           message: "Data tidak ditemukan",
           datetime: formatDateSystem(),
         });
+
+    assertBranchScope(req, oPayload.kode_cabang);
+    assertBranchScope(req, existing.kode_cabang);
     const oData = {
       kode_cabang: oPayload.kode_cabang,
       kode_gedung: oPayload.kode_gedung !== undefined ? oPayload.kode_gedung : existing.kode_gedung,
@@ -95,6 +99,13 @@ router.post("/", async (req, res) => {
         datetime: formatDateSystem(),
       });
   } catch (error) {
+    if (error?.status === 403 || error?.statusCode === 403) {
+      return res.status(403).json({
+        status: status.BAD_REQUEST,
+        message: error.message,
+        datetime: formatDateSystem(),
+      });
+    }
     const oResult = {
       status: status.BAD_REQUEST,
       message: "Sistem sedang maintenance harap tunggu sebentar",
