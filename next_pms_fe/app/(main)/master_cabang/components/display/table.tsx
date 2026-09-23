@@ -76,6 +76,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
 
                     formik.setValues({
                         kode_cabang: rowData.kode_cabang || '',
+                        org_node_id: rowData.org_node_id || null,
                         name: rowData.name || '',
                         address: rowData.address || '',
                         telepon: rowData.telepon || '',

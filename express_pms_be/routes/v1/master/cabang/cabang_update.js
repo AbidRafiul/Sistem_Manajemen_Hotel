@@ -52,6 +52,7 @@ router.post("/", async (req, res) => {
     await DB.transaction(async (trx) => {
       const dataToUpdate = {
         nama_hotel: oPayload.name,
+        org_node_id: oPayload.org_node_id !== undefined ? oPayload.org_node_id : existing.org_node_id,
         alamat: oPayload.address || "",
         telepon: oPayload.telepon || null,
         waktu_checkin: oPayload.check_in_time || "14:00:00",

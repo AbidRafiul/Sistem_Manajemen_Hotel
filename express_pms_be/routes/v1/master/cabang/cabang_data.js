@@ -20,6 +20,7 @@ router.post("/", async (req, res) => {
 
   try {
     const baseQuery = DB("mst_cabang as b")
+      .leftJoin("org_nodes as o", "b.org_node_id", "o.id")
       .whereNull("b.deleted_at")
       .modify((qb) => {
         if (keyword)
@@ -33,6 +34,10 @@ router.post("/", async (req, res) => {
 
     const selectFields = [
       "b.id",
+      "b.company_id",
+      "b.org_node_id",
+      "o.name as nama_wilayah",
+      "o.code as kode_wilayah",
       "b.kode_cabang",
       "b.nama_hotel as name",
       "b.alamat as address",
