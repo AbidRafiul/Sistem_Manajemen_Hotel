@@ -14,6 +14,7 @@ import DB from "../../../../core/config/knex.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { status } from "../../components/tools/general.js";
+import { resolveEffectiveBranch } from "../../components/tools/scope_helper.js";
 const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
@@ -27,12 +28,19 @@ router.post("/", async (req, res) => {
     : "updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
   try {
+    const effectiveBranch = resolveEffectiveBranch(req, oPayload.kode_cabang);
+    const targetKodeCabang = effectiveBranch?.kodeCabang || "";
+
     const baseQuery = DB("mst_tipe_kamar as rt")
       .join("mst_cabang as h", "rt.kode_cabang", "h.kode_cabang")
       .leftJoin("mst_bed_type as bt", "rt.kode_bed_type", "bt.kode_bed_type")
       .whereNull("rt.deleted_at")
       .modify((qb) => {
-        if (oPayload.kode_cabang) qb.where("rt.kode_cabang", oPayload.kode_cabang);
+        if (targetKodeCabang) {
+          qb.where("rt.kode_cabang", targetKodeCabang);
+        } else {
+          qb.whereRaw("1 = 0");
+        }
         if (keyword)
           qb.where(function () {
             this.whereRaw("LOWER(rt.nama_tipe) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw(
@@ -88,6 +96,13 @@ router.post("/", async (req, res) => {
         total_data: totalRecords,
       });
   } catch (error) {
+    if (error?.status === 403 || error?.statusCode === 403) {
+      return res.status(403).json({
+        status: status.BAD_REQUEST,
+        message: error.message,
+        datetime: formatDateSystem(),
+      });
+    }
     const oResult = {
       status: status.BAD_REQUEST,
       message: "Sistem sedang maintenance harap tunggu sebentar",
