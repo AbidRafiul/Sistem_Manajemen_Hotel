@@ -65,8 +65,9 @@ const ItemDialog = ({ visible, title, initialData, onHide, onSave }: ItemDialogP
             onShow={handleOpen}
             onHide={onHide}
             modal
-            style={{ width: '100%', maxWidth: '460px' }}
-            breakpoints={{ '641px': '90vw' }}
+            className="menu-item-dialog"
+            style={{ width: '450px' }}
+            breakpoints={{ '641px': '92vw' }}
             footer={footer}
         >
             <div className="flex flex-column gap-3 pt-2">
@@ -239,16 +240,16 @@ const MenuBuilder = ({ menu, onChange }: MenuBuilderProps) => {
 
     const nodeTemplate = (node: TreeNode, options: any) => {
         return (
-            <div className="flex align-items-center justify-content-between w-full" style={{ minWidth: '100%' }}>
-                <div className="flex align-items-center gap-2">
-                    <span className="font-medium text-sm">{node.label}</span>
+            <div className="flex align-items-center justify-content-between gap-3 py-1 w-full">
+                <div className="flex align-items-center gap-2 flex-wrap min-w-0">
+                    <span className="font-semibold text-sm text-800">{node.label}</span>
                     {node.data && (
-                        <code className="text-xs text-color-secondary ml-2 border-1 border-300 p-1 border-round surface-100" style={{ fontFamily: 'monospace' }}>
+                        <code className="text-xs text-500 border-1 border-300 px-2 py-1 border-round surface-100" style={{ fontFamily: 'monospace' }}>
                             {node.data}
                         </code>
                     )}
                 </div>
-                <div className="flex align-items-center ml-4 gap-1">
+                <div className="flex align-items-center gap-1 border-1 border-200 border-round-xl px-1 surface-50 shadow-none ml-auto flex-shrink-0">
                     <Button
                         icon="pi pi-plus"
                         text
@@ -257,7 +258,7 @@ const MenuBuilder = ({ menu, onChange }: MenuBuilderProps) => {
                         severity="success"
                         tooltip="Tambah Submenu"
                         tooltipOptions={{ position: 'top' }}
-                        className="p-0 h-2rem w-2rem"
+                        className="p-0 h-2rem w-2rem text-green-600 hover:surface-200"
                         type="button"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -272,7 +273,7 @@ const MenuBuilder = ({ menu, onChange }: MenuBuilderProps) => {
                         severity="info"
                         tooltip="Edit"
                         tooltipOptions={{ position: 'top' }}
-                        className="p-0 h-2rem w-2rem"
+                        className="p-0 h-2rem w-2rem text-blue-600 hover:surface-200"
                         type="button"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -291,7 +292,7 @@ const MenuBuilder = ({ menu, onChange }: MenuBuilderProps) => {
                         severity="danger"
                         tooltip="Hapus"
                         tooltipOptions={{ position: 'top' }}
-                        className="p-0 h-2rem w-2rem"
+                        className="p-0 h-2rem w-2rem text-red-500 hover:surface-200"
                         type="button"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -319,12 +320,26 @@ const MenuBuilder = ({ menu, onChange }: MenuBuilderProps) => {
                     padding-left: 0.85rem;
                 }
                 .custom-menu-tree .p-treenode-content {
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
                     padding-top: 0.5rem;
                     padding-bottom: 0.5rem;
                     border-radius: 6px;
                 }
                 .custom-menu-tree .p-treenode-content:hover {
                     background: var(--surface-100);
+                }
+                .custom-menu-tree .p-treenode-label {
+                    flex: 1 1 auto;
+                    width: 100%;
+                    min-width: 0;
+                    margin: 0;
+                    padding: 0 0.5rem;
+                }
+                .menu-item-dialog {
+                    width: 450px !important;
+                    max-width: 92vw !important;
                 }
                 `
             }} />

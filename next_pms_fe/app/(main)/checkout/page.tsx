@@ -929,9 +929,10 @@ const CheckoutPage = () => {
                 footer={
                     <div className="flex justify-content-end gap-2">
                         <Button
-                            label="Lihat / Cetak Invoice"
+                            label="Cetak Struk Checkout (Thermal)"
                             icon="pi pi-print"
                             severity="success"
+                            className="font-bold shadow-2"
                             onClick={() => {
                                 setSuccessDialogVisible(false);
                                 setInvoiceModalVisible(true);
@@ -1001,6 +1002,7 @@ const CheckoutPage = () => {
                 onHide={() => setInvoiceModalVisible(false)}
                 kodeFolio={activeInvoiceFolio}
                 invoiceNumber={activeInvoiceNumber}
+                autoPrint={true}
             />
         </div>
     );

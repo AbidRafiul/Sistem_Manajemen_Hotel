@@ -43,13 +43,23 @@ async function runAll() {
     console.log("  ✅ Navigasi menu tersinkronisasi untuk seluruh role dan user");
 
     // 4. Jalankan Master Data & Demo Transaksi Seluruh Menu
-    console.log("\n▶ [LANGKAH 4/4] Memuat Master Data & Demo Transaksi Seluruh Halaman...");
+    console.log("\n▶ [LANGKAH 4/5] Memuat Master Data & Demo Transaksi Seluruh Halaman...");
     const { seed: seedMaster } = await import("../seeds/master_data_seeder.js");
     await seedMaster(db);
 
+    // 5. Jalankan Master Wilayah (Regions)
+    console.log("\n▶ [LANGKAH 5/6] Memuat Data Master Wilayah (Regions)...");
+    const { seed: seedWilayah } = await import("../seeds/seed_master_wilayah.js");
+    await seedWilayah(db);
+
+    // 6. Jalankan Multi-Branch Enterprise Hierarchy & User Scopes
+    console.log("\n▶ [LANGKAH 6/6] Menyiapkan Multi-Branch Enterprise Hierarchy & User Scope Permissions...");
+    const { seed: seedHierarchy } = await import("../seeds/multi_branch_hierarchy_migration.js");
+    await seedHierarchy(db);
+
     console.log("================================================================");
     console.log("  🎉 SETUP DATABASE SELESAI!");
-    console.log("  Semua menu, master data, dan transaksi demo siap dipresentasikan.");
+    console.log("  Semua menu, master data, multi-branch scope, dan transaksi demo siap.");
     console.log("================================================================\n");
 
     await db.destroy();

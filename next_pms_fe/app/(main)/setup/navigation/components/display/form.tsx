@@ -153,8 +153,8 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                 visible={state.add || state.edit}
                 header={state.edit ? `Edit Navigasi — ${state.selectedData?.role || ''}` : 'Tambah Navigasi Baru'}
                 modal
-                style={{ width: '100%', maxWidth: '640px' }}
-                breakpoints={{ '769px': '95vw' }}
+                style={{ width: '720px' }}
+                breakpoints={{ '960px': '85vw', '641px': '95vw' }}
                 onHide={() => {
                     setState((p) => ({ ...p, add: false, edit: false, delete: false }));
                     formik?.resetForm();

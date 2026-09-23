@@ -125,6 +125,7 @@ export async function seedHotelEnterpriseUsers() {
                 label: "Data Master Hotel",
                 icon: "pi pi-fw pi-building",
                 items: [
+                  { label: "Master Wilayah", icon: "pi pi-fw pi-map", to: "/master_wilayah" },
                   { label: "Master Cabang", icon: "pi pi-fw pi-building", to: "/master_cabang" },
                   { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
                   { label: "Master Lantai", icon: "pi pi-fw pi-bars", to: "/master_lantai" },
@@ -188,6 +189,7 @@ export async function seedHotelEnterpriseUsers() {
             label: "Master Data Hotel",
             icon: "pi pi-fw pi-building",
             items: [
+              { label: "Master Wilayah", icon: "pi pi-fw pi-map", to: "/master_wilayah" },
               { label: "Master Cabang", icon: "pi pi-fw pi-building", to: "/master_cabang" },
               { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
               { label: "Master Kamar", icon: "pi pi-fw pi-home", to: "/master_kamar" },
@@ -215,6 +217,7 @@ export async function seedHotelEnterpriseUsers() {
             label: "Informasi Properti",
             icon: "pi pi-fw pi-building",
             items: [
+              { label: "Master Wilayah", icon: "pi pi-fw pi-map", to: "/master_wilayah" },
               { label: "Master Gedung", icon: "pi pi-fw pi-th-large", to: "/master_gedung" },
               { label: "Master Kamar", icon: "pi pi-fw pi-home", to: "/master_kamar" },
             ],

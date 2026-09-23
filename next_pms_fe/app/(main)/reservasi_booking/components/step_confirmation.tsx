@@ -163,9 +163,10 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                 {/* Action Buttons */}
                 <div className="flex justify-content-center align-items-center gap-2 flex-wrap">
                     <Button 
-                        label="Lihat & Cetak Invoice" 
+                        label={isSettled ? "Cetak Struk Thermal (Lunas)" : totalPaid > 0 ? "Cetak Bukti DP (Thermal)" : "Cetak Dokumen Reservasi"} 
                         icon="pi pi-print" 
-                        className="p-button-primary font-semibold"
+                        severity="success"
+                        className="font-bold shadow-2"
                         onClick={() => setShowInvoice(true)} 
                     />
                     <Button 
@@ -190,6 +191,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                     onHide={() => setShowInvoice(false)}
                     kode_folio={sub.kode_folio}
                     kode_reservation={sub.kode_reservasi}
+                    autoPrint={isSettled}
                 />
             </div>
         );
