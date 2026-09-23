@@ -149,4 +149,21 @@ export interface FormPropsGlobal {
 }
 
 export type TZKey = 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura' | 'UTC';
-export type UserRole = 'superadmin' | 'admin' | 'employee' | 'technician' | 'manager' | 'logistics';
+
+export type UserRole =
+    | 'superadmin'
+    | 'admin'
+    | 'master'
+    | 'corporate_manager'
+    | 'regional_manager'
+    | 'branch_manager'
+    | 'frontdesk'
+    | 'receptionist'
+    | 'kasir'
+    | 'housekeeping'
+    | 'auditor'
+    | 'employee'
+    | 'technician'
+    | 'manager'
+    | 'logistics'
+    | string;
