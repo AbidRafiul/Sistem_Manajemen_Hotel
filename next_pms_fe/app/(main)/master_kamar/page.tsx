@@ -78,7 +78,12 @@ const Page = () => {
         }
     });
 
-    const getData = async (apiEndpoint: string) => {
+    const getData = async (apiEndpoint: string, branchCode?: string) => {
+        const activeCabang = branchCode || state.kode_cabang || session?.user?.active_kode_cabang;
+        if (!activeCabang) {
+            return;
+        }
+
         setState((p) => ({ ...p, load: true }));
         try {
             const oPayload = {
@@ -87,19 +92,15 @@ const Page = () => {
                 keyword: state.keyword,
                 sortField: state.sortField || 'updated_at',
                 sortOrder: state.sortOrder || 'desc',
-                kode_cabang: state.kode_cabang
+                kode_cabang: activeCabang
             };
-
-            // if (!state.kode_cabang) {
-            //     setState((p) => ({ ...p, load: false, data: [], totalData: 0 }));
-            //     return;
-            // }
 
             const res = await postData(apiEndpoint, oPayload);
             setState((p) => ({
                 ...p,
                 data: res.data.data,
-                totalData: res.data.total_data
+                totalData: res.data.total_data,
+                kode_cabang: activeCabang
             }));
         } catch (error: any) {
             const e = error?.response?.data || error;
@@ -110,19 +111,20 @@ const Page = () => {
     };
 
     const getPrintData = async (apiEndpoint: string) => {
+        const activeCabang = state.kode_cabang || session?.user?.active_kode_cabang;
+        if (!activeCabang) {
+            showError(toast, 'Cabang aktif belum terdeteksi');
+            return;
+        }
+
         setDataRekap((p) => ({ ...p, load: true }));
         try {
             const oPayload = {
                 keyword: state.keyword,
                 sortField: state.sortField || 'updated_at',
                 sortOrder: state.sortOrder || 'desc',
-                kode_cabang: state.kode_cabang
+                kode_cabang: activeCabang
             };
-
-            // if (!state.kode_cabang) {
-            //     setDataRekap((p) => ({ ...p, load: false }));
-            //     return;
-            // }
 
             const res = await postData(apiEndpoint, oPayload);
 
@@ -174,25 +176,30 @@ const Page = () => {
     };
 
     useEffect(() => {
-        getData(apiEndpointGet);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword, state.kode_cabang]);
-
-    useEffect(() => {
-        if (session?.user?.active_kode_cabang) {
+        const currentActiveCabang = session?.user?.active_kode_cabang;
+        if (currentActiveCabang && currentActiveCabang !== state.kode_cabang) {
             setState((prev) => ({
                 ...prev,
                 session: session,
-                kode_cabang: session.user.active_kode_cabang || ''
+                kode_cabang: currentActiveCabang,
+                page: 1,
+                first: 0
             }));
-            formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
-        } else if (session) {
+            formik.setFieldValue('kode_cabang', currentActiveCabang);
+        } else if (session && !state.session) {
             setState((prev) => ({
                 ...prev,
                 session: session
             }));
         }
     }, [session?.user?.active_kode_cabang, session]);
+
+    useEffect(() => {
+        if (state.kode_cabang) {
+            getData(apiEndpointGet, state.kode_cabang);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword, state.kode_cabang]);
 
     return (
         <>

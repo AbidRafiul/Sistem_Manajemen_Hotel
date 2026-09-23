@@ -23,22 +23,22 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
             setCabangList(res.data.data);
         } catch (error) { console.error(error); }
     };
-    const fetchLantai = async (keyword = '') => {
+    const fetchLantai = async (keyword = '', branch = formik?.values?.kode_cabang || state.kode_cabang) => {
         try {
-            const res = await postData('/master/lantai/lantai-data', { perPage: 50, keyword });
+            const res = await postData('/master/lantai/lantai-data', { perPage: 50, keyword, kode_cabang: branch });
             setLantaiList(res.data.data);
         } catch (error) { console.error(error); }
     };
-    const fetchTipeKamar = async (keyword = '') => {
+    const fetchTipeKamar = async (keyword = '', branch = formik?.values?.kode_cabang || state.kode_cabang) => {
         try {
-            const res = await postData('/master/tipe-kamar/tipe-kamar-data', { perPage: 50, keyword });
+            const res = await postData('/master/tipe-kamar/tipe-kamar-data', { perPage: 50, keyword, kode_cabang: branch });
             setTipeKamarList(res.data.data);
         } catch (error) { console.error(error); }
     };
 
     const handleFilterHotel = (e: any) => fetchCabang(e.filter);
-    const handleFilterLantai = (e: any) => fetchLantai(e.filter);
-    const handleFilterTipeKamar = (e: any) => fetchTipeKamar(e.filter);
+    const handleFilterLantai = (e: any) => fetchLantai(e.filter, formik?.values?.kode_cabang || state.kode_cabang);
+    const handleFilterTipeKamar = (e: any) => fetchTipeKamar(e.filter, formik?.values?.kode_cabang || state.kode_cabang);
     const handleSave = async (input: initValue) => {
         setState((p) => ({ ...p, load: true }));
 
@@ -136,9 +136,21 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
 
     useEffect(() => {
         fetchCabang();
-        fetchLantai();
-        fetchTipeKamar();
     }, []);
+
+    useEffect(() => {
+        const activeBranch = formik?.values?.kode_cabang || state.kode_cabang;
+        if (activeBranch) {
+            fetchLantai('', activeBranch);
+            fetchTipeKamar('', activeBranch);
+        }
+    }, [formik?.values?.kode_cabang, state.kode_cabang]);
+
+    useEffect(() => {
+        if ((state.add || state.edit) && !formik?.values.kode_cabang && state.kode_cabang) {
+            formik.setFieldValue('kode_cabang', state.kode_cabang);
+        }
+    }, [state.add, state.edit, state.kode_cabang]);
 
     return (
         <>
@@ -169,7 +181,15 @@ const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
                                     options={cabangList}
                                     optionLabel="name"
                                     optionValue="kode_cabang"
-                                    onChange={formik?.handleChange}
+                                    onChange={(e) => {
+                                        formik?.handleChange(e);
+                                        formik?.setFieldValue('kode_lantai', '');
+                                        formik?.setFieldValue('kode_tipe_kamar', '');
+                                        if (e.value) {
+                                            fetchLantai('', e.value);
+                                            fetchTipeKamar('', e.value);
+                                        }
+                                    }}
                                     placeholder="-- Pilih Cabang --"
                                     filter
                                     onFilter={handleFilterHotel}
