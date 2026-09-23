@@ -15,7 +15,12 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
     if (!data) return null;
 
     const { invoice_number, issued_at, hotel = {}, guest = {}, reservation = {}, summary = {}, breakdown = {} } = data;
-    const isSettled = summary.is_settled ?? false;
+    const isSettled = summary.is_settled ?? ((summary.balance ?? 1) <= 0);
+
+    const rooms = data.rooms || breakdown.rooms || [];
+    const charges = data.charges || breakdown.charges || [];
+    const taxDetails = data.tax_breakdown || breakdown.tax_details || [];
+    const payments = data.payments || breakdown.payments || [];
 
     return (
         <div ref={ref} className="p-5 text-gray-900 bg-white" style={{ fontFamily: 'monospace', fontSize: '12px', minWidth: '750px' }}>
@@ -94,37 +99,45 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
                 </thead>
                 <tbody>
                     {/* Baris Kamar */}
-                    {(breakdown.rooms || []).map((rm: any, idx: number) => (
-                        <tr key={`rm-${idx}`} className="border-bottom-1 border-100 text-xs">
-                            <td className="py-2 text-center">{idx + 1}</td>
-                            <td className="py-2">
-                                <span className="font-bold">Sewa Kamar {rm.nomor_kamar}</span>
-                                <span className="text-gray-500 block">Tipe: {rm.nama_tipe || '-'}</span>
-                            </td>
-                            <td className="py-2 text-center">{summary.nights || 1} Malam</td>
-                            <td className="py-2 text-right">{formatCurrency(rm.rate_per_night)}</td>
-                            <td className="py-2 text-right font-bold">{formatCurrency(rm.subtotal || rm.rate_per_night)}</td>
-                        </tr>
-                    ))}
+                    {rooms.map((rm: any, idx: number) => {
+                        const roomNights = rm.nights || summary.nights || 1;
+                        const roomRate = rm.rate_per_night || 0;
+                        const roomSubtotal = rm.subtotal || (roomRate * roomNights);
 
-                    {/* Baris Layanan Tambahan */}
-                    {(breakdown.charges || []).map((ch: any, idx: number) => {
-                        const noStart = (breakdown.rooms || []).length;
                         return (
-                            <tr key={`ch-${idx}`} className="border-bottom-1 border-100 text-xs">
-                                <td className="py-2 text-center">{noStart + idx + 1}</td>
+                            <tr key={`rm-${idx}`} className="border-bottom-1 border-100 text-xs">
+                                <td className="py-2 text-center">{idx + 1}</td>
                                 <td className="py-2">
-                                    <span className="font-semibold">{ch.nama_charge}</span>
-                                    {ch.keterangan && <span className="text-gray-500 block">{ch.keterangan}</span>}
+                                    <span className="font-bold">Sewa Kamar {rm.nomor_kamar || rm.kode_kamar}</span>
+                                    <span className="text-gray-500 block">Tipe: {rm.nama_tipe_kamar || rm.nama_tipe || '-'}</span>
                                 </td>
-                                <td className="py-2 text-center">{ch.qty}</td>
-                                <td className="py-2 text-right">{formatCurrency(ch.unit_price)}</td>
-                                <td className="py-2 text-right font-bold">{formatCurrency(ch.total_amount)}</td>
+                                <td className="py-2 text-center">{roomNights} Malam</td>
+                                <td className="py-2 text-right">{formatCurrency(roomRate)}</td>
+                                <td className="py-2 text-right font-bold">{formatCurrency(roomSubtotal)}</td>
                             </tr>
                         );
                     })}
 
-                    {(!breakdown.rooms || breakdown.rooms.length === 0) && (!breakdown.charges || breakdown.charges.length === 0) && (
+                    {/* Baris Layanan Tambahan */}
+                    {charges.map((ch: any, idx: number) => {
+                        const noStart = rooms.length;
+                        return (
+                            <tr key={`ch-${idx}`} className="border-bottom-1 border-100 text-xs">
+                                <td className="py-2 text-center">{noStart + idx + 1}</td>
+                                <td className="py-2">
+                                    <span className="font-semibold">{ch.nama_charge || ch.charge_name}</span>
+                                    {(ch.keterangan || ch.description) && (
+                                        <span className="text-gray-500 block">{ch.keterangan || ch.description}</span>
+                                    )}
+                                </td>
+                                <td className="py-2 text-center">{ch.qty || 1}</td>
+                                <td className="py-2 text-right">{formatCurrency(ch.unit_price || ch.amount)}</td>
+                                <td className="py-2 text-right font-bold">{formatCurrency(ch.total_amount || ch.amount)}</td>
+                            </tr>
+                        );
+                    })}
+
+                    {rooms.length === 0 && charges.length === 0 && (
                         <tr>
                             <td colSpan={5} className="py-3 text-center text-gray-500">
                                 Tidak ada rincian transaksi tagihan.
@@ -144,10 +157,10 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
                         </div>
 
                         {/* Breakdown Pajak Resmi */}
-                        {(breakdown.tax_details || []).map((tx: any, idx: number) => (
+                        {taxDetails.map((tx: any, idx: number) => (
                             <div key={`tx-${idx}`} className="flex justify-content-between py-1 text-gray-600">
-                                <span>{tx.tax_name} ({tx.tax_rate}%):</span>
-                                <span>+ {formatCurrency(tx.tax_amount)}</span>
+                                <span>{tx.name || tx.tax_name} ({tx.percentage || tx.tax_rate}%):</span>
+                                <span>+ {formatCurrency(tx.amount || tx.tax_amount)}</span>
                             </div>
                         ))}
 
@@ -157,7 +170,7 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
                         </div>
 
                         {/* Pembayaran Masuk */}
-                        {(breakdown.payments || []).map((p: any, idx: number) => (
+                        {payments.map((p: any, idx: number) => (
                             <div key={`p-${idx}`} className="flex justify-content-between py-1 text-green-700">
                                 <span>
                                     Bayar ({String(p.payment_method).toUpperCase()}
