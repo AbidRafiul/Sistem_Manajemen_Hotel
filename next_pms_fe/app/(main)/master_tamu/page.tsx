@@ -47,7 +47,8 @@ export default function MasterTamuPage() {
     initialValues: initValueForm,
     validate: (values) => {
       const errors: Record<string, string> = {};
-      if (!values.kode_cabang) errors.kode_cabang = 'Cabang hotel wajib dipilih';
+      const activeCabang = values.kode_cabang || session?.user?.active_kode_cabang;
+      if (!activeCabang) errors.kode_cabang = 'Cabang hotel wajib dipilih';
       if (!values.full_name || !values.full_name.trim()) errors.full_name = 'Nama lengkap wajib diisi';
       if (!values.id_number || !values.id_number.trim()) errors.id_number = 'Nomor identitas wajib diisi';
       if (!values.phone || !values.phone.trim()) errors.phone = 'Nomor telepon wajib diisi';
@@ -55,6 +56,12 @@ export default function MasterTamuPage() {
     },
     onSubmit: () => {}
   });
+
+  useEffect(() => {
+    if (session?.user?.active_kode_cabang && !formik.values.kode_cabang) {
+      formik.setFieldValue('kode_cabang', session.user.active_kode_cabang);
+    }
+  }, [session?.user?.active_kode_cabang]);
 
   const getData = async () => {
     setState((p) => ({ ...p, load: true }));
