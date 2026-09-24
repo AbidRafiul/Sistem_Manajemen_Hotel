@@ -10,6 +10,7 @@ import { InputIcon } from 'primereact/inputicon';
 import { Tag } from 'primereact/tag';
 import { Dropdown } from 'primereact/dropdown';
 import { useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { GuestData, State } from '../interfaces';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
@@ -25,6 +26,7 @@ interface TableProps {
 }
 
 export default function Table({ state, setState, getData, getPrintData, onLazyLoad, formik }: TableProps) {
+  const { data: session } = useSession();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const guestTypeOptions = [
@@ -227,6 +229,10 @@ export default function Table({ state, setState, getData, getPrintData, onLazyLo
             severity="success"
             onClick={() => {
               formik.resetForm();
+              const activeCabang = session?.user?.active_kode_cabang || session?.user?.default_kode_cabang || '';
+              if (activeCabang) {
+                formik.setFieldValue('kode_cabang', activeCabang);
+              }
               setState((p) => ({ ...p, selectedDatas: [], add: true, edit: false }));
             }}
           />
