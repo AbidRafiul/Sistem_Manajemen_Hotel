@@ -214,10 +214,15 @@ export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode
     guest: {
       kode_tamu: folioInfo.kode_tamu,
       full_name: folioInfo.guest_name || "-",
+      guest_name: folioInfo.guest_name || "-",
       phone: folioInfo.guest_phone || "-",
+      guest_phone: folioInfo.guest_phone || "-",
       email: folioInfo.guest_email || "-",
+      guest_email: folioInfo.guest_email || "-",
       id_type: folioInfo.guest_id_type || "-",
-      id_number: folioInfo.guest_id_number || "-"
+      guest_id_type: folioInfo.guest_id_type || "-",
+      id_number: folioInfo.guest_id_number || "-",
+      guest_id_number: folioInfo.guest_id_number || "-"
     },
     rooms,
     charges,

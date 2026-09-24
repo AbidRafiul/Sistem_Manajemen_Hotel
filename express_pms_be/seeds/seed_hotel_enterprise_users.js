@@ -15,7 +15,7 @@ import { hmac } from "../routes/v1/components/tools/encrypt_tools.js";
 
 export async function seedHotelEnterpriseUsers() {
   console.log("===============================================================");
-  console.log("🏨 SEEDING ENTERPRISE HOTEL ROLES, PERMISSIONS & USERS");
+  console.log(" SEEDING ENTERPRISE HOTEL ROLES, PERMISSIONS & USERS");
   console.log("===============================================================");
 
   const trx = await DB.transaction();
@@ -619,6 +619,10 @@ export async function seedHotelEnterpriseUsers() {
     console.error("❌ Seeding failed:", error);
     throw error;
   }
+}
+
+export async function seed(knex) {
+  return seedHotelEnterpriseUsers();
 }
 
 // Run direct execution if called as a script
