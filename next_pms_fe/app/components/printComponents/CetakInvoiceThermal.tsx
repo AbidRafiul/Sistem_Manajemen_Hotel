@@ -35,9 +35,9 @@ export const CetakInvoiceThermal = React.forwardRef<HTMLDivElement, CetakInvoice
 
         const isSettled = summary.is_settled ?? ((summary.balance ?? 1) <= 0);
         const nights = summary.nights || 1;
-        const guestName = guest.full_name || guest.guest_name || '-';
-        const guestPhone = guest.phone || guest.guest_phone || '';
-        const folioCode = summary.kode_folio || data.folio?.kode_folio || '-';
+        const guestName = guest.full_name || guest.guest_name || guest.nama_tamu || '-';
+        const guestPhone = guest.phone || guest.guest_phone || guest.no_hp || '';
+        const folioCode = summary.kode_folio || data.kode_folio || '-';
         const resvCode = reservation.kode_reservasi || '-';
 
         return (
@@ -143,7 +143,7 @@ export const CetakInvoiceThermal = React.forwardRef<HTMLDivElement, CetakInvoice
                         <span>Nama Tamu</span>
                         <span style={{ fontWeight: 'bold', textAlign: 'right' }}>{guestName}</span>
                     </div>
-                    {guestPhone && (
+                    {guestPhone && guestPhone !== '-' && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span>No. Telepon</span>
                             <span>{guestPhone}</span>
@@ -203,17 +203,20 @@ export const CetakInvoiceThermal = React.forwardRef<HTMLDivElement, CetakInvoice
                     })}
 
                     {/* Layanan Tambahan / Extra Charge */}
-                    {charges.map((ch: any, idx: number) => (
-                        <div key={`ch-${idx}`} style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                            <div style={{ fontWeight: 'bold' }}>
-                                {ch.nama_charge || ch.charge_name || 'Layanan Tambahan'}
+                    {charges.map((ch: any, idx: number) => {
+                        const itemTitle = ch.nama_charge || ch.charge_name || ch.item_name || ch.deskripsi || ch.keterangan || (ch.charge_type ? `Charge: ${ch.charge_type}` : 'Layanan Tambahan');
+                        return (
+                            <div key={`ch-${idx}`} style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                <div style={{ fontWeight: 'bold' }}>
+                                    {itemTitle}
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '8px' }}>
+                                    <span>{ch.qty || 1}x @ {formatCurrency(ch.unit_price || ch.amount)}</span>
+                                    <span style={{ fontWeight: 'bold' }}>{formatCurrency(ch.total_amount || ch.amount)}</span>
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '8px' }}>
-                                <span>{ch.qty || 1}x @ {formatCurrency(ch.unit_price || ch.amount)}</span>
-                                <span style={{ fontWeight: 'bold' }}>{formatCurrency(ch.total_amount || ch.amount)}</span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {/* Fallback jika list rooms & charges kosong namun subtotal terisi */}
                     {rooms.length === 0 && charges.length === 0 && (
@@ -275,35 +278,8 @@ export const CetakInvoiceThermal = React.forwardRef<HTMLDivElement, CetakInvoice
                 {/* Garis Pembatas Putus-putus */}
                 <div style={{ borderTop: '1px dashed #000', margin: '10px 0 8px 0' }} />
 
-                {/* ─── TANDA TANGAN (COMPACT 2-COLUMN) ─── */}
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    textAlign: 'center',
-                    marginTop: '8px',
-                    fontSize: '10px'
-                }}>
-                    <div style={{ width: '45%' }}>
-                        <div>Tamu Menginap,</div>
-                        <div style={{ height: '36px' }} />
-                        <div style={{ borderBottom: '1px solid #000', margin: '0 4px' }} />
-                        <div style={{ marginTop: '2px', fontWeight: 'bold', fontSize: '9.5px' }}>
-                            ( {guestName.length > 15 ? guestName.substring(0, 15) + '..' : guestName} )
-                        </div>
-                    </div>
-
-                    <div style={{ width: '45%' }}>
-                        <div>Kasir / FO,</div>
-                        <div style={{ height: '36px' }} />
-                        <div style={{ borderBottom: '1px solid #000', margin: '0 4px' }} />
-                        <div style={{ marginTop: '2px', fontWeight: 'bold', fontSize: '9.5px' }}>
-                            ( {cashierName || 'Front Office'} )
-                        </div>
-                    </div>
-                </div>
-
                 {/* ─── FOOTER PESAN RAMAH ─── */}
-                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '9.5px', color: '#222' }}>
+                <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '9.5px', color: '#222' }}>
                     <div style={{ fontWeight: 'bold', letterSpacing: '0.5px' }}>
                         *** TERIMA KASIH ***
                     </div>
@@ -321,7 +297,7 @@ export const CetakInvoiceThermal = React.forwardRef<HTMLDivElement, CetakInvoice
                 </div>
 
                 {/* Feed spacer untuk thermal tear bar */}
-                <div style={{ height: '20px' }} />
+                <div style={{ height: '15px' }} />
             </div>
         );
     }

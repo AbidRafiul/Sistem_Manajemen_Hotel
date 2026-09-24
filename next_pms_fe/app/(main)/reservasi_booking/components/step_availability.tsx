@@ -43,14 +43,26 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
         setGalleryVisible(true);
         setGalleryLoading(true);
         try {
-            const res = await postData('/master/tipe-kamar-foto/tipe-kamar-foto-data', { kode_tipe_kamar: tk.kode_tipe_kamar });
-            const data = res.data?.data || [];
+            const [resFoto, resFas, resAm] = await Promise.all([
+                postData('/master/tipe-kamar-foto/tipe-kamar-foto-data', { kode_tipe_kamar: tk.kode_tipe_kamar }),
+                (!tk.fasilitas || tk.fasilitas.length === 0) ? postData('/master/room-type-fasilitas/room-type-fasilitas-data', { kode_tipe_kamar: tk.kode_tipe_kamar }) : Promise.resolve(null),
+                (!tk.amenities || tk.amenities.length === 0) ? postData('/master/room-type-amenity/room-type-amenity-data', { kode_tipe_kamar: tk.kode_tipe_kamar }) : Promise.resolve(null)
+            ]);
+
+            const data = resFoto.data?.data || [];
             if (data.length > 0) {
                 setGalleryPhotos(data);
             } else if (tk.foto_cover_url) {
                 setGalleryPhotos([{ id: 0, foto_url: tk.foto_cover_url, is_cover: 1 }]);
             } else {
                 setGalleryPhotos([]);
+            }
+
+            if (resFas?.data?.data) {
+                tk.fasilitas = resFas.data.data;
+            }
+            if (resAm?.data?.data) {
+                tk.amenities = resAm.data.data;
             }
         } catch (err) {
             console.error('Gagal memuat galeri:', err);
@@ -400,6 +412,33 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                                 </div>
                                             </div>
 
+                                            {/* Mini Badges Fasilitas & Amenity dari Master */}
+                                            {((tk.fasilitas && tk.fasilitas.length > 0) || (tk.amenities && tk.amenities.length > 0)) && (
+                                                <div className="flex flex-wrap gap-1 mb-2 align-items-center">
+                                                    {(tk.fasilitas || []).slice(0, 3).map((f: any, idx: number) => (
+                                                        <span key={idx} className="surface-100 text-700 text-xs px-2 py-1 border-round flex align-items-center gap-1 font-medium border-1 surface-border">
+                                                            <i className="pi pi-check text-green-600" style={{ fontSize: '0.65rem' }}></i>
+                                                            <span>{f.nama_fasilitas}</span>
+                                                        </span>
+                                                    ))}
+                                                    {(tk.amenities || []).slice(0, 2).map((a: any, idx: number) => (
+                                                        <span key={`a-${idx}`} className="surface-100 text-600 text-xs px-2 py-1 border-round flex align-items-center gap-1 font-medium border-1 surface-border">
+                                                            <i className="pi pi-box text-blue-500" style={{ fontSize: '0.65rem' }}></i>
+                                                            <span>{a.nama_amenity}</span>
+                                                        </span>
+                                                    ))}
+                                                    {((tk.fasilitas?.length || 0) + (tk.amenities?.length || 0)) > 5 && (
+                                                        <span 
+                                                            className="text-primary text-xs font-bold cursor-pointer hover:underline ml-1"
+                                                            onClick={() => openGallery(tk)}
+                                                            title="Lihat semua foto & detail fasilitas"
+                                                        >
+                                                            +{((tk.fasilitas?.length || 0) + (tk.amenities?.length || 0)) - 5} lainnya
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             {/* Deskripsi Kamar */}
                                             {tk.deskripsi && (
                                                 <div className="text-xs text-600 mb-2 line-height-2 surface-50 p-2 border-round">
@@ -451,8 +490,8 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                                 </div>
                                             )}
 
-                                            {/* Deretan Kotak / Badge Nomor Kamar Fisik (Sesuai Foto User) */}
-                                            <div className="mt-auto pt-2 border-top-1 surface-border">
+                                                                                        {/* Deretan Kotak / Badge Nomor Kamar Fisik (Tablet POS Ergonomic Design) */}
+                                            <div className="mt-auto pt-3 border-top-1 surface-border">
                                                 <div className="flex justify-content-between align-items-center mb-2">
                                                     <span className="text-xs font-bold text-700">
                                                         <i className="pi pi-key mr-1 text-primary text-xs"></i>
@@ -463,56 +502,76 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                                     </span>
                                                 </div>
 
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="flex flex-wrap gap-2 pt-1">
                                                     {roomsList.length > 0 ? (
                                                         roomsList.map((rm: any, idx: number) => {
                                                             const isSelected = selectedRooms.some(s => s.kode_kamar === rm.kode_kamar);
                                                             const isAvailable = rm.status === 'available';
                                                             const isOccupied = rm.status === 'occupied';
+                                                            const isDirty = rm.status === 'dirty';
                                                             const isMaintenance = rm.status === 'maintenance';
 
                                                             let badgeClass = '';
                                                             let badgeStyle: React.CSSProperties = {
-                                                                minWidth: '54px',
-                                                                textAlign: 'center',
-                                                                padding: '6px 10px',
-                                                                borderRadius: '8px',
-                                                                fontSize: '0.875rem',
-                                                                fontWeight: '700',
-                                                                transition: 'all 0.15s ease',
-                                                                userSelect: 'none'
+                                                                minWidth: '80px',
+                                                                minHeight: '48px',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                gap: '6px',
+                                                                padding: '10px 16px',
+                                                                borderRadius: '12px',
+                                                                fontSize: '1.05rem',
+                                                                fontWeight: '800',
+                                                                transition: 'all 0.15s ease-in-out',
+                                                                userSelect: 'none',
+                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
                                                             };
 
                                                             if (isSelected) {
-                                                                badgeClass = 'bg-green-600 text-white shadow-2 cursor-pointer';
+                                                                // Terpilih (Hijau solid dengan checkmark tebal)
+                                                                badgeClass = 'bg-green-600 text-white cursor-pointer';
                                                                 badgeStyle = {
                                                                     ...badgeStyle,
                                                                     border: '2px solid #15803d',
-                                                                    boxShadow: '0 0 0 2px rgba(34, 197, 94, 0.4)'
+                                                                    boxShadow: '0 4px 10px rgba(34, 197, 94, 0.35)',
+                                                                    transform: 'scale(1.03)'
                                                                 };
                                                             } else if (isAvailable) {
-                                                                badgeClass = 'hover:bg-green-100 cursor-pointer shadow-1';
+                                                                // Tersedia (Hijau segar tablet-friendly)
+                                                                badgeClass = 'hover:bg-green-100 cursor-pointer';
                                                                 badgeStyle = {
                                                                     ...badgeStyle,
                                                                     backgroundColor: '#dcfce7',
                                                                     color: '#15803d',
-                                                                    border: '1px solid #86efac'
+                                                                    border: '1.5px solid #86efac'
                                                                 };
                                                             } else if (isOccupied) {
+                                                                // Terisi (Merah)
                                                                 badgeClass = 'cursor-not-allowed opacity-75';
                                                                 badgeStyle = {
                                                                     ...badgeStyle,
                                                                     backgroundColor: '#fee2e2',
                                                                     color: '#dc2626',
-                                                                    border: '1px solid #fca5a5'
+                                                                    border: '1.5px solid #fca5a5'
+                                                                };
+                                                            } else if (isDirty) {
+                                                                // Perlu Dibersihkan (Kuning)
+                                                                badgeClass = 'cursor-not-allowed opacity-80';
+                                                                badgeStyle = {
+                                                                    ...badgeStyle,
+                                                                    backgroundColor: '#fef3c7',
+                                                                    color: '#b45309',
+                                                                    border: '1.5px solid #fde68a'
                                                                 };
                                                             } else if (isMaintenance) {
+                                                                // Maintenance (Biru)
                                                                 badgeClass = 'cursor-not-allowed opacity-75';
                                                                 badgeStyle = {
                                                                     ...badgeStyle,
                                                                     backgroundColor: '#e0f2fe',
                                                                     color: '#0284c7',
-                                                                    border: '1px solid #7dd3fc'
+                                                                    border: '1.5px solid #7dd3fc'
                                                                 };
                                                             }
 
@@ -525,8 +584,8 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                                                     style={badgeStyle}
                                                                     title={`Kamar ${rm.nomor_kamar} - ${rm.status_label}${isSelected ? ' (Dipilih)' : ''}`}
                                                                 >
-                                                                    {isSelected && <i className="pi pi-check mr-1" style={{ fontSize: '0.75rem' }}></i>}
-                                                                    {rm.nomor_kamar}
+                                                                    {isSelected && <i className="pi pi-check font-bold mr-1" style={{ fontSize: '0.85rem' }}></i>}
+                                                                    <span>{rm.nomor_kamar}</span>
                                                                 </button>
                                                             );
                                                         })
@@ -600,77 +659,161 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                 </div>
             </div>
 
-            {/* Modal Lightbox Galeri Foto Tipe Kamar */}
+            {/* Modal Terpadu Foto Galeri, Fasilitas & Detail Tipe Kamar */}
             <Dialog
                 visible={galleryVisible}
                 onHide={() => setGalleryVisible(false)}
                 header={
                     <div className="flex align-items-center gap-2">
-                        <i className="pi pi-images text-primary text-xl"></i>
-                        <span className="font-bold text-lg">{selectedRoomType?.nama_tipe || 'Galeri Kamar'}</span>
+                        <i className="pi pi-building text-primary text-xl"></i>
+                        <div>
+                            <span className="font-bold text-lg block">{selectedRoomType?.nama_tipe || 'Detail Tipe Kamar'}</span>
+                            <span className="text-xs text-500 font-normal">Kode Tipe: {selectedRoomType?.kode_tipe_kamar}</span>
+                        </div>
                     </div>
                 }
-                style={{ width: '90vw', maxWidth: '720px' }}
+                style={{ width: '90vw', maxWidth: '760px' }}
                 modal
                 dismissableMask
             >
                 {galleryLoading ? (
                     <div className="p-5 text-center text-500">
                         <i className="pi pi-spin pi-spinner text-3xl mb-2 text-primary"></i>
-                        <p className="m-0 text-sm">Memuat galeri foto...</p>
+                        <p className="m-0 text-sm">Memuat foto & detail fasilitas kamar...</p>
                     </div>
-                ) : galleryPhotos.length > 0 ? (
-                    <div>
-                        <Galleria
-                            value={galleryPhotos}
-                            numVisible={5}
-                            circular
-                            style={{ maxWidth: '100%' }}
-                            showItemNavigators
-                            showThumbnails={galleryPhotos.length > 1}
-                            item={(item) => (
-                                <div className="relative w-full border-round overflow-hidden" style={{ height: '380px' }}>
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                ) : selectedRoomType ? (
+                    <div className="flex flex-column gap-3 py-1">
+                        {/* 1. Galleria Foto Carousel */}
+                        {galleryPhotos.length > 0 ? (
+                            <Galleria
+                                value={galleryPhotos}
+                                numVisible={5}
+                                circular
+                                style={{ maxWidth: '100%' }}
+                                showItemNavigators
+                                showThumbnails={galleryPhotos.length > 1}
+                                item={(item) => (
+                                    <div className="relative w-full border-round overflow-hidden surface-900" style={{ height: '340px' }}>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={item.foto_url}
+                                            alt="Foto Kamar"
+                                            style={{ width: '100%', height: '340px', objectFit: 'cover', display: 'block' }}
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+                                            }}
+                                        />
+                                        {item.is_cover === 1 && (
+                                            <div className="absolute top-0 left-0 m-2">
+                                                <Tag severity="success" value="Cover Utama" icon="pi pi-star-fill" />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                thumbnail={(item) => (
+                                    // eslint-disable-next-line @next/next/no-img-element
                                     <img
                                         src={item.foto_url}
-                                        alt="Foto Kamar"
-                                        style={{ width: '100%', height: '380px', objectFit: 'cover', display: 'block' }}
+                                        alt="Thumbnail"
+                                        style={{ width: '75px', height: '50px', objectFit: 'cover', display: 'block', borderRadius: '4px' }}
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
                                         }}
                                     />
-                                    {item.is_cover === 1 && (
-                                        <div className="absolute top-0 left-0 m-2">
-                                            <Tag severity="success" value="Cover Utama" icon="pi pi-star-fill" />
-                                        </div>
-                                    )}
+                                )}
+                            />
+                        ) : (
+                            <div className="p-4 text-center text-500 surface-100 border-round">
+                                <i className="pi pi-image text-3xl mb-1 text-300"></i>
+                                <p className="m-0 text-sm">Belum ada foto kamar yang diunggah.</p>
+                            </div>
+                        )}
+
+                        {/* 2. Grid Ringkasan Spesifikasi Kamar */}
+                        <div className="grid surface-50 border-round p-3 m-0 border-1 surface-border">
+                            <div className="col-6 md:col-3 flex flex-column">
+                                <span className="text-xs text-500 font-medium">Kapasitas Dasar</span>
+                                <span className="font-bold text-700 text-sm flex align-items-center gap-1 mt-1">
+                                    <i className="pi pi-user text-primary text-xs"></i> {selectedRoomType.kapasitas_dasar} Orang
+                                </span>
+                            </div>
+                            <div className="col-6 md:col-3 flex flex-column">
+                                <span className="text-xs text-500 font-medium">Kapasitas Maksimal</span>
+                                <span className="font-bold text-700 text-sm flex align-items-center gap-1 mt-1">
+                                    <i className="pi pi-users text-primary text-xs"></i> {selectedRoomType.kapasitas_maksimal || selectedRoomType.kapasitas_dasar} Orang
+                                </span>
+                            </div>
+                            <div className="col-6 md:col-3 flex flex-column">
+                                <span className="text-xs text-500 font-medium">Luas Kamar</span>
+                                <span className="font-bold text-700 text-sm flex align-items-center gap-1 mt-1">
+                                    <i className="pi pi-arrows-alt text-primary text-xs"></i> {selectedRoomType.luas_m2 ? `${selectedRoomType.luas_m2} m²` : '-'}
+                                </span>
+                            </div>
+                            <div className="col-6 md:col-3 flex flex-column">
+                                <span className="text-xs text-500 font-medium">Harga Standard</span>
+                                <span className="font-bold text-primary text-sm flex align-items-center gap-1 mt-1">
+                                    <i className="pi pi-tag text-primary text-xs"></i> Rp {Number(selectedRoomType.harga_default || 0).toLocaleString('id-ID')}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* 3. Fasilitas Kamar */}
+                        <div>
+                            <h6 className="m-0 mb-2 font-bold text-800 text-sm flex align-items-center gap-2">
+                                <i className="pi pi-check-circle text-green-600 text-xs"></i> Fasilitas Kamar ({selectedRoomType.fasilitas?.length || 0})
+                            </h6>
+                            {selectedRoomType.fasilitas && selectedRoomType.fasilitas.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedRoomType.fasilitas.map((f: any, idx: number) => (
+                                        <Tag 
+                                            key={idx} 
+                                            icon="pi pi-check" 
+                                            severity="info" 
+                                            value={f.nama_fasilitas} 
+                                            className="px-3 py-2 text-xs font-semibold" 
+                                        />
+                                    ))}
                                 </div>
+                            ) : (
+                                <span className="text-xs text-500 italic">Belum ada fasilitas khusus yang didaftarkan.</span>
                             )}
-                            thumbnail={(item) => (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    src={item.foto_url}
-                                    alt="Thumbnail"
-                                    style={{ width: '80px', height: '55px', objectFit: 'cover', display: 'block', borderRadius: '4px' }}
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
-                                    }}
-                                />
+                        </div>
+
+                        {/* 4. Amenities Kamar */}
+                        <div>
+                            <h6 className="m-0 mb-2 font-bold text-800 text-sm flex align-items-center gap-2">
+                                <i className="pi pi-box text-blue-500 text-xs"></i> Amenity & Perlengkapan ({selectedRoomType.amenities?.length || 0})
+                            </h6>
+                            {selectedRoomType.amenities && selectedRoomType.amenities.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedRoomType.amenities.map((a: any, idx: number) => (
+                                        <Tag 
+                                            key={idx} 
+                                            icon="pi pi-box" 
+                                            severity="success" 
+                                            value={a.nama_amenity} 
+                                            className="px-3 py-2 text-xs font-semibold" 
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <span className="text-xs text-500 italic">Belum ada amenity khusus yang didaftarkan.</span>
                             )}
-                        />
-                        {selectedRoomType?.deskripsi && (
-                            <div className="mt-3 p-3 surface-50 border-round text-sm line-height-3 text-700">
-                                <span className="font-bold block mb-1 text-900">Deskripsi Tipe Kamar:</span>
-                                {selectedRoomType.deskripsi}
+                        </div>
+
+                        {/* 5. Deskripsi Tipe Kamar */}
+                        {selectedRoomType.deskripsi && (
+                            <div>
+                                <h6 className="m-0 mb-1 font-bold text-800 text-sm flex align-items-center gap-2">
+                                    <i className="pi pi-file-text text-primary text-xs"></i> Deskripsi Lengkap
+                                </h6>
+                                <div className="p-3 surface-100 border-round text-sm line-height-3 text-700">
+                                    {selectedRoomType.deskripsi}
+                                </div>
                             </div>
                         )}
                     </div>
-                ) : (
-                    <div className="p-5 text-center text-500">
-                        <i className="pi pi-image text-4xl mb-2 text-300"></i>
-                        <p className="m-0 text-base">Belum ada galeri foto untuk tipe kamar ini.</p>
-                    </div>
-                )}
+                ) : null}
             </Dialog>
 
         </div>

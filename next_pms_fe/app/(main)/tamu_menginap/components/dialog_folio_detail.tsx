@@ -7,6 +7,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag } from 'primereact/tag';
 import { ProgressBar } from 'primereact/progressbar';
+import { useReactToPrint } from 'react-to-print';
 import postData from '@/lib/axios/postData';
 import { apiFolioDetail } from './endpoints';
 import { formatDateSystem } from '@/lib/tools/dateTools';
@@ -51,15 +52,66 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
         }
     }, [visible, roomData]);
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     const header = folioData?.folio;
     const charges = folioData?.charges || [];
     const payments = folioData?.payments || [];
-
     const isSettled = (header?.balance || 0) <= 0;
+
+    // Direct printable document rendering via react-to-print (prevents printing dialog buttons/footer)
+    const handleTriggerPrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `KartuFolio-${header?.kode_folio || 'Tamu'}`,
+        pageStyle: `
+            @page {
+                size: A4 portrait;
+                margin: 8mm 10mm;
+            }
+            @media print {
+                html, body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: #ffffff !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                    font-size: 11px !important;
+                }
+                .no-print {
+                    display: none !important;
+                }
+                .print-container {
+                    gap: 0.6rem !important;
+                    padding: 0 !important;
+                }
+                .surface-card {
+                    padding: 8px 12px !important;
+                    margin-bottom: 0 !important;
+                    border: 1px solid #e2e8f0 !important;
+                    border-radius: 8px !important;
+                    box-shadow: none !important;
+                }
+                .p-datatable-sm .p-datatable-thead > tr > th,
+                .p-datatable-sm .p-datatable-tbody > tr > td,
+                .p-datatable .p-datatable-thead > tr > th,
+                .p-datatable .p-datatable-tbody > tr > td {
+                    padding: 4px 8px !important;
+                    font-size: 11px !important;
+                }
+                .text-xl { font-size: 13px !important; }
+                .text-2xl { font-size: 15px !important; }
+                .text-3xl { font-size: 17px !important; }
+                .text-lg { font-size: 12px !important; }
+                .text-base { font-size: 11px !important; }
+                .text-sm { font-size: 10px !important; }
+                .text-xs { font-size: 9px !important; }
+                .p-4 { padding: 8px 12px !important; }
+                .mb-3 { margin-bottom: 4px !important; }
+                .pb-2 { padding-bottom: 3px !important; }
+                .py-2 { padding-top: 3px !important; padding-bottom: 3px !important; }
+                .pt-3 { padding-top: 4px !important; }
+                .mt-2.5 { margin-top: 4px !important; }
+            }
+        `
+    });
 
     return (
         <>
@@ -68,31 +120,31 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                 onHide={onHide}
                 header={
                     <div className="flex align-items-center gap-3">
-                        <div className="w-3rem h-3rem border-round-xl bg-primary-50 text-primary flex align-items-center justify-content-center flex-shrink-0 border-1 border-primary-200">
+                        <div className="w-3rem h-3rem border-round-xl bg-primary-50 text-primary flex align-items-center justify-content-center flex-shrink-0 border-1 border-primary-200 shadow-1">
                             <i className="pi pi-receipt text-2xl"></i>
                         </div>
                         <div>
                             <span className="font-bold text-xl text-900 block line-height-2">
                                 Kartu Tagihan Folio Tamu (Guest Folio)
                             </span>
-                            <span className="text-sm text-600 font-normal">
+                            <span className="text-sm text-600 font-normal block mt-0.5">
                                 Rincian lengkap mutasi sewa kamar, tagihan fasilitas tambahan, dan pembayaran tamu
                             </span>
                         </div>
                     </div>
                 }
                 style={{ width: '96vw', maxWidth: '1100px' }}
-                contentStyle={{ overflowX: 'hidden', padding: '2rem 2.5rem' }}
+                contentStyle={{ overflowX: 'hidden', padding: '1.25rem 1.5rem' }}
                 modal
                 footer={
-                    <div className="flex justify-content-between align-items-center flex-wrap gap-3 pt-3 border-top-1 surface-border">
+                    <div className="flex justify-content-between align-items-center flex-wrap gap-3 pt-3 border-top-1 surface-border no-print">
                         <div className="flex align-items-center gap-3">
                             <Button
                                 label="Cetak Folio"
                                 icon="pi pi-print"
                                 className="p-button-outlined font-bold text-sm px-4"
-                                style={{ height: '46px' }}
-                                onClick={handlePrint}
+                                style={{ height: '42px' }}
+                                onClick={() => handleTriggerPrint()}
                                 disabled={loading || !folioData}
                             />
                             <Button
@@ -100,7 +152,7 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                 icon="pi pi-file-pdf"
                                 severity="success"
                                 className="font-bold text-sm px-4"
-                                style={{ height: '46px' }}
+                                style={{ height: '42px' }}
                                 onClick={() => setShowInvoiceModal(true)}
                                 disabled={loading || !folioData}
                             />
@@ -109,7 +161,7 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                             label="Tutup"
                             icon="pi pi-times"
                             className="p-button-secondary font-bold text-sm px-5"
-                            style={{ height: '46px' }}
+                            style={{ height: '42px' }}
                             onClick={onHide}
                         />
                     </div>
@@ -118,60 +170,60 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                 {loading && <ProgressBar mode="indeterminate" style={{ height: '4px' }} className="mb-3 border-round" />}
 
                 {folioData && (
-                    <div ref={printRef} className="flex flex-column" style={{ gap: '2rem' }}>
+                    <div ref={printRef} className="flex flex-column p-1 bg-white print-container" style={{ gap: '1rem' }}>
                         {/* Section Header: Informasi Tamu & Folio Card */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-4 sm:p-4 shadow-sm pb-4 border-bottom-1">
-                            <div className="grid align-items-center">
-                                <div className="col-12 sm:col-7">
-                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-1.5">
+                        <div className="surface-card border-round-xl border-1 surface-border p-3 sm:p-3.5 shadow-sm">
+                            <div className="flex flex-row justify-content-between align-items-start gap-3">
+                                <div className="w-7">
+                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-1">
                                         Tamu &amp; Kamar (PIC Reservasi)
                                     </div>
-                                    <div className="text-xl font-bold text-900 flex align-items-center gap-2.5 flex-wrap">
-                                        <span className="bg-primary-50 text-primary border-round-lg px-3 py-1 font-bold text-base border-1 border-primary-100">
+                                    <div className="text-lg font-bold text-900 flex align-items-center gap-2 flex-wrap mb-1.5">
+                                        <span className="bg-primary-50 text-primary border-round-lg px-2.5 py-0.5 font-bold text-sm border-1 border-primary-200 shadow-1">
                                             {folioData.rooms && folioData.rooms.length > 1
                                                 ? `Kamar ${folioData.rooms.map((r: any) => r.nomor_kamar).join(', ')}`
                                                 : header?.nomor_kamar
                                                 ? `Kamar ${header.nomor_kamar}`
                                                 : 'Kamar -'}
                                         </span>
-                                        <span className="text-base font-medium text-700">
+                                        <span className="text-sm font-semibold text-700">
                                             {folioData.rooms && folioData.rooms.length > 1
                                                 ? [...new Set(folioData.rooms.map((r: any) => r.nama_tipe_kamar || r.nama_tipe))].join(', ')
                                                 : header?.nama_tipe_kamar || 'Tipe Kamar'}
                                         </span>
                                     </div>
-                                    <div className="text-base font-semibold text-900 mt-2.5 flex align-items-center gap-4 flex-wrap">
-                                        <span className="inline-flex align-items-center">
-                                            <i className="pi pi-user mr-2 text-primary text-base"></i>
-                                            {header?.guest_name || '-'}
+                                    <div className="text-sm font-semibold text-900 flex align-items-center gap-3 flex-wrap mt-1">
+                                        <span className="inline-flex align-items-center gap-1.5">
+                                            <i className="pi pi-user text-primary text-sm"></i>
+                                            <span>{header?.guest_name || '-'}</span>
                                         </span>
                                         {header?.guest_phone && (
-                                            <span className="text-600 font-normal inline-flex align-items-center text-sm">
-                                                <i className="pi pi-phone mr-1.5 text-400 text-sm"></i>
-                                                {header.guest_phone}
+                                            <span className="text-600 font-normal inline-flex align-items-center gap-1.5 text-xs">
+                                                <i className="pi pi-phone text-400 text-xs"></i>
+                                                <span>{header.guest_phone}</span>
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <div className="col-12 sm:col-5 text-left sm:text-right mt-3 sm:mt-0">
-                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-1">
+                                <div className="w-5 text-right">
+                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-0.5">
                                         Nomor Folio
                                     </div>
                                     <div className="text-lg font-bold text-primary font-mono">
                                         {header?.kode_folio || '-'}
                                     </div>
-                                    <div className="text-sm text-600 mt-1 inline-flex align-items-center gap-1.5 justify-content-start sm:justify-content-end font-medium">
-                                        <i className="pi pi-calendar text-sm text-400"></i>
+                                    <div className="text-xs text-600 mt-1 inline-flex align-items-center gap-1.5 justify-content-end font-medium">
+                                        <i className="pi pi-calendar text-xs text-400"></i>
                                         <span>
                                             {header?.check_in_date ? formatDateSystem(header.check_in_date, 'dd MMM yyyy') : '-'} s/d{' '}
                                             {header?.check_out_date ? formatDateSystem(header.check_out_date, 'dd MMM yyyy') : '-'}
                                         </span>
                                     </div>
-                                    <div className="mt-2.5">
+                                    <div className="mt-1.5">
                                         <Tag
                                             severity={isSettled ? 'success' : 'danger'}
-                                            value={isSettled ? 'LUNAS (SETTLED)' : `BELUM LUNAS (Rp ${(header?.balance || 0).toLocaleString('id-ID')})`}
-                                            className="text-sm px-3.5 py-1.5 font-bold border-round-md"
+                                            value={isSettled ? '✓ LUNAS (SETTLED)' : `⚠ BELUM LUNAS (Rp ${(header?.balance || 0).toLocaleString('id-ID')})`}
+                                            className="text-xs px-2.5 py-1 font-bold border-round-md shadow-1"
                                         />
                                     </div>
                                 </div>
@@ -180,15 +232,15 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
 
                         {/* Section 1: Daftar Kamar Ditempati */}
                         {folioData.rooms && folioData.rooms.length > 0 && (
-                            <div className="surface-card border-round-xl border-1 surface-border p-4 shadow-sm pb-4 border-bottom-1">
-                                <div className="font-bold text-lg text-900 mb-3.5 flex align-items-center justify-content-between">
-                                    <div className="flex align-items-center gap-2.5">
-                                        <i className="pi pi-home text-primary text-lg"></i>
-                                        <span>Daftar Kamar Ditempati</span>
-                                        <span className="text-xs bg-primary-50 text-primary border-round-md px-2.5 py-1 font-bold">
-                                            {folioData.rooms.length} Kamar
-                                        </span>
+                            <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
+                                <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-2 pb-1.5 border-bottom-1 surface-border">
+                                    <div className="flex align-items-center gap-2">
+                                        <i className="pi pi-home text-primary text-base"></i>
+                                        <h4 className="m-0 font-bold text-base text-900">Daftar Kamar Ditempati</h4>
                                     </div>
+                                    <span className="text-xs bg-primary-50 text-primary border-round-md px-2.5 py-0.5 font-bold border-1 border-primary-200">
+                                        {folioData.rooms.length} Kamar
+                                    </span>
                                 </div>
                                 <DataTable
                                     value={folioData.rooms}
@@ -200,15 +252,15 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Kamar & Tipe"
                                         align="left"
                                         alignHeader="left"
-                                        headerStyle={{ width: '38%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
-                                        bodyStyle={{ width: '38%', textAlign: 'left', padding: '14px 16px' }}
+                                        headerStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px' }}
                                         body={(rowData) => (
-                                            <div className="flex align-items-center gap-3">
-                                                <span className="w-2.5rem h-2.5rem border-round-lg bg-primary-100 text-primary font-bold flex align-items-center justify-content-center text-base">
+                                            <div className="flex align-items-center gap-2">
+                                                <span className="w-2rem h-2rem border-round-lg bg-primary-100 text-primary font-bold flex align-items-center justify-content-center text-sm shadow-1">
                                                     {rowData.nomor_kamar}
                                                 </span>
                                                 <div>
-                                                    <span className="font-bold text-900 text-base block">
+                                                    <span className="font-bold text-900 text-sm block">
                                                         {rowData.nama_tipe_kamar || rowData.nama_tipe || `Kamar ${rowData.nomor_kamar}`}
                                                     </span>
                                                     <span className="text-xs text-500 font-medium">
@@ -222,19 +274,19 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Status"
                                         align="center"
                                         alignHeader="center"
-                                        headerStyle={{ width: '22%', textAlign: 'center', padding: '14px 16px', fontSize: '14px' }}
-                                        bodyStyle={{ width: '22%', textAlign: 'center', padding: '14px 16px' }}
+                                        headerStyle={{ width: '22%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '22%', textAlign: 'center', padding: '8px 10px' }}
                                         body={(rowData) => {
                                             const isCheckedIn = rowData.status_room === 'checked_in' || rowData.status === 'checked_in';
                                             return (
-                                                <div className="inline-flex align-items-center gap-2 justify-content-center">
+                                                <div className="inline-flex align-items-center gap-1.5 justify-content-center">
                                                     <span
-                                                        className={`w-2.5 h-2.5 border-circle ${isCheckedIn ? 'bg-green-500' : 'bg-orange-500'}`}
+                                                        className={`w-2 h-2 border-circle ${isCheckedIn ? 'bg-green-500' : 'bg-orange-500'}`}
                                                     ></span>
                                                     <Tag
                                                         severity={isCheckedIn ? 'success' : 'warning'}
                                                         value={isCheckedIn ? 'Occupied (Checked In)' : String(rowData.status_room || rowData.status || '-').toUpperCase()}
-                                                        className="text-xs px-3 py-1 font-semibold"
+                                                        className="text-xs px-2.5 py-0.5 font-semibold"
                                                     />
                                                 </div>
                                             );
@@ -244,10 +296,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Tarif / Malam"
                                         align="right"
                                         alignHeader="right"
-                                        headerStyle={{ width: '20%', textAlign: 'right', padding: '14px 16px', fontSize: '14px' }}
-                                        bodyStyle={{ width: '20%', textAlign: 'right', padding: '14px 16px' }}
+                                        headerStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px' }}
                                         body={(rowData) => (
-                                            <span className="text-base text-700 font-medium font-mono">
+                                            <span className="text-sm text-700 font-medium font-mono">
                                                 Rp {Number(rowData.rate_per_night || 0).toLocaleString('id-ID')}
                                             </span>
                                         )}
@@ -256,10 +308,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Subtotal Sewa"
                                         align="right"
                                         alignHeader="right"
-                                        headerStyle={{ width: '20%', textAlign: 'right', padding: '14px 16px', fontSize: '14px' }}
-                                        bodyStyle={{ width: '20%', textAlign: 'right', padding: '14px 16px' }}
+                                        headerStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px' }}
                                         body={(rowData) => (
-                                            <span className="font-bold text-900 text-base font-mono">
+                                            <span className="font-bold text-900 text-sm font-mono">
                                                 Rp {Number(rowData.subtotal || rowData.total_charges || rowData.rate_per_night || 0).toLocaleString('id-ID')}
                                             </span>
                                         )}
@@ -269,15 +321,15 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                         )}
 
                         {/* Section 2: Rincian Tagihan Layanan & Fasilitas (Charges) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-4 shadow-sm pb-4 border-bottom-1">
-                            <div className="font-bold text-lg text-900 mb-3.5 flex align-items-center justify-content-between">
-                                <div className="flex align-items-center gap-2.5">
-                                    <i className="pi pi-list text-primary text-lg"></i>
-                                    <span>Rincian Tagihan Layanan &amp; Fasilitas (Charges)</span>
-                                    <span className="text-xs bg-primary-50 text-primary border-round-md px-2.5 py-1 font-bold">
-                                        {charges.length} Item
-                                    </span>
+                        <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
+                            <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-2 pb-1.5 border-bottom-1 surface-border">
+                                <div className="flex align-items-center gap-2">
+                                    <i className="pi pi-list text-primary text-base"></i>
+                                    <h4 className="m-0 font-bold text-base text-900">Rincian Tagihan Layanan &amp; Fasilitas (Charges)</h4>
                                 </div>
+                                <span className="text-xs bg-primary-50 text-primary border-round-md px-2.5 py-0.5 font-bold border-1 border-primary-200">
+                                    {charges.length} Item
+                                </span>
                             </div>
                             <DataTable
                                 value={charges}
@@ -290,10 +342,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Waktu Posting"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '18%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'left', padding: '14px 16px' }}
+                                    headerStyle={{ width: '18%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '18%', textAlign: 'left', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="text-sm text-600 font-mono font-medium">
+                                        <span className="text-xs text-600 font-mono font-medium">
                                             {formatDateSystem(rowData.posted_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
                                         </span>
                                     )}
@@ -302,8 +354,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Kategori"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '15%', textAlign: 'center', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '15%', textAlign: 'center', padding: '14px 16px' }}
+                                    headerStyle={{ width: '15%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '15%', textAlign: 'center', padding: '8px 10px' }}
                                     body={(rowData) => (
                                         <Tag
                                             severity={
@@ -316,32 +368,30 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                                     : 'secondary'
                                             }
                                             value={rowData.charge_type?.toUpperCase() || 'OTHER'}
-                                            className="text-xs px-2.5 py-1 font-semibold"
+                                            className="text-xs px-2 py-0.5 font-semibold"
                                         />
                                     )}
                                 />
                                 <Column
                                     header="Keterangan / Item"
-                                    field="description"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '33%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '33%', textAlign: 'left', padding: '14px 16px' }}
+                                    headerStyle={{ width: '33%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '33%', textAlign: 'left', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="font-bold text-900 text-base">
-                                            {rowData.description}
+                                        <span className="font-bold text-900 text-sm block">
+                                            {rowData.item_name || rowData.description || rowData.nama_charge || rowData.keterangan || 'Layanan Tambahan'}
                                         </span>
                                     )}
                                 />
                                 <Column
                                     header="Qty"
-                                    field="qty"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '10%', textAlign: 'center', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '10%', textAlign: 'center', padding: '14px 16px' }}
+                                    headerStyle={{ width: '10%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '10%', textAlign: 'center', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="text-sm font-bold text-800 bg-surface-100 border-round-md px-2.5 py-1">
+                                        <span className="text-xs font-bold text-800 bg-surface-100 border-round-md px-2 py-0.5 border-1 surface-border">
                                             {rowData.qty || 1}x
                                         </span>
                                     )}
@@ -350,10 +400,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Harga Satuan"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '14px 16px' }}
+                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="text-base text-700 font-mono">
+                                        <span className="text-xs text-700 font-mono">
                                             Rp {Number(rowData.unit_price || 0).toLocaleString('id-ID')}
                                         </span>
                                     )}
@@ -362,10 +412,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Jumlah"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '14px 16px' }}
+                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="font-bold text-900 text-base font-mono">
+                                        <span className="font-bold text-900 text-sm font-mono">
                                             Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
                                         </span>
                                     )}
@@ -374,15 +424,15 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                         </div>
 
                         {/* Section 3: Riwayat Pembayaran (Payments) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-4 shadow-sm pb-4 border-bottom-1">
-                            <div className="font-bold text-lg text-900 mb-3.5 flex align-items-center justify-content-between">
-                                <div className="flex align-items-center gap-2.5">
-                                    <i className="pi pi-wallet text-green-600 text-lg"></i>
-                                    <span>Riwayat Pembayaran Diterima (Payments)</span>
-                                    <span className="text-xs bg-green-50 text-green-700 border-round-md px-2.5 py-1 font-bold">
-                                        {payments.length} Pembayaran
-                                    </span>
+                        <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
+                            <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-2 pb-1.5 border-bottom-1 surface-border">
+                                <div className="flex align-items-center gap-2">
+                                    <i className="pi pi-wallet text-green-600 text-base"></i>
+                                    <h4 className="m-0 font-bold text-base text-900">Riwayat Pembayaran Diterima (Payments)</h4>
                                 </div>
+                                <span className="text-xs bg-green-50 text-green-700 border-round-md px-2.5 py-0.5 font-bold border-1 border-green-200">
+                                    {payments.length} Pembayaran
+                                </span>
                             </div>
                             <DataTable
                                 value={payments}
@@ -395,10 +445,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Waktu Bayar"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '22%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '22%', textAlign: 'left', padding: '14px 16px' }}
+                                    headerStyle={{ width: '22%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '22%', textAlign: 'left', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="text-sm text-600 font-mono font-medium">
+                                        <span className="text-xs text-600 font-mono font-medium">
                                             {formatDateSystem(rowData.paid_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
                                         </span>
                                     )}
@@ -407,13 +457,13 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Metode"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '18%', textAlign: 'center', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'center', padding: '14px 16px' }}
+                                    headerStyle={{ width: '18%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '18%', textAlign: 'center', padding: '8px 10px' }}
                                     body={(rowData) => (
                                         <Tag
                                             severity="success"
                                             value={rowData.payment_method?.toUpperCase()}
-                                            className="text-xs px-3 py-1 font-bold"
+                                            className="text-xs px-2.5 py-0.5 font-bold"
                                         />
                                     )}
                                 />
@@ -421,10 +471,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="No. Referensi / Shift"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '38%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '38%', textAlign: 'left', padding: '14px 16px' }}
+                                    headerStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="text-base text-700 font-medium">
+                                        <span className="text-xs text-700 font-medium">
                                             {rowData.reference_no || '-'} {rowData.kode_cashier_shift ? `(${rowData.kode_cashier_shift})` : ''}
                                         </span>
                                     )}
@@ -433,10 +483,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Nominal Bayar"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '22%', textAlign: 'right', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '22%', textAlign: 'right', padding: '14px 16px' }}
+                                    headerStyle={{ width: '22%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '22%', textAlign: 'right', padding: '8px 10px' }}
                                     body={(rowData) => (
-                                        <span className="font-bold text-green-700 text-base font-mono">
+                                        <span className="font-bold text-green-700 text-sm font-mono">
                                             Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
                                         </span>
                                     )}
@@ -444,33 +494,33 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                             </DataTable>
                         </div>
 
-                        {/* Section 4: Ringkasan Total Tagihan & Saldo (Card Terpisah) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-4 sm:p-5 shadow-1 bg-surface-50">
-                            <div className="flex justify-content-between align-items-center py-2.5">
-                                <span className="text-base font-bold text-700">Total Tagihan (Grand Total):</span>
-                                <span className="text-lg sm:text-xl font-bold text-900 font-mono">
+                        {/* Section 4: Ringkasan Total Tagihan & Saldo */}
+                        <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm bg-surface-50">
+                            <div className="flex justify-content-between align-items-center py-1">
+                                <span className="text-sm font-bold text-700">Total Tagihan (Grand Total):</span>
+                                <span className="text-base font-bold text-900 font-mono">
                                     Rp {Number(header?.grand_total || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>
-                            <div className="flex justify-content-between align-items-center py-2.5 border-bottom-1 surface-border">
-                                <span className="text-base font-bold text-700">Total Pembayaran Masuk:</span>
-                                <span className="text-lg sm:text-xl font-bold text-green-600 font-mono">
+                            <div className="flex justify-content-between align-items-center py-1 border-bottom-1 surface-border">
+                                <span className="text-sm font-bold text-700">Total Pembayaran Masuk:</span>
+                                <span className="text-base font-bold text-green-600 font-mono">
                                     - Rp {Number(header?.total_paid || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>
-                            <div className="flex justify-content-between align-items-center pt-3.5 flex-wrap gap-3">
+                            <div className="flex justify-content-between align-items-center pt-2 flex-wrap gap-2">
                                 <div>
-                                    <span className="text-lg sm:text-xl font-bold text-900 block">
+                                    <span className="text-base font-bold text-900 block">
                                         Sisa Tagihan (Saldo / Outstanding):
                                     </span>
-                                    <span className="text-sm text-600 font-medium">
+                                    <span className="text-xs text-600 font-medium block mt-0.5">
                                         {isSettled
                                             ? 'Tagihan lunas, tidak ada sisa saldo.'
                                             : 'Wajib diselesaikan oleh tamu sebelum checkout.'}
                                     </span>
                                 </div>
                                 <span
-                                    className={`text-2xl sm:text-3xl font-bold font-mono px-4 py-2 border-round-xl ${
+                                    className={`text-xl font-bold font-mono px-3 py-1.5 border-round-xl shadow-1 ${
                                         isSettled
                                             ? 'text-green-700 bg-green-50 border-1 border-green-200'
                                             : 'text-red-600 bg-red-50 border-1 border-red-200'
