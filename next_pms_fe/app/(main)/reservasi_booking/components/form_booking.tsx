@@ -145,7 +145,7 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
             <div className="col-12 lg:col-4 mt-4 lg:mt-0">
                 <div
                     className="card shadow-2 p-4"
-                    style={{ position: 'sticky', top: '1.5rem' }}
+                    style={{ position: 'sticky', top: '6.5rem', zIndex: 10 }}
                 >
                     {/* Header */}
                     <div className="flex align-items-center gap-2 mb-3">
