@@ -172,58 +172,61 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                 {folioData && (
                     <div ref={printRef} className="flex flex-column p-1 bg-white print-container" style={{ gap: '1rem' }}>
                         {/* Section Header: Informasi Tamu & Folio Card */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-3 sm:p-3.5 shadow-sm">
-                            <div className="flex flex-row justify-content-between align-items-start gap-3">
-                                <div className="w-7">
-                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-1">
+                        <div className="surface-card border-round-xl border-1 surface-border p-3.5 sm:p-4 shadow-sm">
+                            <div className="flex flex-column sm:flex-row justify-content-between align-items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-2">
                                         Tamu &amp; Kamar (PIC Reservasi)
                                     </div>
-                                    <div className="text-lg font-bold text-900 flex align-items-center gap-2 flex-wrap mb-1.5">
-                                        <span className="bg-primary-50 text-primary border-round-lg px-2.5 py-0.5 font-bold text-sm border-1 border-primary-200 shadow-1">
-                                            {folioData.rooms && folioData.rooms.length > 1
-                                                ? `Kamar ${folioData.rooms.map((r: any) => r.nomor_kamar).join(', ')}`
-                                                : header?.nomor_kamar
-                                                ? `Kamar ${header.nomor_kamar}`
-                                                : 'Kamar -'}
+                                    <div className="text-lg font-bold text-900 flex align-items-center gap-3 flex-wrap mb-2">
+                                        <span className="bg-primary-50 text-primary border-round-lg px-3 py-1.5 font-bold text-sm border-1 border-primary-200 shadow-1 inline-flex align-items-center gap-2 white-space-nowrap mr-1">
+                                            <i className="pi pi-home text-xs"></i>
+                                            <span>
+                                                {folioData.rooms && folioData.rooms.length > 1
+                                                    ? `Kamar ${folioData.rooms.map((r: any) => r.nomor_kamar).join(', ')}`
+                                                    : header?.nomor_kamar
+                                                    ? `Kamar ${header.nomor_kamar}`
+                                                    : 'Kamar -'}
+                                            </span>
                                         </span>
-                                        <span className="text-sm font-semibold text-700">
+                                        <span className="text-sm font-semibold text-700 inline-flex align-items-center py-1">
                                             {folioData.rooms && folioData.rooms.length > 1
                                                 ? [...new Set(folioData.rooms.map((r: any) => r.nama_tipe_kamar || r.nama_tipe))].join(', ')
                                                 : header?.nama_tipe_kamar || 'Tipe Kamar'}
                                         </span>
                                     </div>
-                                    <div className="text-sm font-semibold text-900 flex align-items-center gap-3 flex-wrap mt-1">
-                                        <span className="inline-flex align-items-center gap-1.5">
+                                    <div className="text-sm font-semibold text-900 flex align-items-center gap-4 flex-wrap mt-2.5">
+                                        <span className="inline-flex align-items-center gap-2">
                                             <i className="pi pi-user text-primary text-sm"></i>
                                             <span>{header?.guest_name || '-'}</span>
                                         </span>
                                         {header?.guest_phone && (
-                                            <span className="text-600 font-normal inline-flex align-items-center gap-1.5 text-xs">
+                                            <span className="text-600 font-normal inline-flex align-items-center gap-2 text-xs">
                                                 <i className="pi pi-phone text-400 text-xs"></i>
                                                 <span>{header.guest_phone}</span>
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <div className="w-5 text-right">
-                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-0.5">
+                                <div className="w-full sm:w-auto text-left sm:text-right flex-shrink-0">
+                                    <div className="text-xs text-500 font-bold uppercase tracking-wider mb-1">
                                         Nomor Folio
                                     </div>
-                                    <div className="text-lg font-bold text-primary font-mono">
+                                    <div className="text-xl font-bold text-primary font-mono">
                                         {header?.kode_folio || '-'}
                                     </div>
-                                    <div className="text-xs text-600 mt-1 inline-flex align-items-center gap-1.5 justify-content-end font-medium">
+                                    <div className="text-xs text-600 mt-1.5 inline-flex align-items-center gap-2 justify-content-start sm:justify-content-end font-medium">
                                         <i className="pi pi-calendar text-xs text-400"></i>
                                         <span>
                                             {header?.check_in_date ? formatDateSystem(header.check_in_date, 'dd MMM yyyy') : '-'} s/d{' '}
                                             {header?.check_out_date ? formatDateSystem(header.check_out_date, 'dd MMM yyyy') : '-'}
                                         </span>
                                     </div>
-                                    <div className="mt-1.5">
+                                    <div className="mt-2">
                                         <Tag
                                             severity={isSettled ? 'success' : 'danger'}
                                             value={isSettled ? '✓ LUNAS (SETTLED)' : `⚠ BELUM LUNAS (Rp ${(header?.balance || 0).toLocaleString('id-ID')})`}
-                                            className="text-xs px-2.5 py-1 font-bold border-round-md shadow-1"
+                                            className="text-xs px-3 py-1.5 font-bold border-round-md shadow-1"
                                         />
                                     </div>
                                 </div>
@@ -232,13 +235,13 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
 
                         {/* Section 1: Daftar Kamar Ditempati */}
                         {folioData.rooms && folioData.rooms.length > 0 && (
-                            <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
-                                <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-2 pb-1.5 border-bottom-1 surface-border">
+                            <div className="surface-card border-round-xl border-1 surface-border p-3.5 sm:p-4 shadow-sm">
+                                <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom-1 surface-border">
                                     <div className="flex align-items-center gap-2">
                                         <i className="pi pi-home text-primary text-base"></i>
                                         <h4 className="m-0 font-bold text-base text-900">Daftar Kamar Ditempati</h4>
                                     </div>
-                                    <span className="text-xs bg-primary-50 text-primary border-round-md px-2.5 py-0.5 font-bold border-1 border-primary-200">
+                                    <span className="text-xs bg-primary-50 text-primary border-round-md px-3 py-1 font-bold border-1 border-primary-200">
                                         {folioData.rooms.length} Kamar
                                     </span>
                                 </div>
@@ -252,18 +255,21 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Kamar & Tipe"
                                         align="left"
                                         alignHeader="left"
-                                        headerStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
-                                        bodyStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px' }}
+                                        headerStyle={{ width: '42%', textAlign: 'left', padding: '10px 14px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '42%', textAlign: 'left', padding: '10px 14px' }}
                                         body={(rowData) => (
-                                            <div className="flex align-items-center gap-2">
-                                                <span className="w-2rem h-2rem border-round-lg bg-primary-100 text-primary font-bold flex align-items-center justify-content-center text-sm shadow-1">
+                                            <div className="flex align-items-center gap-3">
+                                                <span
+                                                    className="inline-flex align-items-center justify-content-center border-round-lg bg-primary-100 text-primary font-bold text-xs px-3 py-1.5 border-1 border-primary-200 shadow-1 white-space-nowrap flex-shrink-0"
+                                                    style={{ minWidth: '3.5rem', minHeight: '2.25rem' }}
+                                                >
                                                     {rowData.nomor_kamar}
                                                 </span>
-                                                <div>
-                                                    <span className="font-bold text-900 text-sm block">
+                                                <div className="flex flex-column min-w-0">
+                                                    <span className="font-bold text-900 text-sm block line-height-2 mb-0.5">
                                                         {rowData.nama_tipe_kamar || rowData.nama_tipe || `Kamar ${rowData.nomor_kamar}`}
                                                     </span>
-                                                    <span className="text-xs text-500 font-medium">
+                                                    <span className="text-xs text-500 font-medium block">
                                                         Kamar #{rowData.nomor_kamar}
                                                     </span>
                                                 </div>
@@ -274,19 +280,19 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Status"
                                         align="center"
                                         alignHeader="center"
-                                        headerStyle={{ width: '22%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
-                                        bodyStyle={{ width: '22%', textAlign: 'center', padding: '8px 10px' }}
+                                        headerStyle={{ width: '22%', textAlign: 'center', padding: '10px 14px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '22%', textAlign: 'center', padding: '10px 14px' }}
                                         body={(rowData) => {
                                             const isCheckedIn = rowData.status_room === 'checked_in' || rowData.status === 'checked_in';
                                             return (
-                                                <div className="inline-flex align-items-center gap-1.5 justify-content-center">
+                                                <div className="inline-flex align-items-center gap-2 justify-content-center">
                                                     <span
                                                         className={`w-2 h-2 border-circle ${isCheckedIn ? 'bg-green-500' : 'bg-orange-500'}`}
                                                     ></span>
                                                     <Tag
                                                         severity={isCheckedIn ? 'success' : 'warning'}
                                                         value={isCheckedIn ? 'Occupied (Checked In)' : String(rowData.status_room || rowData.status || '-').toUpperCase()}
-                                                        className="text-xs px-2.5 py-0.5 font-semibold"
+                                                        className="text-xs px-3 py-1 font-semibold"
                                                     />
                                                 </div>
                                             );
@@ -296,8 +302,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Tarif / Malam"
                                         align="right"
                                         alignHeader="right"
-                                        headerStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
-                                        bodyStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px' }}
+                                        headerStyle={{ width: '18%', textAlign: 'right', padding: '10px 14px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '18%', textAlign: 'right', padding: '10px 14px' }}
                                         body={(rowData) => (
                                             <span className="text-sm text-700 font-medium font-mono">
                                                 Rp {Number(rowData.rate_per_night || 0).toLocaleString('id-ID')}
@@ -308,8 +314,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                         header="Subtotal Sewa"
                                         align="right"
                                         alignHeader="right"
-                                        headerStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
-                                        bodyStyle={{ width: '20%', textAlign: 'right', padding: '8px 10px' }}
+                                        headerStyle={{ width: '18%', textAlign: 'right', padding: '10px 14px', fontSize: '12px' }}
+                                        bodyStyle={{ width: '18%', textAlign: 'right', padding: '10px 14px' }}
                                         body={(rowData) => (
                                             <span className="font-bold text-900 text-sm font-mono">
                                                 Rp {Number(rowData.subtotal || rowData.total_charges || rowData.rate_per_night || 0).toLocaleString('id-ID')}
@@ -321,13 +327,13 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                         )}
 
                         {/* Section 2: Rincian Tagihan Layanan & Fasilitas (Charges) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
-                            <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-2 pb-1.5 border-bottom-1 surface-border">
+                        <div className="surface-card border-round-xl border-1 surface-border p-3.5 sm:p-4 shadow-sm">
+                            <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom-1 surface-border">
                                 <div className="flex align-items-center gap-2">
                                     <i className="pi pi-list text-primary text-base"></i>
                                     <h4 className="m-0 font-bold text-base text-900">Rincian Tagihan Layanan &amp; Fasilitas (Charges)</h4>
                                 </div>
-                                <span className="text-xs bg-primary-50 text-primary border-round-md px-2.5 py-0.5 font-bold border-1 border-primary-200">
+                                <span className="text-xs bg-primary-50 text-primary border-round-md px-3 py-1 font-bold border-1 border-primary-200">
                                     {charges.length} Item
                                 </span>
                             </div>
@@ -342,8 +348,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Waktu Posting"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '18%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'left', padding: '8px 10px' }}
+                                    headerStyle={{ width: '18%', textAlign: 'left', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '18%', textAlign: 'left', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="text-xs text-600 font-mono font-medium">
                                             {formatDateSystem(rowData.posted_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
@@ -354,8 +360,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Kategori"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '15%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '15%', textAlign: 'center', padding: '8px 10px' }}
+                                    headerStyle={{ width: '15%', textAlign: 'center', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '15%', textAlign: 'center', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <Tag
                                             severity={
@@ -368,7 +374,7 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                                     : 'secondary'
                                             }
                                             value={rowData.charge_type?.toUpperCase() || 'OTHER'}
-                                            className="text-xs px-2 py-0.5 font-semibold"
+                                            className="text-xs px-2.5 py-1 font-semibold"
                                         />
                                     )}
                                 />
@@ -376,8 +382,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Keterangan / Item"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '33%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '33%', textAlign: 'left', padding: '8px 10px' }}
+                                    headerStyle={{ width: '33%', textAlign: 'left', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '33%', textAlign: 'left', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="font-bold text-900 text-sm block">
                                             {rowData.item_name || rowData.description || rowData.nama_charge || rowData.keterangan || 'Layanan Tambahan'}
@@ -388,10 +394,10 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Qty"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '10%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '10%', textAlign: 'center', padding: '8px 10px' }}
+                                    headerStyle={{ width: '10%', textAlign: 'center', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '10%', textAlign: 'center', padding: '10px 14px' }}
                                     body={(rowData) => (
-                                        <span className="text-xs font-bold text-800 bg-surface-100 border-round-md px-2 py-0.5 border-1 surface-border">
+                                        <span className="text-xs font-bold text-800 bg-surface-100 border-round-md px-2.5 py-1 border-1 surface-border">
                                             {rowData.qty || 1}x
                                         </span>
                                     )}
@@ -400,8 +406,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Harga Satuan"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px' }}
+                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="text-xs text-700 font-mono">
                                             Rp {Number(rowData.unit_price || 0).toLocaleString('id-ID')}
@@ -412,8 +418,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Jumlah"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '8px 10px' }}
+                                    headerStyle={{ width: '12%', textAlign: 'right', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '12%', textAlign: 'right', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="font-bold text-900 text-sm font-mono">
                                             Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
@@ -424,13 +430,13 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                         </div>
 
                         {/* Section 3: Riwayat Pembayaran (Payments) */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
-                            <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-2 pb-1.5 border-bottom-1 surface-border">
+                        <div className="surface-card border-round-xl border-1 surface-border p-3.5 sm:p-4 shadow-sm">
+                            <div className="flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom-1 surface-border">
                                 <div className="flex align-items-center gap-2">
                                     <i className="pi pi-wallet text-green-600 text-base"></i>
                                     <h4 className="m-0 font-bold text-base text-900">Riwayat Pembayaran Diterima (Payments)</h4>
                                 </div>
-                                <span className="text-xs bg-green-50 text-green-700 border-round-md px-2.5 py-0.5 font-bold border-1 border-green-200">
+                                <span className="text-xs bg-green-50 text-green-700 border-round-md px-3 py-1 font-bold border-1 border-green-200">
                                     {payments.length} Pembayaran
                                 </span>
                             </div>
@@ -445,8 +451,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Waktu Bayar"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '22%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '22%', textAlign: 'left', padding: '8px 10px' }}
+                                    headerStyle={{ width: '22%', textAlign: 'left', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '22%', textAlign: 'left', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="text-xs text-600 font-mono font-medium">
                                             {formatDateSystem(rowData.paid_at || rowData.created_at, 'dd/MM/yyyy HH:mm')}
@@ -457,13 +463,13 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Metode"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '18%', textAlign: 'center', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'center', padding: '8px 10px' }}
+                                    headerStyle={{ width: '18%', textAlign: 'center', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '18%', textAlign: 'center', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <Tag
                                             severity="success"
                                             value={rowData.payment_method?.toUpperCase()}
-                                            className="text-xs px-2.5 py-0.5 font-bold"
+                                            className="text-xs px-3 py-1 font-bold"
                                         />
                                     )}
                                 />
@@ -471,8 +477,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="No. Referensi / Shift"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '38%', textAlign: 'left', padding: '8px 10px' }}
+                                    headerStyle={{ width: '38%', textAlign: 'left', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '38%', textAlign: 'left', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="text-xs text-700 font-medium">
                                             {rowData.reference_no || '-'} {rowData.kode_cashier_shift ? `(${rowData.kode_cashier_shift})` : ''}
@@ -483,8 +489,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     header="Nominal Bayar"
                                     align="right"
                                     alignHeader="right"
-                                    headerStyle={{ width: '22%', textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}
-                                    bodyStyle={{ width: '22%', textAlign: 'right', padding: '8px 10px' }}
+                                    headerStyle={{ width: '22%', textAlign: 'right', padding: '10px 14px', fontSize: '12px' }}
+                                    bodyStyle={{ width: '22%', textAlign: 'right', padding: '10px 14px' }}
                                     body={(rowData) => (
                                         <span className="font-bold text-green-700 text-sm font-mono">
                                             Rp {Number(rowData.amount || 0).toLocaleString('id-ID')}
@@ -495,20 +501,20 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                         </div>
 
                         {/* Section 4: Ringkasan Total Tagihan & Saldo */}
-                        <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm bg-surface-50">
-                            <div className="flex justify-content-between align-items-center py-1">
+                        <div className="surface-card border-round-xl border-1 surface-border p-3.5 sm:p-4 shadow-sm bg-surface-50">
+                            <div className="flex justify-content-between align-items-center py-1.5">
                                 <span className="text-sm font-bold text-700">Total Tagihan (Grand Total):</span>
                                 <span className="text-base font-bold text-900 font-mono">
                                     Rp {Number(header?.grand_total || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>
-                            <div className="flex justify-content-between align-items-center py-1 border-bottom-1 surface-border">
+                            <div className="flex justify-content-between align-items-center py-1.5 border-bottom-1 surface-border">
                                 <span className="text-sm font-bold text-700">Total Pembayaran Masuk:</span>
                                 <span className="text-base font-bold text-green-600 font-mono">
                                     - Rp {Number(header?.total_paid || 0).toLocaleString('id-ID')}
                                 </span>
                             </div>
-                            <div className="flex justify-content-between align-items-center pt-2 flex-wrap gap-2">
+                            <div className="flex justify-content-between align-items-center pt-3 flex-wrap gap-3">
                                 <div>
                                     <span className="text-base font-bold text-900 block">
                                         Sisa Tagihan (Saldo / Outstanding):
@@ -520,10 +526,8 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     </span>
                                 </div>
                                 <span
-                                    className={`text-xl font-bold font-mono px-3 py-1.5 border-round-xl shadow-1 ${
-                                        isSettled
-                                            ? 'text-green-700 bg-green-50 border-1 border-green-200'
-                                            : 'text-red-600 bg-red-50 border-1 border-red-200'
+                                    className={`text-xl font-bold font-mono ${
+                                        isSettled ? 'text-green-600' : 'text-red-600'
                                     }`}
                                 >
                                     Rp {Number(header?.balance || 0).toLocaleString('id-ID')}
