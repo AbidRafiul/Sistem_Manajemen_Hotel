@@ -250,12 +250,16 @@ export const CetakInvoiceThermal = React.forwardRef<HTMLDivElement, CetakInvoice
                     </div>
 
                     {/* Rincian Pembayaran */}
-                    {payments.map((p: any, idx: number) => (
-                        <div key={`p-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
-                            <span>Bayar ({String(p.payment_method).toUpperCase()}{p.reference_no ? ` - ${p.reference_no}` : ''}):</span>
-                            <span>- {formatCurrency(p.amount)}</span>
-                        </div>
-                    ))}
+                    {payments.map((p: any, idx: number) => {
+                        const bankInfo = p.bank_name ? ` ${p.bank_name}${p.card_type ? ' ' + p.card_type.toUpperCase() : ''}` : '';
+                        const refInfo = p.reference_no ? ` - ${p.reference_no}` : '';
+                        return (
+                            <div key={`p-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
+                                <span>Bayar {String(p.payment_method || '').toUpperCase()}{bankInfo}{refInfo}:</span>
+                                <span>- {formatCurrency(p.amount)}</span>
+                            </div>
+                        );
+                    })}
 
                     {payments.length === 0 && Number(summary.total_paid || 0) > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>

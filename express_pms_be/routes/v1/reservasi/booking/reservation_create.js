@@ -297,6 +297,18 @@ router.post("/", async (req, res) => {
 
             // Insert trx_payment (DP / Pelunasan) jika ada
             if (paymentAmount > 0) {
+                let shiftCode = oPayload.kode_cashier_shift || null;
+                if (!shiftCode && userId) {
+                    const activeShift = await trx("trx_cashier_shift")
+                        .where("user_id", userId)
+                        .where("status", "open")
+                        .orderBy("opened_at", "desc")
+                        .first();
+                    if (activeShift) {
+                        shiftCode = activeShift.kode_cashier_shift;
+                    }
+                }
+
                 const noPayment = await generateSequence("FMT-PAYMENT", trx);
                 if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
 
@@ -304,8 +316,10 @@ router.post("/", async (req, res) => {
                     kode_payment: noPayment,
                     kode_folio: lastFolioCode,
                     payment_method: oPayload.payment_method || 'cash',
+                    bank_name: oPayload.bank_name || null,
+                    card_type: oPayload.card_type || null,
                     amount: paymentAmount,
-                    kode_cashier_shift: oPayload.kode_cashier_shift || null,
+                    kode_cashier_shift: shiftCode,
                     reference_no: oPayload.reference_no || null,
                     received_by: userId,
                     paid_at: tNow,

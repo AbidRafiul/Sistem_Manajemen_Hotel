@@ -12,6 +12,7 @@ import { apiFolioDetail } from './endpoints';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 
 import DialogInvoice from '@/app/components/dialogComponents/dialog_invoice';
+import { formatPaymentDisplay } from '@/lib/tools/paymentTools';
 
 interface DialogFolioDetailProps {
     visible: boolean;
@@ -404,29 +405,40 @@ export const DialogFolioDetail: React.FC<DialogFolioDetailProps> = ({ visible, o
                                     )}
                                 />
                                 <Column
-                                    header="Metode"
+                                    header="Metode Pembayaran"
                                     align="center"
                                     alignHeader="center"
-                                    headerStyle={{ width: '18%', textAlign: 'center', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '18%', textAlign: 'center', padding: '14px 16px' }}
-                                    body={(rowData) => (
-                                        <Tag
-                                            severity="success"
-                                            value={rowData.payment_method?.toUpperCase()}
-                                            className="text-xs px-3 py-1 font-bold"
-                                        />
-                                    )}
+                                    headerStyle={{ width: '22%', textAlign: 'center', padding: '14px 16px', fontSize: '14px' }}
+                                    bodyStyle={{ width: '22%', textAlign: 'center', padding: '14px 16px' }}
+                                    body={(rowData) => {
+                                        const disp = formatPaymentDisplay(rowData.payment_method, rowData.bank_name, rowData.card_type);
+                                        return (
+                                            <Tag
+                                                severity={disp.severity}
+                                                value={disp.label}
+                                                icon={disp.icon}
+                                                className="text-xs px-2.5 py-1 font-bold"
+                                            />
+                                        );
+                                    }}
                                 />
                                 <Column
                                     header="No. Referensi / Shift"
                                     align="left"
                                     alignHeader="left"
-                                    headerStyle={{ width: '38%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
-                                    bodyStyle={{ width: '38%', textAlign: 'left', padding: '14px 16px' }}
+                                    headerStyle={{ width: '34%', textAlign: 'left', padding: '14px 16px', fontSize: '14px' }}
+                                    bodyStyle={{ width: '34%', textAlign: 'left', padding: '14px 16px' }}
                                     body={(rowData) => (
-                                        <span className="text-base text-700 font-medium">
-                                            {rowData.reference_no || '-'} {rowData.kode_cashier_shift ? `(${rowData.kode_cashier_shift})` : ''}
-                                        </span>
+                                        <div>
+                                            <span className="text-sm font-semibold text-800 block">
+                                                {rowData.reference_no || '-'}
+                                            </span>
+                                            {rowData.kode_cashier_shift && (
+                                                <span className="text-xs text-500 font-mono block mt-0.5">
+                                                    Shift: {rowData.kode_cashier_shift}
+                                                </span>
+                                            )}
+                                        </div>
                                     )}
                                 />
                                 <Column

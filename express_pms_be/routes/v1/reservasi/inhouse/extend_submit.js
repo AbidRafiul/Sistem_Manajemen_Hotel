@@ -250,6 +250,8 @@ router.post("/", async (req, res) => {
           kode_payment: noPayment,
           kode_folio: folio.kode_folio,
           payment_method: oPayload.payment_method,
+          bank_name: oPayload.bank_name || null,
+          card_type: oPayload.card_type || null,
           amount: totalAdditionalCharge,
           reference_no: oPayload.reference_no || null,
           kode_cashier_shift: oPayload.kode_cashier_shift || null,

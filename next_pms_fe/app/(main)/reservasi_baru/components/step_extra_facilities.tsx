@@ -442,38 +442,6 @@ const StepExtraFacilities: React.FC<StepExtraFacilitiesProps> = ({ state, setSta
                     className="w-full text-sm"
                 />
             </div>
-
-            {/* Tombol Navigasi Bawah */}
-            <div className="col-12 flex justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top-1 surface-border">
-                <Button
-                    type="button"
-                    label="Kembali ke Kamar & Tarif"
-                    icon="pi pi-arrow-left"
-                    outlined
-                    severity="secondary"
-                    className="p-button-sm font-medium px-3 py-2"
-                    onClick={() => setState(p => ({ ...p, activeStep: 1 }))}
-                />
-                <div className="flex align-items-center gap-3 ml-auto">
-                    {totalPaidAmount > 0 && (
-                        <div className="text-right">
-                            <span className="text-xs text-color-secondary block">Total Fasilitas Tambahan</span>
-                            <span className="font-bold text-primary text-base">
-                                + Rp {totalPaidAmount.toLocaleString('id-ID')}
-                            </span>
-                        </div>
-                    )}
-                    <Button
-                        type="button"
-                        label="Lanjut ke Deposit & Pembayaran"
-                        icon="pi pi-arrow-right"
-                        iconPos="right"
-                        severity="success"
-                        className="p-button-sm font-bold px-4 py-2"
-                        onClick={() => setState(p => ({ ...p, activeStep: 3 }))}
-                    />
-                </div>
-            </div>
         </div>
     );
 };

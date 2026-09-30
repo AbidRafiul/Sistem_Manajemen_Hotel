@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { ReservasiBaruState, initValue } from './interfaces';
 import { FormikProps } from 'formik';
@@ -10,10 +10,11 @@ import StepExtraFacilities from './step_extra_facilities';
 import StepPayment from './step_payment';
 import StepConfirmation from './step_confirmation';
 import { Button } from 'primereact/button';
-
 import { Divider } from 'primereact/divider';
 import { Tag } from 'primereact/tag';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import postData from '@/lib/axios/postData';
+import { apiCashierShiftDropdown } from './endpoints';
 
 interface FormBookingProps {
     state: ReservasiBaruState;
@@ -25,7 +26,7 @@ interface FormBookingProps {
 const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toast }) => {
     const selectedRooms = formik.values.selected_rooms || [];
     const hasMultiRooms = selectedRooms.length > 0;
-    const hasGuest = !!(formik.values.kode_guest || (state.foundGuest && !state.isGuestNew));
+    const hasGuest = !!(formik.values.kode_guest || (state.foundGuest && !state.isGuestNew) || formik.values.full_name);
     const hasRoom = hasMultiRooms || !!(formik.values.kode_tipe_kamar && formik.values.kode_rate_plan);
     const hasPaymentSetup = formik.values.deposit_amount === 0 || !!(formik.values.deposit_amount > 0 && formik.values.payment_method);
 
@@ -37,6 +38,29 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
     const totalTagihan = totalKamar + totalFasilitas;
     const guestName = state.foundGuest?.full_name || formik.values.full_name || null;
 
+    useEffect(() => {
+        const getCashierShift = async () => {
+            if (!formik.values.kode_cabang) return;
+            setState(p => ({ ...p, cashierShiftLoad: true }));
+            try {
+                const res = await postData(apiCashierShiftDropdown, {
+                    kode_cabang: formik.values.kode_cabang
+                });
+                const shifts = res.data.data || [];
+                setState(p => ({ ...p, cashierShiftOptions: shifts }));
+                if (shifts.length > 0 && !formik.values.kode_cashier_shift) {
+                    formik.setFieldValue('kode_cashier_shift', shifts[0].kode_cashier_shift);
+                }
+            } catch (e: any) {
+                console.error("Gagal memuat data shift kasir:", e);
+            } finally {
+                setState(p => ({ ...p, cashierShiftLoad: false }));
+            }
+        };
+        getCashierShift();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formik.values.kode_cabang]);
+
     const hasTabErrors = (tabIndex: number): boolean => {
         if (!formik || formik.submitCount === 0) return false;
         if (!formik?.errors) return false;
@@ -45,9 +69,16 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
     };
 
     const getTabForField = (fieldName: string): number => {
-        if (['kode_cabang', 'keyword_guest', 'full_name', 'id_number', 'phone'].includes(fieldName)) return 0;
-        if (['check_in_date', 'check_out_date', 'kode_tipe_kamar', 'kode_rate_plan', 'selected_rooms'].includes(fieldName)) return 1;
-        if (['payment_method', 'kode_cashier_shift'].includes(fieldName)) return 3;
+        // Tab 0: Kamar & Tarif
+        if (['check_in_date', 'check_out_date', 'kode_tipe_kamar', 'kode_rate_plan', 'kode_kamar', 'nights', 'rooms', 'kode_season', 'selected_rooms'].includes(fieldName)) return 0;
+        // Tab 1: Fasilitas Tambahan
+        if (['extra_facilities'].includes(fieldName)) return 1;
+        // Tab 2: Uang Jaminan (Deposit)
+        if (['deposit_amount'].includes(fieldName)) return 2;
+        // Tab 3: Data Tamu
+        if (['kode_cabang', 'keyword_guest', 'full_name', 'id_number', 'phone', 'email', 'address', 'nationality', 'kode_guest'].includes(fieldName)) return 3;
+        // Tab 4: Konfirmasi & Pembayaran
+        if (['payment_method', 'kode_cashier_shift', 'special_request', 'reference_no'].includes(fieldName)) return 4;
         return 0;
     };
 
@@ -62,33 +93,20 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                 Booking Reservasi
                             </h3>
                             <p className="text-gray-500">
-                                Isi form di bawah ini untuk membuat reservasi tamu (booking).
+                                Pilih kamar & tarif di bawah untuk membuat reservasi tamu (booking).
                             </p>
                         </div>
                     </div>
 
                     <div className="py-2">
                         <TabView className="browser-style-tabs" scrollable activeIndex={state.activeStep} onTabChange={(e) => setState((p) => ({ ...p, activeStep: e.index }))}>
+                            {/* Tab 0: Kamar & Tarif (Landing Page Front Office) */}
                             <TabPanel
                                 header={
                                     <div className={`flex align-items-center gap-2 ${hasTabErrors(0) ? 'text-red-500' : ''}`}>
-                                        <i className="pi pi-user"></i>
-                                        <span>Data Tamu</span>
-                                        {hasTabErrors(0) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
-                                    </div>
-                                }
-                            >
-                                <div className="pt-4 animation-duration-300 fadein">
-                                    <StepGuest state={state} setState={setState} formik={formik} toast={toast} />
-                                </div>
-                            </TabPanel>
-                            
-                            <TabPanel
-                                header={
-                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(1) ? 'text-red-500' : ''}`}>
                                         <i className="pi pi-home"></i>
                                         <span>Kamar & Tarif {hasMultiRooms ? `(${selectedRooms.length})` : ''}</span>
-                                        {hasTabErrors(1) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
+                                        {hasTabErrors(0) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }
                             >
@@ -97,11 +115,13 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                 </div>
                             </TabPanel>
 
+                            {/* Tab 1: Fasilitas Tambahan */}
                             <TabPanel
                                 header={
-                                    <div className={`flex align-items-center gap-2`}>
+                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(1) ? 'text-red-500' : ''}`}>
                                         <i className="pi pi-sparkles"></i>
                                         <span>Fasilitas Tambahan {activeExtraFacilities.length > 0 ? `(${activeExtraFacilities.length})` : ''}</span>
+                                        {hasTabErrors(1) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }
                             >
@@ -110,12 +130,13 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                 </div>
                             </TabPanel>
 
+                            {/* Tab 2: Uang Jaminan (Deposit) */}
                             <TabPanel
                                 header={
-                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(3) ? 'text-red-500' : ''}`}>
-                                        <i className="pi pi-wallet"></i>
-                                        <span>Pembayaran & Uang Muka</span>
-                                        {hasTabErrors(3) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
+                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(2) ? 'text-red-500' : ''}`}>
+                                        <i className="pi pi-shield"></i>
+                                        <span>Uang Jaminan (Deposit)</span>
+                                        {hasTabErrors(2) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }
                             >
@@ -124,11 +145,28 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                 </div>
                             </TabPanel>
 
+                            {/* Tab 3: Data Tamu */}
                             <TabPanel
                                 header={
-                                    <div className={`flex align-items-center gap-2`}>
+                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(3) ? 'text-red-500' : ''}`}>
+                                        <i className="pi pi-user"></i>
+                                        <span>Data Tamu</span>
+                                        {hasTabErrors(3) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
+                                    </div>
+                                }
+                            >
+                                <div className="pt-4 animation-duration-300 fadein">
+                                    <StepGuest state={state} setState={setState} formik={formik} toast={toast} />
+                                </div>
+                            </TabPanel>
+
+                            {/* Tab 4: Konfirmasi & Pembayaran */}
+                            <TabPanel
+                                header={
+                                    <div className={`flex align-items-center gap-2 ${hasTabErrors(4) ? 'text-red-500' : ''}`}>
                                         <i className="pi pi-check-circle"></i>
-                                        <span>Konfirmasi</span>
+                                        <span>Konfirmasi & Pembayaran</span>
+                                        {hasTabErrors(4) && <i className="pi pi-exclamation-circle text-red-500 animation-duration-300 fadein" style={{ fontSize: '0.95rem' }}></i>}
                                     </div>
                                 }
                             >
@@ -323,8 +361,8 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                             </span>
                         </div>
 
-                        {/* Deposit / Uang Jaminan (Terpisah dari total tagihan) */}
-                        {formik.values.deposit_amount > 0 && (
+                        {/* Deposit / Uang Jaminan */}
+                        {formik.values.deposit_amount > 0 ? (
                             <div className="mt-3 p-2 border-round surface-50 border-1 border-green-300">
                                 <div className="flex justify-content-between text-xs mb-1">
                                     <span className="font-semibold text-green-800 flex align-items-center gap-1">
@@ -333,7 +371,16 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                     <span className="font-bold text-green-700">Rp {formik.values.deposit_amount.toLocaleString('id-ID')}</span>
                                 </div>
                                 <div className="text-color-secondary" style={{ fontSize: '11px', lineHeight: 1.3 }}>
-                                    Deposit dipegang kasir sebagai jaminan dan tidak mengurangi total tagihan (dapat di-refund saat checkout).
+                                    Deposit dipegang kasir sebagai jaminan dan tercatat pada folio transaksi tamu.
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mt-3 p-2 border-round surface-50 border-1 surface-border">
+                                <div className="flex justify-content-between text-xs">
+                                    <span className="text-600 flex align-items-center gap-1">
+                                        <i className="pi pi-shield text-400" /> Uang Jaminan (Deposit)
+                                    </span>
+                                    <span className="text-500 font-medium">Rp 0 (Opsional)</span>
                                 </div>
                             </div>
                         )}
@@ -346,9 +393,11 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                     >
                         <div className="text-xs font-medium text-color-secondary mb-2">Progres Pengisian</div>
                         {[
-                            { label: 'Data Tamu', done: hasGuest },
-                            { label: 'Pilih Kamar', done: hasRoom },
-                            { label: 'Info Deposit', done: hasPaymentSetup },
+                            { label: '1. Kamar & Tarif', done: hasRoom },
+                            { label: '2. Fasilitas Tambahan', done: true },
+                            { label: '3. Uang Jaminan (Deposit)', done: hasPaymentSetup },
+                            { label: '4. Data Tamu', done: hasGuest },
+                            { label: '5. Konfirmasi & Pembayaran', done: false },
                         ].map((item, i) => (
                             <div key={i} className="flex align-items-center gap-2 mb-1">
                                 <i

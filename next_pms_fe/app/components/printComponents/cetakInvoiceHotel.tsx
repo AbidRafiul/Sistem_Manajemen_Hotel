@@ -170,15 +170,18 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
                         </div>
 
                         {/* Pembayaran Masuk */}
-                        {payments.map((p: any, idx: number) => (
-                            <div key={`p-${idx}`} className="flex justify-content-between py-1 text-green-700">
-                                <span>
-                                    Bayar ({String(p.payment_method).toUpperCase()}
-                                    {p.reference_no ? ` - Ref: ${p.reference_no}` : ''}):
-                                </span>
-                                <span className="font-semibold">- {formatCurrency(p.amount)}</span>
-                            </div>
-                        ))}
+                        {payments.map((p: any, idx: number) => {
+                            const bankInfo = p.bank_name ? ` ${p.bank_name}${p.card_type ? ' ' + p.card_type.toUpperCase() : ''}` : '';
+                            const refInfo = p.reference_no ? ` - Ref: ${p.reference_no}` : '';
+                            return (
+                                <div key={`p-${idx}`} className="flex justify-content-between py-1 text-green-700">
+                                    <span>
+                                        Bayar ({String(p.payment_method || '').toUpperCase()}{bankInfo}{refInfo}):
+                                    </span>
+                                    <span className="font-semibold">- {formatCurrency(p.amount)}</span>
+                                </div>
+                            );
+                        })}
 
                         <div className="flex justify-content-between py-2 border-top-2 border-900 font-bold text-base mt-1">
                             <span>SISA TAGIHAN (SALDO):</span>

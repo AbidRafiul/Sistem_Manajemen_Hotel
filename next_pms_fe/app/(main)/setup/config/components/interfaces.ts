@@ -14,6 +14,9 @@ export interface initValue {
     msTeleponPerusahaan: string,
     msNamaPimpinan: string,
     msLogoPerusahaan: string,
+    msQrisMerchantName?: string,
+    msQrisNmid?: string,
+    msQrisImage?: string,
 }
 
 export interface NavState {
@@ -41,6 +44,7 @@ export interface State {
     session: Session | null
     submittedData: initValue | null
     imgPrev: string | null
+    qrisImgPrev?: string | null
 }
 
 export interface TableProps {

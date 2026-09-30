@@ -113,16 +113,29 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Resolusi shift kasir aktif
+    let shiftCode = oPayload.kode_cashier_shift || null;
+    if (!shiftCode && userId) {
+      const activeShift = await DB("trx_cashier_shift")
+        .where("user_id", userId)
+        .where("status", "open")
+        .orderBy("opened_at", "desc")
+        .first();
+      if (activeShift) {
+        shiftCode = activeShift.kode_cashier_shift;
+      }
+    }
+
     // 3. Jika bayar langsung dengan Cash, validasi shift
     if (oPayload.is_paid_now && oPayload.payment_method === "cash") {
       const shift = await DB("trx_cashier_shift")
-        .where("kode_cashier_shift", oPayload.kode_cashier_shift)
+        .where("kode_cashier_shift", shiftCode)
         .first();
 
       if (!shift || shift.status !== "open") {
         return res.status(422).json({
           status: status.BAD_REQUEST,
-          message: `Shift kasir ${oPayload.kode_cashier_shift} tidak aktif/tidak valid. Silakan buka shift terlebih dahulu.`,
+          message: `Shift kasir ${shiftCode || ""} tidak aktif/tidak valid. Silakan buka shift terlebih dahulu.`,
           datetime: formatDateSystem()
         });
       }
@@ -154,6 +167,7 @@ router.post("/", async (req, res) => {
             amount: subtotal,
             ref_source_type: "manual_addon",
             kode_ref_source: oPayload.kode_reservasi_room,
+            kode_cashier_shift: shiftCode,
             posted_by: userId,
             posted_at: tNow,
             created_by: userId,
@@ -194,9 +208,11 @@ router.post("/", async (req, res) => {
           kode_payment: noPayment,
           kode_folio: folio.kode_folio,
           payment_method: oPayload.payment_method,
+          bank_name: oPayload.bank_name || null,
+          card_type: oPayload.card_type || null,
           amount: totalItemsAmount,
           reference_no: oPayload.reference_no || null,
-          kode_cashier_shift: oPayload.kode_cashier_shift || null,
+          kode_cashier_shift: shiftCode,
           received_by: userId,
           paid_at: tNow,
           created_by: userId,

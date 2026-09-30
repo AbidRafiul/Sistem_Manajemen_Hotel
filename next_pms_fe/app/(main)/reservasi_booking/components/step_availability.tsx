@@ -581,12 +581,12 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                         </div>
 
                         <Button 
-                            label={formik.values.kode_guest || state.foundGuest || formik.values.full_name ? "Lanjut ke Fasilitas Tambahan" : "Lanjutkan ke Data Tamu"} 
+                            label="Lanjut ke Fasilitas Tambahan" 
                             icon="pi pi-arrow-right" 
                             iconPos="right" 
                             severity="success"
                             className="font-bold px-4 py-3 border-round-lg shadow-2"
-                            onClick={() => setState(p => ({ ...p, activeStep: (formik.values.kode_guest || state.foundGuest || formik.values.full_name) ? 2 : 0 }))}
+                            onClick={() => setState(p => ({ ...p, activeStep: 1 }))}
                         />
                     </div>
                 </div>

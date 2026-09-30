@@ -131,16 +131,30 @@ router.post("/", async (req, res) => {
       let totalPaid = billing.folio.total_paid;
       const tNow = formatDateSystem();
 
+      // Resolusi shift kasir aktif jika tidak disertakan dalam payload
+      let shiftCode = oPayload.kode_cashier_shift || null;
+      if (!shiftCode && user_id) {
+        const activeShift = await trx("trx_cashier_shift")
+          .where("user_id", user_id)
+          .where("status", "open")
+          .orderBy("opened_at", "desc")
+          .first();
+        if (activeShift) {
+          shiftCode = activeShift.kode_cashier_shift;
+        }
+      }
+
       // 3. Proses Pembayaran Pelunasan jika dikirimkan
       if (Array.isArray(oPayload.payment) && oPayload.payment.length > 0) {
         for (const pay of oPayload.payment) {
+          const payShift = pay.kode_cashier_shift || shiftCode;
           if (pay.payment_method === "cash") {
             const shift = await trx("trx_cashier_shift")
-              .where("kode_cashier_shift", pay.kode_cashier_shift)
+              .where("kode_cashier_shift", payShift)
               .first();
 
             if (!shift || shift.status !== "open") {
-              throw new Error(`Shift kasir ${pay.kode_cashier_shift || ""} tidak aktif/tidak valid. Harap buka shift terlebih dahulu.`);
+              throw new Error(`Shift kasir ${payShift || ""} tidak aktif/tidak valid. Harap buka shift terlebih dahulu.`);
             }
           }
 
@@ -149,9 +163,11 @@ router.post("/", async (req, res) => {
             kode_payment: payCode,
             kode_folio: folio.kode_folio,
             payment_method: pay.payment_method,
+            bank_name: pay.bank_name || null,
+            card_type: pay.card_type || null,
             amount: pay.amount,
             reference_no: pay.reference_no || null,
-            kode_cashier_shift: pay.kode_cashier_shift || null,
+            kode_cashier_shift: payShift || null,
             received_by: user_id,
             paid_at: tNow,
             created_by: user_id,
@@ -225,6 +241,14 @@ router.post("/", async (req, res) => {
           hkTask = { kode_housekeeping_task: hkTaskCode, kode_kamar: roomItem.kode_kamar };
         }
 
+        // Ambil data jumlah tamu dari reservasi
+        const resData = await trx("trx_reservation_room as rr")
+          .join("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
+          .where("rr.kode_reservasi_room", roomItem.kode_reservasi_room)
+          .select("r.guest_count")
+          .first();
+        const paxCheckout = resData?.guest_count ? parseInt(resData.guest_count, 10) : 1;
+
         // Insert trx_checkout per kamar
         const cCheckoutCode = await generateSequence("FMT-CO", trx);
         await trx("trx_checkout").insert({
@@ -232,6 +256,8 @@ router.post("/", async (req, res) => {
           kode_reservation_room: roomItem.kode_reservasi_room,
           late_checkout: 0,
           grand_total: roomItem.rate_per_night,
+          kode_cashier_shift: shiftCode,
+          guest_count: paxCheckout > 0 ? paxCheckout : 1,
           checkout_by: user_id,
           checkout_at: tNow,
           created_by: user_id,

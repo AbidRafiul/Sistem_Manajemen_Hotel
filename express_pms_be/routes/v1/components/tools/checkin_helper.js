@@ -21,7 +21,7 @@ import { generateSequence } from "./generateCode.js";
  * @param {string} [params.kode_kamar_manual] - Jika ada, akan pakai kamar ini. Jika tidak, auto-assign.
  * @returns {Promise<Object>}
  */
-export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_kamar_manual }) => {
+export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_kamar_manual, kode_cashier_shift, guest_count }) => {
     if (!trx) throw new Error("processCheckIn membutuhkan instance transaction (trx)");
 
     const tNow = formatDateSystem();
@@ -33,7 +33,8 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
             "rr.*",
             "r.kode_cabang",
             "r.check_in_date",
-            "r.check_out_date"
+            "r.check_out_date",
+            "r.guest_count as res_guest_count"
         )
         .where("rr.kode_reservasi_room", kode_reservasi_room)
         .first();
@@ -106,11 +107,28 @@ export const processCheckIn = async ({ kode_reservasi_room, trx, userId, kode_ka
             updated_at: tNow
         });
 
-    // 6. Insert trx_checkin
+    // 6. Resolusi Shift Kasir & Guest Count
+    let shiftCode = kode_cashier_shift || null;
+    if (!shiftCode && userId) {
+        const activeShift = await trx("trx_cashier_shift")
+            .where("user_id", userId)
+            .where("status", "open")
+            .orderBy("opened_at", "desc")
+            .first();
+        if (activeShift) {
+            shiftCode = activeShift.kode_cashier_shift;
+        }
+    }
+
+    const totalPax = guest_count ? parseInt(guest_count, 10) : (resRoom.res_guest_count ? parseInt(resRoom.res_guest_count, 10) : 1);
+
+    // Insert trx_checkin
     await trx("trx_checkin").insert({
         kode_checkin: noCheckin,
         kode_reservation_room: kode_reservasi_room,
         early_checkin: 0,
+        kode_cashier_shift: shiftCode,
+        guest_count: totalPax > 0 ? totalPax : 1,
         checkin_by: userId,
         checkin_at: tNow,
         created_by: userId,

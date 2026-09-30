@@ -99,9 +99,13 @@ export interface initValue {
     extra_facilities?: ExtraFacilityItem[];
     special_request?: string;
 
-    // Step 4: Payment
-    deposit_amount: number;
+    // Step 4: Payment & Deposit
+    payment_amount: number; // Pembayaran tagihan sewa kamar (mengurangi tagihan)
+    deposit_amount: number; // Uang jaminan insidentil/kunci (TIDAK mengurangi tagihan, dikembalikan saat checkout)
     payment_method: string;
+    bank_name?: string;
+    card_type?: 'debit' | 'credit';
     kode_cashier_shift: string;
+    reference_no?: string;
 }
 

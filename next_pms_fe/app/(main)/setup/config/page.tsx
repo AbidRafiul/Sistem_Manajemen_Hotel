@@ -35,11 +35,12 @@ const Page = () => {
             msTeleponPerusahaan: '',
             msNamaPimpinan: '',
             msLogoPerusahaan: '',
+            msQrisMerchantName: 'Grand Marstech Hotel & Resort',
+            msQrisNmid: 'ID1020039485721',
+            msQrisImage: '',
         },
         validate: (data: initValue) => {
             let errors = {};
-            // Validasi name
-
             return errors;
         },
         onSubmit: (data) => {
@@ -59,16 +60,26 @@ const Page = () => {
                     'msTeleponPerusahaan',
                     'msNamaPimpinan',
                     'msLogoPerusahaan',
+                    'msQrisMerchantName',
+                    'msQrisNmid',
+                    'msQrisImage',
                 ]
             });
 
-            const { msLogoPerusahaan, ...vaValues } = res.data?.data || {};
+            const { msLogoPerusahaan, msQrisImage, ...vaValues } = res.data?.data || {};
 
-            formik.setValues(vaValues || {});
+            formik.setValues({
+                ...vaValues,
+                msLogoPerusahaan: msLogoPerusahaan || '',
+                msQrisImage: msQrisImage || '',
+                msQrisMerchantName: vaValues?.msQrisMerchantName || 'Grand Marstech Hotel & Resort',
+                msQrisNmid: vaValues?.msQrisNmid || 'ID1020039485721'
+            });
 
             setState((p) => ({
                 ...p,
-                imgPrev: msLogoPerusahaan || null
+                imgPrev: msLogoPerusahaan || null,
+                qrisImgPrev: msQrisImage || '/layout/images/qris-demo.svg'
             }));
 
         } catch (error: any) {
