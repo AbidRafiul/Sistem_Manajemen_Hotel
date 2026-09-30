@@ -250,6 +250,19 @@ router.use("/cashier-counter/cashier-counter-create", cashierCounterCreate);
 router.use("/cashier-counter/cashier-counter-update", cashierCounterUpdate);
 router.use("/cashier-counter/cashier-counter-delete", cashierCounterDelete);
 
+// Master Shift
+import shiftData from "./shift/shift_data.js";
+import shiftCreate from "./shift/shift_create.js";
+import shiftUpdate from "./shift/shift_update.js";
+import shiftDelete from "./shift/shift_delete.js";
+import shiftDropdown from "./shift/shift_dropdown.js";
+
+router.use("/shift/shift-data", shiftData);
+router.use("/shift/shift-create", shiftCreate);
+router.use("/shift/shift-update", shiftUpdate);
+router.use("/shift/shift-delete", shiftDelete);
+router.use("/shift/shift-dropdown", shiftDropdown);
+
 import guestData from "./guest/guest_data.js";
 import guestDetail from "./guest/guest_detail.js";
 import guestCreate from "./guest/guest_create.js";
