@@ -19,6 +19,7 @@ import { DialogTambahFasilitas } from './components/dialog_tambah_fasilitas';
 import { DialogExtendStay } from './components/dialog_extend_stay';
 import { showError } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 const TamuMenginapPage = () => {
     const toast = useRef<Toast>(null);
@@ -27,7 +28,7 @@ const TamuMenginapPage = () => {
 
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any[]>([]);
-    
+
     // Filters
     const [searchKeyword, setSearchKeyword] = useState('');
     const [selectedCabang, setSelectedCabang] = useState<string>('');
@@ -88,6 +89,7 @@ const TamuMenginapPage = () => {
             <Toast ref={toast} />
 
             <div className="col-12">
+                <FrontOfficeNav />
                 {/* Header Title Card */}
                 <div className="surface-card p-4 border-round-xl shadow-1 border-1 surface-border mb-3">
                     <div className="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center gap-3">
@@ -101,12 +103,12 @@ const TamuMenginapPage = () => {
                             </span>
                         </div>
                         <div className="flex align-items-center gap-2 flex-wrap">
-                            <div className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border">
+                            {/* <div className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border">
                                 <i className="pi pi-building text-primary font-bold"></i>
                                 <span className="text-sm font-bold text-900">
                                     {session?.user?.active_kode_cabang || selectedCabang || '-'} - {session?.user?.active_branch_name || 'Cabang Aktif'}
                                 </span>
-                            </div>
+                            </div> */}
                             <Button
                                 label="Segarkan Data"
                                 icon="pi pi-refresh"
@@ -356,8 +358,8 @@ const TamuMenginapPage = () => {
                                         tooltipOptions={{ position: 'top' }}
                                         className="p-button-rounded p-button-text p-button-secondary"
                                         onClick={() => {
-                                             setSelectedRow(row);
-                                             setShowFolioDialog(true);
+                                            setSelectedRow(row);
+                                            setShowFolioDialog(true);
                                         }}
                                     />
                                     <Button

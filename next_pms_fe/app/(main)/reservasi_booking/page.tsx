@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
 import FormBooking from './components/form_booking';
+import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 const BookingContent = () => {
     const toast = useRef<Toast>(null);
@@ -54,19 +55,31 @@ const BookingContent = () => {
             extra_facilities: [],
             special_request: '',
             deposit_amount: 0,
-            payment_method: '',
-            kode_cashier_shift: ''
+            payment_method: 'cash',
+            kode_cashier_shift: '',
+            reference_no: ''
         },
         validate: (data) => {
             let errors: any = {};
-            const checkStep0 = state.activeStep === 0 || state.activeStep === 4;
-            const checkStep1 = state.activeStep === 1 || state.activeStep === 4;
-            const checkStep3 = state.activeStep === 3 || state.activeStep === 4;
+            const checkTabKamar = state.activeStep === 0 || state.activeStep === 4;
+            const checkTabTamu = state.activeStep === 3 || state.activeStep === 4;
+            const checkTabKonfirmasi = state.activeStep === 4;
 
-            if (checkStep0) {
+            // Tab 0: Kamar & Tarif
+            if (checkTabKamar) {
+                if (!data.check_in_date) errors.check_in_date = 'Tanggal Check In wajib diisi';
+                if (!data.check_out_date) errors.check_out_date = 'Tanggal Check Out wajib diisi';
+                const hasRooms = (data.selected_rooms && data.selected_rooms.length > 0) || (data.kode_tipe_kamar && data.kode_rate_plan);
+                if (!hasRooms) {
+                    errors.kode_tipe_kamar = 'Silakan pilih tipe kamar dan paket tarif';
+                }
+            }
+
+            // Tab 3: Data Tamu
+            if (checkTabTamu) {
                 if (!data.kode_cabang) errors.kode_cabang = 'Cabang wajib dipilih';
-                if (!state.foundGuest && !state.isGuestNew && !data.kode_guest) {
-                    errors.keyword_guest = 'Silakan cari atau buat data tamu baru';
+                if (!state.foundGuest && !state.isGuestNew && !data.kode_guest && !data.full_name) {
+                    errors.keyword_guest = 'Silakan cari atau pilih data tamu';
                 }
                 if (state.isGuestNew) {
                     if (!data.full_name) errors.full_name = 'Nama lengkap wajib diisi';
@@ -74,18 +87,11 @@ const BookingContent = () => {
                     if (!data.phone) errors.phone = 'Nomor Telepon wajib diisi';
                 }
             }
-            if (checkStep1) {
-                if (!data.check_in_date) errors.check_in_date = 'Tanggal Check In wajib diisi';
-                if (!data.check_out_date) errors.check_out_date = 'Tanggal Check Out wajib diisi';
-                const hasRooms = (data.selected_rooms && data.selected_rooms.length > 0) || (data.kode_kamar && data.kode_tipe_kamar);
-                if (!hasRooms) {
-                    errors.kode_kamar = 'Silakan pilih minimal 1 kamar fisik yang tersedia';
-                }
-            }
-            if (checkStep3) {
+
+            // Tab 4: Konfirmasi & Pembayaran
+            if (checkTabKonfirmasi) {
                 if (data.deposit_amount > 0) {
                     if (!data.payment_method) errors.payment_method = 'Metode pembayaran wajib dipilih';
-                    if (!data.kode_cashier_shift) errors.kode_cashier_shift = 'Shift kasir wajib dipilih';
                 }
             }
             return errors;
@@ -126,6 +132,7 @@ const BookingContent = () => {
     return (
         <div className="p-0">
             <Toast ref={toast} position="top-right" />
+            <FrontOfficeNav />
             <FormBooking state={state} setState={setState} formik={formik} toast={toast} />
         </div>
     );

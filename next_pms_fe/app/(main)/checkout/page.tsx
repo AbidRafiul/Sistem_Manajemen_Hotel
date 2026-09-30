@@ -23,6 +23,9 @@ import { apiCheckoutSearch, apiCheckoutSubmit, apiShiftCurrent } from './compone
 import DialogInvoice from '@/app/components/dialogComponents/dialog_invoice';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
 import StatusLegend from '@/app/components/status/StatusLegend';
+import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
+// import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
+import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 
 const CheckoutPage = () => {
     const toast = useRef<Toast>(null);
@@ -50,7 +53,9 @@ const CheckoutPage = () => {
     const [checkoutDialogVisible, setCheckoutDialogVisible] = useState(false);
 
     // Payment form state
-    const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'qris' | 'transfer'>('cash');
+    const [bankName, setBankName] = useState<string>('BCA');
+    const [cardType, setCardType] = useState<'debit' | 'credit'>('debit');
     const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
     const [referenceNo, setReferenceNo] = useState('');
 
@@ -73,9 +78,9 @@ const CheckoutPage = () => {
     const searchRooms = async (keyword: string = '') => {
         setLoading(true);
         try {
-            const res = await postData(apiCheckoutSearch, { 
+            const res = await postData(apiCheckoutSearch, {
                 keyword,
-                kode_cabang: session?.user?.active_kode_cabang 
+                kode_cabang: session?.user?.active_kode_cabang
             });
             const list = res?.data?.data || [];
             setRooms(list);
@@ -202,16 +207,19 @@ const CheckoutPage = () => {
                 kode_folio: selectedRoom.kode_folio,
                 kode_reservasi_rooms: targetIds,
                 kode_reservasi_room: targetIds[0],
-                kode_cabang: session?.user?.active_kode_cabang || selectedRoom.kode_cabang
+                kode_cabang: session?.user?.active_kode_cabang || selectedRoom.kode_cabang,
+                kode_cashier_shift: shiftAktif?.kode_cashier_shift || undefined
             };
 
             if (withPayment || outstanding > 0) {
                 payload.payment = [
                     {
                         payment_method: paymentMethod,
+                        bank_name: (paymentMethod === 'card' || paymentMethod === 'transfer') ? bankName : undefined,
+                        card_type: paymentMethod === 'card' ? cardType : undefined,
                         amount: paymentAmount !== null ? paymentAmount : outstanding,
-                        kode_cashier_shift: paymentMethod === 'cash' ? shiftAktif?.kode_cashier_shift : undefined,
-                        reference_no: referenceNo || undefined
+                        kode_cashier_shift: shiftAktif?.kode_cashier_shift || undefined,
+                        reference_no: buildStandardReferenceNo(paymentMethod, referenceNo, bankName, cardType) || undefined
                     }
                 ];
             }
@@ -403,6 +411,7 @@ const CheckoutPage = () => {
     return (
         <div className="p-0">
             <Toast ref={toast} position="top-right" />
+            {/* <FrontOfficeNav /> */}
 
             {/* Master Tamu Styled Card */}
             <div className="card">
@@ -715,9 +724,8 @@ const CheckoutPage = () => {
                                         return (
                                             <div
                                                 key={idx}
-                                                className={`flex align-items-center justify-content-between p-2 border-round cursor-pointer transition-colors ${
-                                                    isChecked ? 'bg-primary-50 border-1 border-primary-300' : 'surface-100 border-1 surface-border'
-                                                }`}
+                                                className={`flex align-items-center justify-content-between p-2 border-round cursor-pointer transition-colors ${isChecked ? 'bg-primary-50 border-1 border-primary-300' : 'surface-100 border-1 surface-border'
+                                                    }`}
                                                 onClick={() => {
                                                     if (isChecked) {
                                                         setSelectedRoomIds(selectedRoomIds.filter((id) => id !== rm.kode_reservasi_room));
@@ -861,50 +869,49 @@ const CheckoutPage = () => {
                         {/* Form Pelunasan Kasir jika Belum Lunas */}
                         {!isSelectedSettled && (
                             <div className="surface-50 p-3 border-round-xl border-1 surface-border p-fluid">
-                                <div className="text-xs font-bold text-color-secondary uppercase mb-2">Formulir Pelunasan Kasir</div>
-
-                                <div className="field mb-2">
-                                    <label className="text-xs font-semibold">Metode Pembayaran</label>
-                                    <Dropdown
-                                        value={paymentMethod}
-                                        options={[
-                                            { label: 'Cash (Tunai)', value: 'cash' },
-                                            { label: 'Kartu Debit / Kredit', value: 'card' },
-                                            { label: 'Transfer Bank', value: 'transfer' },
-                                            { label: 'QRIS / EDC', value: 'edc' }
-                                        ]}
-                                        onChange={(e) => setPaymentMethod(e.value)}
-                                        className="w-full text-sm"
-                                    />
-                                    {paymentMethod === 'cash' && !shiftAktif && (
-                                        <small className="p-error block mt-1">
-                                            Shift kasir belum aktif! Buka shift di menu Shift Kasir untuk transaksi tunai.
-                                        </small>
-                                    )}
+                                <div className="text-xs font-bold text-color-secondary uppercase mb-2">
+                                    Formulir Pelunasan Kasir
                                 </div>
 
-                                <div className="field mb-2">
-                                    <label className="text-xs font-semibold">Nominal Pembayaran</label>
+                                <div className="field mb-3">
+                                    <label className="text-xs font-bold text-700 block mb-1">
+                                        Nominal Pembayaran Pelunasan <span className="text-red-500">*</span>
+                                    </label>
                                     <InputNumber
-                                        value={paymentAmount}
+                                        value={paymentAmount !== null ? paymentAmount : selectedBalance}
                                         onValueChange={(e) => setPaymentAmount(e.value as number | null)}
                                         mode="currency"
                                         currency="IDR"
                                         locale="id-ID"
                                         placeholder="Jumlah bayar"
-                                        className="w-full text-sm"
+                                        className="w-full text-base font-bold"
                                     />
+                                    <small className="text-500 text-xs mt-1 block">
+                                        Total sisa tagihan belum lunas: Rp {selectedBalance.toLocaleString('id-ID')}
+                                    </small>
                                 </div>
 
-                                {paymentMethod !== 'cash' && (
-                                    <div className="field mb-0">
-                                        <label className="text-xs font-semibold">No. Referensi / Transaksi (Opsional)</label>
-                                        <InputText
-                                            value={referenceNo}
-                                            onChange={(e) => setReferenceNo(e.target.value)}
-                                            placeholder="Cth: No Kartu / Trx ID / Approval Code"
-                                            className="w-full text-sm"
-                                        />
+                                <PaymentMethodSelector
+                                    value={{
+                                        method: paymentMethod,
+                                        bank_name: bankName,
+                                        card_type: cardType,
+                                        reference_no: referenceNo
+                                    }}
+                                    onChange={(detail) => {
+                                        setPaymentMethod(detail.method);
+                                        if (detail.bank_name) setBankName(detail.bank_name);
+                                        if (detail.card_type) setCardType(detail.card_type);
+                                        setReferenceNo(detail.reference_no || '');
+                                    }}
+                                    totalAmount={paymentAmount !== null ? paymentAmount : selectedBalance}
+                                    compact={true}
+                                />
+
+                                {paymentMethod === 'cash' && !shiftAktif && (
+                                    <div className="p-2 border-round bg-red-50 text-red-700 border-1 border-red-200 text-xs mt-2">
+                                        <i className="pi pi-exclamation-triangle mr-1"></i>
+                                        Shift kasir belum aktif! Buka sesi shift kasir terlebih dahulu untuk transaksi tunai.
                                     </div>
                                 )}
                             </div>

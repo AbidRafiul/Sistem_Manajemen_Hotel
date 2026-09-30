@@ -11,11 +11,16 @@ import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { InputText } from 'primereact/inputtext';
 import { Dialog } from 'primereact/dialog';
+import { InputNumber } from 'primereact/inputnumber';
 import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { apiReservationData, apiCheckinSubmit, apiShiftCurrent } from './components/endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
+import CashierPicCard from '@/app/components/payment/CashierPicCard';
+import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
+import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
@@ -30,7 +35,11 @@ const Page = () => {
     // Deposit handling dialog
     const [showDepositDialog, setShowDepositDialog] = useState(false);
     const [selectedRes, setSelectedRes] = useState<any>(null);
-    const [paymentMethod, setPaymentMethod] = useState('');
+    const [depositAmount, setDepositAmount] = useState<number>(0);
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'qris' | 'transfer'>('cash');
+    const [bankName, setBankName] = useState('BCA');
+    const [cardType, setCardType] = useState<'debit' | 'credit'>('debit');
+    const [referenceNo, setReferenceNo] = useState('');
     const [shiftCode, setShiftCode] = useState('');
     const [shiftAktif, setShiftAktif] = useState<any>(null);
 
@@ -82,19 +91,14 @@ const Page = () => {
     };
 
     const processCheckIn = async (rowData: any) => {
-        if (rowData.deposit_amount > 0) {
-            if (!shiftAktif) {
-                showError(toast, 'Shift kasir belum dibuka. Silakan buka shift terlebih dahulu sebelum memproses check-in dengan deposit.');
-                return;
-            }
-            setSelectedRes(rowData);
-            setShiftCode(shiftAktif.kode_cashier_shift); 
-            setPaymentMethod('cash');
-            setShowDepositDialog(true);
-            return;
-        }
-
-        doSubmitCheckin(rowData.kode_reservasi_room);
+        setSelectedRes(rowData);
+        setShiftCode(shiftAktif?.kode_cashier_shift || ''); 
+        setPaymentMethod('cash');
+        setBankName('');
+        setCardType('debit');
+        setReferenceNo('');
+        setDepositAmount(parseFloat(rowData.deposit_amount || 0));
+        setShowDepositDialog(true);
     };
 
     const doSubmitCheckin = async (kode_reservasi_room: string, payloadDeposit: any = {}) => {
@@ -119,9 +123,19 @@ const Page = () => {
     };
 
     const handleDepositSubmit = () => {
+        if (depositAmount > 0 && !shiftAktif) {
+            showError(toast, 'Shift kasir belum dibuka. Silakan buka shift terlebih dahulu sebelum memproses check-in dengan deposit.');
+            return;
+        }
+        const stdRef = depositAmount > 0 ? buildStandardReferenceNo(paymentMethod, bankName, cardType, referenceNo) : null;
         doSubmitCheckin(selectedRes.kode_reservasi_room, {
-            payment_method: paymentMethod,
-            kode_cashier_shift: shiftCode
+            payment_method: depositAmount > 0 ? (paymentMethod || 'cash') : null,
+            bank_name: depositAmount > 0 ? (bankName || null) : null,
+            card_type: depositAmount > 0 && paymentMethod === 'card' ? (cardType || 'debit') : null,
+            reference_no: stdRef,
+            kode_cashier_shift: shiftCode || shiftAktif?.kode_cashier_shift || null,
+            deposit_amount: depositAmount,
+            guest_count: selectedRes?.guest_count || 1
         });
     };
 
@@ -190,6 +204,7 @@ const Page = () => {
     return (
         <div className="card">
             <Toast ref={toast} position="top-right" />
+            <FrontOfficeNav />
             
             <div className="flex justify-content-between align-items-start mb-4">
                 <div className="flex flex-column">
@@ -265,50 +280,127 @@ const Page = () => {
             </DataTable>
 
             <Dialog 
-                header={<div className="flex align-items-center gap-2"><i className="pi pi-wallet text-xl text-primary"></i> <span>Proses Deposit Reservasi</span></div>} 
+                header={<div className="flex align-items-center gap-2"><i className="pi pi-shield text-xl text-primary"></i> <span>Konfirmasi Check-In & Deposit</span></div>} 
                 visible={showDepositDialog} 
-                style={{ width: '450px' }} 
+                style={{ width: '500px' }} 
                 onHide={() => setShowDepositDialog(false)} 
                 breakpoints={{ '960px': '75vw', '641px': '100vw' }}
                 footer={(
                     <div className="flex justify-content-end gap-2">
                         <Button label="Batal" icon="pi pi-times" onClick={() => setShowDepositDialog(false)} className="p-button-text" />
-                        <Button label="Proses Check-in" icon="pi pi-check" onClick={handleDepositSubmit} loading={loading} />
+                        <Button label="Proses Check-in" icon="pi pi-check" onClick={handleDepositSubmit} loading={loading} severity="success" />
                     </div>
                 )}
             >
                 {selectedRes && (
                     <div className="p-fluid">
-                        <div className="p-3 border-round bg-yellow-50 border-1 border-yellow-200 mb-4">
-                            <div className="flex align-items-center gap-2 mb-2">
-                                <i className="pi pi-info-circle text-yellow-600"></i>
-                                <span className="font-bold text-yellow-800">Info Pembayaran Deposit</span>
+                        <div className="p-3 border-round bg-blue-50 border-1 border-blue-200 mb-3">
+                            <div className="flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span className="font-bold text-900 block text-base">{selectedRes.full_name}</span>
+                                    <span className="text-xs text-500">ID Tamu: {selectedRes.kode_tamu} • Reservasi: {selectedRes.kode_reservation}</span>
+                                </div>
+                                <Tag severity="info" value={`${selectedRes.nights || 1} Malam`} />
                             </div>
-                            <p className="m-0 text-sm">Tamu ini memiliki deposit sebesar <strong>Rp {parseFloat(selectedRes.deposit_amount).toLocaleString('id-ID')}</strong>.</p>
-                            <p className="m-0 text-sm mt-1">Deposit akan otomatis dimasukkan ke folio dan shift kasir yang Anda pilih di bawah ini.</p>
+                            <div className="text-xs text-700">
+                                <span>Kamar: <strong>{selectedRes.nomor_kamar ? `No. ${selectedRes.nomor_kamar}` : 'Auto-Assign'}</strong> ({selectedRes.nama_tipe})</span>
+                            </div>
+                        </div>
+
+                        {/* Status Deposit Reservasi */}
+                        {parseFloat(selectedRes.deposit_amount || 0) > 0 ? (
+                            <div className="p-2 border-round bg-green-50 border-1 border-green-300 mb-3 flex align-items-center gap-2">
+                                <i className="pi pi-check-circle text-green-700 text-lg"></i>
+                                <div className="text-xs">
+                                    <span className="font-bold text-green-900">Deposit Tercatat di Reservasi: Rp {parseFloat(selectedRes.deposit_amount).toLocaleString('id-ID')}</span>
+                                    <span className="text-green-800 block">Tamu telah menyetor uang jaminan saat membuat reservasi.</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-2 border-round surface-50 border-1 surface-border mb-3 flex align-items-center gap-2">
+                                <i className="pi pi-info-circle text-blue-500 text-lg"></i>
+                                <span className="text-xs text-color-secondary">Reservasi ini belum memiliki deposit awal. Silakan tetapkan uang jaminan di bawah.</span>
+                            </div>
+                        )}
+
+                        {/* Presets Uang Jaminan */}
+                        <div className="mb-3">
+                            <label className="text-xs font-semibold text-color-secondary uppercase mb-1 block">Pilihan Cepat Deposit (Uang Jaminan)</label>
+                            <div className="grid">
+                                {[
+                                    { label: 'Tanpa Deposit', val: 0 },
+                                    { label: 'Rp 100.000', val: 100000 },
+                                    { label: 'Rp 200.000', val: 200000 },
+                                    { label: 'Rp 500.000', val: 500000 },
+                                ].map((p) => (
+                                    <div key={p.val} className="col-6 sm:col-3">
+                                        <div
+                                            className={`p-2 text-center border-round cursor-pointer text-xs font-bold transition-all select-none ${
+                                                depositAmount === p.val
+                                                    ? 'bg-green-600 text-white shadow-1'
+                                                    : 'surface-100 hover:surface-200 text-700 border-1 surface-border'
+                                            }`}
+                                            onClick={() => setDepositAmount(p.val)}
+                                        >
+                                            {p.label}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="field mb-3">
+                            <label className="font-semibold text-sm">Nominal Uang Jaminan / Deposit (Rp)</label>
+                            <InputNumber 
+                                value={depositAmount} 
+                                onValueChange={(e) => setDepositAmount(e.value ?? 0)} 
+                                mode="currency" 
+                                currency="IDR" 
+                                locale="id-ID" 
+                                min={0} 
+                                placeholder="Rp 0" 
+                                className="w-full" 
+                            />
+                            <small className="text-color-secondary">Uang jaminan disimpan di kasir dan tercatat pada folio transaksi tamu.</small>
                         </div>
                         
-                        <div className="field">
-                            <label>Shift Kasir</label>
-                            <Dropdown 
-                                value={shiftCode} 
-                                options={shiftAktif ? [{label: shiftAktif.kode_cashier_shift, value: shiftAktif.kode_cashier_shift}] : []} 
-                                onChange={(e) => setShiftCode(e.value)} 
-                                disabled
-                            />
-                        </div>
-                        <div className="field">
-                            <label>Metode Pembayaran</label>
-                            <Dropdown 
-                                value={paymentMethod} 
-                                options={[
-                                    {label: 'Cash', value: 'cash'},
-                                    {label: 'Transfer Bank', value: 'transfer'},
-                                    {label: 'Kartu Kredit', value: 'credit_card'}
-                                ]} 
-                                onChange={(e) => setPaymentMethod(e.value)} 
-                            />
-                        </div>
+                        {depositAmount > 0 && (
+                            <>
+                                <div className="mb-3">
+                                    <PaymentMethodSelector
+                                        value={{
+                                            method: paymentMethod,
+                                            bank_name: bankName,
+                                            card_type: cardType,
+                                            reference_no: referenceNo
+                                        }}
+                                        onChange={(detail) => {
+                                            setPaymentMethod(detail.method);
+                                            if (detail.bank_name) setBankName(detail.bank_name);
+                                            if (detail.card_type) setCardType(detail.card_type);
+                                            setReferenceNo(detail.reference_no || '');
+                                        }}
+                                        totalAmount={depositAmount}
+                                        compact={true}
+                                    />
+                                </div>
+                                <div className="mb-2">
+                                    <CashierPicCard
+                                        sessionUser={session?.user}
+                                        activeShift={shiftAktif}
+                                        kodeCabang={filterCabang}
+                                        onShiftUpdated={(s) => {
+                                            setShiftAktif(s);
+                                            if (s?.kode_cashier_shift) {
+                                                setShiftCode(s.kode_cashier_shift);
+                                            }
+                                        }}
+                                        toast={toast}
+                                        compact={true}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </Dialog>
