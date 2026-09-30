@@ -15,11 +15,15 @@ import express from "express";
 import shiftOpen from "./shift_open.js";
 import shiftClose from "./shift_close.js";
 import shiftCurrent from "./shift_current.js";
+import shiftDetail from "./shift_detail.js";
+import shiftHistory from "./shift_history.js";
 
 const router = express.Router();
 
 router.use("/shift-open", shiftOpen);
 router.use("/shift-close", shiftClose);
 router.use("/shift-current", shiftCurrent);
+router.use("/shift-detail", shiftDetail);
+router.use("/shift-history", shiftHistory);
 
 export default router;

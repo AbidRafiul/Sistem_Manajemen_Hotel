@@ -21,7 +21,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
-  const user_id = req?.auth?.user_id || 0;
+  const user_id = req?.auth?.user_id || req?.auth?.id || 0;
 
   try {
     if (!oPayload || Object.keys(oPayload).length < 1)
@@ -35,6 +35,7 @@ router.post("/", async (req, res) => {
       {
         kode_cashier_shift: Joi.string().required().label("Kode Shift"),
         closing_cash: Joi.number().min(0).required().label("Closing Cash"),
+        catatan_handover: Joi.string().optional().allow("", null).label("Catatan Handover"),
       },
       {
         "string.base": "{#label} harus berupa teks",
@@ -58,8 +59,18 @@ router.post("/", async (req, res) => {
 
     await DB.transaction(async (trx) => {
       // 1. Ambil data shift yang akan ditutup
-      const existingShift = await trx("trx_cashier_shift")
-        .where("kode_cashier_shift", oPayload.kode_cashier_shift)
+      const existingShift = await trx("trx_cashier_shift as cs")
+        .select(
+          "cs.*",
+          "cc.name as nama_counter",
+          "c.nama_hotel as cabang_name",
+          "u.username as cashier_username",
+          "u.fullname as cashier_name"
+        )
+        .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_counter")
+        .leftJoin("mst_cabang as c", "cs.kode_cabang", "c.kode_cabang")
+        .leftJoin("mst_user as u", "cs.user_id", "u.id")
+        .where("cs.kode_cashier_shift", oPayload.kode_cashier_shift)
         .first();
 
       if (!existingShift) {
@@ -70,42 +81,87 @@ router.post("/", async (req, res) => {
         throw new Error("Shift ini sudah ditutup sebelumnya");
       }
       
-      // Keamanan opsional: pastikan shift ini milik user yang sedang login, atau berhak (misal admin bisa nutup paksa).
-      // Untuk sederhananya kita asumsikan user_id match.
       if (existingShift.user_id !== user_id) {
         throw new Error("Anda tidak berhak menutup shift milik user lain");
       }
 
-      // 2. Hitung total cash dari payment (jika ada deposit, dll yang masuk ke trx_payment dgn cash)
+      // 2. Hitung total transaksi pembayaran (Cash & Non-Cash)
       const sumPayment = await trx("trx_payment")
         .where("kode_cashier_shift", oPayload.kode_cashier_shift)
-        .where("payment_method", "cash")
-        .sum("amount as total_cash")
+        .select(
+          trx.raw("COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as total_cash"),
+          trx.raw("COALESCE(SUM(CASE WHEN payment_method != 'cash' THEN amount ELSE 0 END), 0) as total_non_cash"),
+          trx.raw("COALESCE(SUM(amount), 0) as total_payment")
+        )
         .first();
 
       const totalCashTransaction = sumPayment?.total_cash ? parseFloat(sumPayment.total_cash) : 0;
+      const totalNonCashTransaction = sumPayment?.total_non_cash ? parseFloat(sumPayment.total_non_cash) : 0;
       
-      // 3. Kalkulasi system_cash & difference
+      // 3. Hitung aktivitas check-in, checkout, dan fasilitas
+      const checkinCount = await trx("trx_checkin")
+        .where("kode_cashier_shift", oPayload.kode_cashier_shift)
+        .whereNull("deleted_at")
+        .select(
+          trx.raw("COUNT(id) as total_checkin_kamar"),
+          trx.raw("COALESCE(SUM(guest_count), 0) as total_checkin_pax")
+        )
+        .first();
+
+      const checkoutCount = await trx("trx_checkout")
+        .where("kode_cashier_shift", oPayload.kode_cashier_shift)
+        .whereNull("deleted_at")
+        .select(
+          trx.raw("COUNT(id) as total_checkout_kamar"),
+          trx.raw("COALESCE(SUM(guest_count), 0) as total_checkout_pax")
+        )
+        .first();
+
+      const facilityCount = await trx("trx_folio_charge")
+        .where("kode_cashier_shift", oPayload.kode_cashier_shift)
+        .where("charge_type", "!=", "room")
+        .where("is_active", 1)
+        .select(
+          trx.raw("COALESCE(SUM(qty), 0) as total_fasilitas_item"),
+          trx.raw("COALESCE(SUM(amount), 0) as total_fasilitas_amount")
+        )
+        .first();
+
+      // 4. Kalkulasi system_cash & difference
       const systemCash = parseFloat(existingShift.opening_cash) + totalCashTransaction;
       const closingCash = parseFloat(oPayload.closing_cash);
       const cashDifference = closingCash - systemCash;
+      const closedAt = formatDateSystem();
 
-      // 4. Update data shift
+      // 5. Update data shift
       const oData = {
         closing_cash: closingCash,
         system_cash: systemCash,
         cash_difference: cashDifference,
+        catatan_handover: oPayload.catatan_handover || null,
         status: "closed",
-        closed_at: formatDateSystem(),
+        closed_at: closedAt,
         updated_by: user_id,
-        updated_at: formatDateSystem(),
+        updated_at: closedAt,
       };
 
       await trx("trx_cashier_shift")
         .where("kode_cashier_shift", oPayload.kode_cashier_shift)
         .update(oData);
         
-      closingResult = oData;
+      closingResult = {
+        ...existingShift,
+        ...oData,
+        total_checkin_kamar: parseInt(checkinCount?.total_checkin_kamar, 10) || 0,
+        total_checkin_pax: parseInt(checkinCount?.total_checkin_pax, 10) || 0,
+        total_checkout_kamar: parseInt(checkoutCount?.total_checkout_kamar, 10) || 0,
+        total_checkout_pax: parseInt(checkoutCount?.total_checkout_pax, 10) || 0,
+        total_cash_in: totalCashTransaction,
+        total_non_cash_in: totalNonCashTransaction,
+        total_payment_in: parseFloat(sumPayment?.total_payment) || 0,
+        total_fasilitas_item: parseFloat(facilityCount?.total_fasilitas_item) || 0,
+        total_fasilitas_amount: parseFloat(facilityCount?.total_fasilitas_amount) || 0,
+      };
     });
 
     return res.status(200).json({
