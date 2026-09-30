@@ -8,9 +8,9 @@
 import DB from "../core/config/knex.js";
 import { formatDateSystem } from "../routes/v1/components/tools/date_tools.js";
 
-async function seedCAB0002() {
+export async function seed(knex) {
   console.log("=====================================================================");
-  console.log("🚀 STARTING SEEDING FOR CAB0002 (Grand Marstech Resort & Spa Batu)");
+  console.log(" STARTING SEEDING FOR CAB0002 (Grand Marstech Resort & Spa Batu)");
   console.log("=====================================================================");
 
   const tNow = formatDateSystem();
@@ -1395,7 +1395,6 @@ async function seedCAB0002() {
         assigned_to: 1002, // SyifaNW (housekeeping)
         priority: "urgent",
         status: "in_progress",
-        started_at: tNow,
         is_active: 1,
         created_at: tNow,
         updated_at: tNow,
@@ -1429,9 +1428,11 @@ async function seedCAB0002() {
   console.log("=====================================================================");
 }
 
-seedCAB0002()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error("❌ SEEDING FAILED:", err);
-    process.exit(1);
-  });
+if (process.argv[1]?.includes("seed_cab0002_complete_data")) {
+  seed()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error("❌ SEEDING FAILED:", err);
+      process.exit(1);
+    });
+}

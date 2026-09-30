@@ -19,7 +19,7 @@ import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
 import CashierPicCard from '@/app/components/payment/CashierPicCard';
-import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
+// import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 
 const Page = () => {
@@ -31,7 +31,7 @@ const Page = () => {
     const [filterDate, setFilterDate] = useState<Date | null>(new Date());
     const [globalFilter, setGlobalFilter] = useState('');
     const [showFilter, setShowFilter] = useState(true);
-    
+
     // Deposit handling dialog
     const [showDepositDialog, setShowDepositDialog] = useState(false);
     const [selectedRes, setSelectedRes] = useState<any>(null);
@@ -92,7 +92,7 @@ const Page = () => {
 
     const processCheckIn = async (rowData: any) => {
         setSelectedRes(rowData);
-        setShiftCode(shiftAktif?.kode_cashier_shift || ''); 
+        setShiftCode(shiftAktif?.kode_cashier_shift || '');
         setPaymentMethod('cash');
         setBankName('');
         setCardType('debit');
@@ -141,11 +141,11 @@ const Page = () => {
 
     const actionBody = (rowData: any) => {
         return (
-            <Button 
-                label="Check In" 
-                icon="pi pi-sign-in" 
-                className="p-button-sm p-button-success" 
-                onClick={() => processCheckIn(rowData)} 
+            <Button
+                label="Check In"
+                icon="pi pi-sign-in"
+                className="p-button-sm p-button-success"
+                onClick={() => processCheckIn(rowData)}
                 disabled={loading}
             />
         );
@@ -204,8 +204,8 @@ const Page = () => {
     return (
         <div className="card">
             <Toast ref={toast} position="top-right" />
-            <FrontOfficeNav />
-            
+            {/* <FrontOfficeNav /> */}
+
             <div className="flex justify-content-between align-items-start mb-4">
                 <div className="flex flex-column">
                     <h3 className="text-2xl font-semibold flex align-items-center gap-2 m-0">
@@ -220,11 +220,11 @@ const Page = () => {
                     <div className="flex flex-wrap align-items-center gap-3">
                         <div className="flex align-items-center gap-2">
                             <span className="text-sm font-bold text-700">Pilih Tanggal:</span>
-                            <Calendar 
-                                value={filterDate} 
-                                onChange={(e) => setFilterDate(e.value as Date)} 
-                                dateFormat="dd/mm/yy" 
-                                showIcon 
+                            <Calendar
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.value as Date)}
+                                dateFormat="dd/mm/yy"
+                                showIcon
                                 className="w-11rem text-sm"
                             />
                         </div>
@@ -251,11 +251,11 @@ const Page = () => {
                 </div>
             )}
 
-            <DataTable 
-                value={filteredData} 
-                loading={loading} 
-                emptyMessage="Data Kosong" 
-                scrollable 
+            <DataTable
+                value={filteredData}
+                loading={loading}
+                emptyMessage="Data Kosong"
+                scrollable
                 responsiveLayout="scroll"
                 header={headerTemplate}
                 paginator
@@ -269,21 +269,21 @@ const Page = () => {
                 <Column field="guest_name" header="Nama Tamu" sortable />
                 <Column field="tipe_kamar_name" header="Tipe Kamar" sortable />
                 <Column field="nights" header="Malam" sortable align="center" />
-                <Column 
-                    field="deposit_amount" 
-                    header="Deposit" 
-                    sortable 
-                    body={(r) => r.deposit_amount ? `Rp ${parseFloat(r.deposit_amount).toLocaleString('id-ID')}` : '-'} 
+                <Column
+                    field="deposit_amount"
+                    header="Deposit"
+                    sortable
+                    body={(r) => r.deposit_amount ? `Rp ${parseFloat(r.deposit_amount).toLocaleString('id-ID')}` : '-'}
                 />
                 <Column field="room_status" header="Status" sortable body={statusBody} align="center" />
                 <Column header="Aksi" body={actionBody} align="center" />
             </DataTable>
 
-            <Dialog 
-                header={<div className="flex align-items-center gap-2"><i className="pi pi-shield text-xl text-primary"></i> <span>Konfirmasi Check-In & Deposit</span></div>} 
-                visible={showDepositDialog} 
-                style={{ width: '500px' }} 
-                onHide={() => setShowDepositDialog(false)} 
+            <Dialog
+                header={<div className="flex align-items-center gap-2"><i className="pi pi-shield text-xl text-primary"></i> <span>Konfirmasi Check-In & Deposit</span></div>}
+                visible={showDepositDialog}
+                style={{ width: '500px' }}
+                onHide={() => setShowDepositDialog(false)}
                 breakpoints={{ '960px': '75vw', '641px': '100vw' }}
                 footer={(
                     <div className="flex justify-content-end gap-2">
@@ -335,11 +335,10 @@ const Page = () => {
                                 ].map((p) => (
                                     <div key={p.val} className="col-6 sm:col-3">
                                         <div
-                                            className={`p-2 text-center border-round cursor-pointer text-xs font-bold transition-all select-none ${
-                                                depositAmount === p.val
+                                            className={`p-2 text-center border-round cursor-pointer text-xs font-bold transition-all select-none ${depositAmount === p.val
                                                     ? 'bg-green-600 text-white shadow-1'
                                                     : 'surface-100 hover:surface-200 text-700 border-1 surface-border'
-                                            }`}
+                                                }`}
                                             onClick={() => setDepositAmount(p.val)}
                                         >
                                             {p.label}
@@ -351,19 +350,19 @@ const Page = () => {
 
                         <div className="field mb-3">
                             <label className="font-semibold text-sm">Nominal Uang Jaminan / Deposit (Rp)</label>
-                            <InputNumber 
-                                value={depositAmount} 
-                                onValueChange={(e) => setDepositAmount(e.value ?? 0)} 
-                                mode="currency" 
-                                currency="IDR" 
-                                locale="id-ID" 
-                                min={0} 
-                                placeholder="Rp 0" 
-                                className="w-full" 
+                            <InputNumber
+                                value={depositAmount}
+                                onValueChange={(e) => setDepositAmount(e.value ?? 0)}
+                                mode="currency"
+                                currency="IDR"
+                                locale="id-ID"
+                                min={0}
+                                placeholder="Rp 0"
+                                className="w-full"
                             />
                             <small className="text-color-secondary">Uang jaminan disimpan di kasir dan tercatat pada folio transaksi tamu.</small>
                         </div>
-                        
+
                         {depositAmount > 0 && (
                             <>
                                 <div className="mb-3">

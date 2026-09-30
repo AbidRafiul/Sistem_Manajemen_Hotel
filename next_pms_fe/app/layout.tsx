@@ -21,6 +21,7 @@ export const viewport: Viewport = {
 
 // 2. Metadata Microva Store
 export const metadata: Metadata = {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
     title: {
         default: 'Microva Store - Platform SaaS & Manajemen Aplikasi',
         template: '%s | Microva Store', // Otomatis format judul di sub-halaman (contoh: "Dashboard | Microva Store")

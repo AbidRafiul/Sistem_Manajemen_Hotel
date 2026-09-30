@@ -49,7 +49,7 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                     if (currentShiftRes?.data?.data?.kode_cashier_shift) {
                         formik.setFieldValue('kode_cashier_shift', currentShiftRes.data.data.kode_cashier_shift);
                     }
-                } catch (err) {}
+                } catch (err) { }
 
                 const res = await postData(apiCashierShiftDropdown, {
                     kode_cabang: formik.values.kode_cabang
@@ -410,8 +410,8 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                                     type="button"
                                     label={
                                         state.activeStep === 0 ? "Lanjut ke Fasilitas ➔" :
-                                        state.activeStep === 1 ? "Lanjut ke Pembayaran ➔" :
-                                        "Lanjut ke Data Tamu ➔"
+                                            state.activeStep === 1 ? "Lanjut ke Pembayaran ➔" :
+                                                "Lanjut ke Data Tamu ➔"
                                     }
                                     iconPos="right"
                                     severity="success"

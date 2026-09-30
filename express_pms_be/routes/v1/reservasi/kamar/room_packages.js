@@ -76,6 +76,31 @@ router.post("/", async (req, res) => {
                 }
             }
 
+            // 1.2 Ambil fasilitas & amenity untuk tipe kamar
+            const fasilitasList = await trx('mst_room_type_fasilitas as rtf')
+                .join('mst_fasilitas as f', 'rtf.kode_fasilitas', 'f.kode_fasilitas')
+                .whereIn('rtf.kode_tipe_kamar', roomTypeCodes)
+                .whereNull('f.deleted_at')
+                .select('rtf.kode_tipe_kamar', 'rtf.kode_fasilitas', 'f.name as nama_fasilitas');
+
+            const amenityList = await trx('mst_room_type_amenity as rta')
+                .join('mst_amenity as a', 'rta.kode_amenity', 'a.kode_amenity')
+                .whereIn('rta.kode_tipe_kamar', roomTypeCodes)
+                .whereNull('a.deleted_at')
+                .select('rta.kode_tipe_kamar', 'rta.kode_amenity', 'a.name as nama_amenity');
+
+            const fasMap = new Map();
+            for (const f of fasilitasList) {
+                if (!fasMap.has(f.kode_tipe_kamar)) fasMap.set(f.kode_tipe_kamar, []);
+                fasMap.get(f.kode_tipe_kamar).push(f);
+            }
+
+            const amMap = new Map();
+            for (const a of amenityList) {
+                if (!amMap.has(a.kode_tipe_kamar)) amMap.set(a.kode_tipe_kamar, []);
+                amMap.get(a.kode_tipe_kamar).push(a);
+            }
+
             const assetsPath = process.env.ASSETS_PATH || "";
 
             // 2. Ambil semua rate plan aktif untuk cabang ini
@@ -84,8 +109,6 @@ router.post("/", async (req, res) => {
                 .where('is_active', 1)
                 .whereNull('deleted_at')
                 .select('kode_paket_harga as kode_rate_plan', 'nama_paket as nama_rate_plan', 'tipe_markup', 'nilai_markup');
-
-            // Bulk logic dihapus, dipindah ke helper dalam loop
 
             const packagesList = [];
 
@@ -125,6 +148,8 @@ router.post("/", async (req, res) => {
                     deskripsi: tk.deskripsi || '',
                     foto_cover_url: fotoCoverUrl,
                     jumlah_foto: jumlahFoto,
+                    fasilitas: fasMap.get(tk.kode_tipe_kamar) || [],
+                    amenities: amMap.get(tk.kode_tipe_kamar) || [],
                     available_count,
                     available_rooms,
                     rooms,
