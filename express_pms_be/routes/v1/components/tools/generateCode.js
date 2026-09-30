@@ -46,6 +46,7 @@ const TABLE_MAP = {
   "FMT-SEASON": "mst_musim",
   "FMT-TIPERUANGEVENT": "mst_tipe_ruang_event",
   "FMT-HRGRUANGEVENT": "mst_harga_ruang_event",
+  "FMT-MSTSHIFT": "mst_shift",
   "FMT-USR": "mst_user"
 };
 
@@ -62,6 +63,7 @@ const COL_MAP = {
   trx_payment: "kode_payment",
   mst_invoice: "kode_invoice",
   trx_cashier_shift: "kode_shift",
+  mst_shift: "kode_shift",
   mst_kamar: "kode_kamar",
   mst_tipe_kamar: "kode_tipe_kamar",
   mst_lantai: "kode_lantai",
@@ -91,7 +93,8 @@ const PREFIX_MAP = {
   "FMT-HKT": "TSK",
   "FMT-TASK": "TSK",
   "FMT-PAY": "PAY",
-  "FMT-PAYMENT": "PAY"
+  "FMT-PAYMENT": "PAY",
+  "FMT-MSTSHIFT": "SFT"
 };
 
 /**

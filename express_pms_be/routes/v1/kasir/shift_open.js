@@ -23,7 +23,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
-  const user_id = req?.auth?.user_id || 0;
+  const user_id = req?.auth?.user_id || req?.auth?.id || 0;
 
   try {
     if (!oPayload || Object.keys(oPayload).length < 1)
@@ -38,6 +38,7 @@ router.post("/", async (req, res) => {
         kode_cabang: Joi.string().required().label("Kode Cabang"),
         kode_cashier_counter: Joi.string().required().label("Kode Counter"),
         opening_cash: Joi.number().min(0).required().label("Opening Cash"),
+        sesi: Joi.string().optional().allow("", null).label("Sesi Shift"),
       },
       {
         "string.base": "{#label} harus berupa teks",
@@ -80,6 +81,7 @@ router.post("/", async (req, res) => {
         kode_cashier_shift: cUniqueCode,
         kode_cabang: oPayload.kode_cabang,
         kode_cashier_counter: oPayload.kode_cashier_counter,
+        sesi: oPayload.sesi || "pagi",
         user_id: user_id,
         opening_cash: oPayload.opening_cash,
         status: "open",

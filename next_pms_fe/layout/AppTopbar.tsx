@@ -26,6 +26,24 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     const [selectedRegion, setSelectedRegion] = useState<string | number | null>('ALL');
     const [regions, setRegions] = useState<{ label: string; value: any }[]>([]);
     const [allBranches, setAllBranches] = useState<any[]>([]);
+    const [shiftStatus, setShiftStatus] = useState<any>(null);
+
+    // Live cashier shift listener
+    const fetchShiftStatus = async () => {
+        try {
+            const res = await postData('/kasir/shift-current', {});
+            setShiftStatus(res?.data?.data || null);
+        } catch {
+            setShiftStatus(null);
+        }
+    };
+
+    useEffect(() => {
+        fetchShiftStatus();
+        const handleShiftUpdate = () => fetchShiftStatus();
+        window.addEventListener('shiftUpdated', handleShiftUpdate);
+        return () => window.removeEventListener('shiftUpdated', handleShiftUpdate);
+    }, [session]);
 
     // Live clock formatted in Indonesian locale
     useEffect(() => {
@@ -241,6 +259,27 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                         </span>
                         <i className="pi pi-chevron-down text-xs ml-1 text-primary" />
                     </button>
+
+                    {/* Cashier Shift Status Indicator Pill */}
+                    <Link
+                        href="/kasir_shift"
+                        className="p-link flex align-items-center gap-2 px-3 py-2 border-round-3xl transition-all cursor-pointer text-decoration-none shadow-none hover:surface-hover"
+                        style={{
+                            backgroundColor: shiftStatus ? '#f0fdf4' : '#f8fafc',
+                            border: shiftStatus ? '1px solid #86efac' : '1px solid #cbd5e1',
+                            outline: 'none'
+                        }}
+                        title={shiftStatus ? `Shift Kasir Aktif: ${shiftStatus.kode_cashier_shift} (${shiftStatus.sesi?.toUpperCase()}) - Klik untuk ke Kasir Shift` : 'Shift Kasir Belum Buka - Klik untuk Buka Shift'}
+                        suppressHydrationWarning
+                    >
+                        <i className={`pi pi-circle-fill text-xs ${shiftStatus ? 'text-green-500' : 'text-400'}`} />
+                        <span
+                            className="font-semibold text-xs md:text-sm line-height-1"
+                            style={{ color: shiftStatus ? '#166534' : '#64748b' }}
+                        >
+                            {shiftStatus ? `Shift: ${shiftStatus.kode_cashier_shift} (${shiftStatus.sesi ? shiftStatus.sesi.toUpperCase() : 'AKTIF'})` : 'Shift Kasir: Tutup'}
+                        </span>
+                    </Link>
 
                     {/* Popup Pindah Cabang Hotel (Hierarchical OverlayPanel) */}
                     <OverlayPanel

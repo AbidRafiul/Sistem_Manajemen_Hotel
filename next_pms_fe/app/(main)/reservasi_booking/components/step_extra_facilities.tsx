@@ -452,7 +452,7 @@ const StepExtraFacilities: React.FC<StepExtraFacilitiesProps> = ({ state, setSta
                     outlined
                     severity="secondary"
                     className="p-button-sm font-medium px-3 py-2"
-                    onClick={() => setState(p => ({ ...p, activeStep: 1 }))}
+                    onClick={() => setState(p => ({ ...p, activeStep: 0 }))}
                 />
                 <div className="flex align-items-center gap-3 ml-auto">
                     {totalPaidAmount > 0 && (
@@ -465,12 +465,12 @@ const StepExtraFacilities: React.FC<StepExtraFacilitiesProps> = ({ state, setSta
                     )}
                     <Button
                         type="button"
-                        label="Lanjut ke Deposit & Pembayaran"
+                        label="Lanjut ke Uang Jaminan (Deposit)"
                         icon="pi pi-arrow-right"
                         iconPos="right"
                         severity="success"
                         className="p-button-sm font-bold px-4 py-2"
-                        onClick={() => setState(p => ({ ...p, activeStep: 3 }))}
+                        onClick={() => setState(p => ({ ...p, activeStep: 2 }))}
                     />
                 </div>
             </div>

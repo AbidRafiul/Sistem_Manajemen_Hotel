@@ -21,6 +21,7 @@ import {
     apiDashboardMonitoring,
     apiCabangDropdown
 } from './components/endpoints';
+import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 const ReservasiDashboardPage = () => {
     const toast = useRef<Toast>(null);
@@ -197,6 +198,8 @@ const ReservasiDashboardPage = () => {
 
             {/* Front Office Header Toolbar */}
             <div className="col-12">
+                <FrontOfficeNav />
+
                 <div className="surface-card p-4 border-round-xl shadow-1 border-1 surface-border mb-3">
                     <div className="flex flex-column lg:flex-row justify-content-between align-items-start lg:align-items-center gap-3">
                         <div>

@@ -13,6 +13,8 @@ import postData from '@/lib/axios/postData';
 import { apiExtendCheck, apiExtendSubmit, apiShiftCurrent } from './endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
+import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 
 interface DialogExtendStayProps {
     visible: boolean;
@@ -38,7 +40,9 @@ export const DialogExtendStay: React.FC<DialogExtendStayProps> = ({
     
     // Payment State
     const [isPaidNow, setIsPaidNow] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'qris' | 'transfer'>('cash');
+    const [bankName, setBankName] = useState<string>('BCA');
+    const [cardType, setCardType] = useState<'debit' | 'credit'>('debit');
     const [referenceNo, setReferenceNo] = useState('');
     const [shiftAktif, setShiftAktif] = useState<any>(null);
 
@@ -123,8 +127,10 @@ export const DialogExtendStay: React.FC<DialogExtendStayProps> = ({
 
             if (isPaidNow) {
                 payload.payment_method = paymentMethod;
-                payload.kode_cashier_shift = paymentMethod === 'cash' ? shiftAktif?.kode_cashier_shift : undefined;
-                payload.reference_no = referenceNo || undefined;
+                payload.bank_name = (paymentMethod === 'card' || paymentMethod === 'transfer') ? bankName : undefined;
+                payload.card_type = paymentMethod === 'card' ? cardType : undefined;
+                payload.kode_cashier_shift = shiftAktif?.kode_cashier_shift || undefined;
+                payload.reference_no = buildStandardReferenceNo(paymentMethod, referenceNo, bankName, cardType) || undefined;
             }
 
             const res = await postData(apiExtendSubmit, payload);
@@ -289,46 +295,33 @@ export const DialogExtendStay: React.FC<DialogExtendStayProps> = ({
                         {/* Jika Bayar Langsung */}
                         {isPaidNow && (
                             <div className="surface-50 border-round-lg p-3 mt-3 border-1 surface-border">
-                                <div className="grid">
-                                    <div className="col-12 md:col-6">
-                                        <label className="text-xs font-bold text-700 block mb-1">Metode Pembayaran</label>
-                                        <Dropdown
-                                            value={paymentMethod}
-                                            options={[
-                                                { label: 'Tunai (Cash)', value: 'cash' },
-                                                { label: 'QRIS', value: 'qris' },
-                                                { label: 'Kartu Debit (EDC)', value: 'debit_card' },
-                                                { label: 'Kartu Kredit (EDC)', value: 'credit_card' },
-                                                { label: 'Transfer Bank', value: 'bank_transfer' }
-                                            ]}
-                                            onChange={(e) => setPaymentMethod(e.value)}
-                                            className="w-full"
-                                        />
-                                    </div>
-                                    <div className="col-12 md:col-6">
-                                        <label className="text-xs font-bold text-700 block mb-1">Nomor Referensi (Opsional)</label>
-                                        <InputText
-                                            value={referenceNo}
-                                            onChange={(e) => setReferenceNo(e.target.value)}
-                                            placeholder="No Ref / Trace / Transaksi"
-                                            className="w-full"
-                                        />
-                                    </div>
-                                    {paymentMethod === 'cash' && (
-                                        <div className="col-12">
-                                            <div className="text-xs text-700 flex align-items-center gap-1">
-                                                <i className="pi pi-clock text-primary"></i>
-                                                <span>
-                                                    Shift Kasir Aktif:{' '}
-                                                    {shiftAktif ? (
-                                                        <strong className="text-green-600 font-semibold">{shiftAktif.kode_cashier_shift} ({shiftAktif.nama_shift || 'Shift Aktif'})</strong>
-                                                    ) : (
-                                                        <strong className="text-red-500">Belum Ada Shift Terbuka!</strong>
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
+                                <PaymentMethodSelector
+                                    value={{
+                                        method: paymentMethod,
+                                        bank_name: bankName,
+                                        card_type: cardType,
+                                        reference_no: referenceNo
+                                    }}
+                                    onChange={(detail) => {
+                                        setPaymentMethod(detail.method);
+                                        if (detail.bank_name) setBankName(detail.bank_name);
+                                        if (detail.card_type) setCardType(detail.card_type);
+                                        setReferenceNo(detail.reference_no || '');
+                                    }}
+                                    totalAmount={simData?.total_additional_charge || 0}
+                                    compact={true}
+                                />
+
+                                <div className="mt-2 pt-2 border-top-1 surface-border text-xs text-700 flex align-items-center gap-1">
+                                    <i className="pi pi-clock text-primary"></i>
+                                    <span>
+                                        Shift Kasir Penerima:{' '}
+                                        {shiftAktif ? (
+                                            <strong className="text-green-600 font-semibold">{shiftAktif.kode_cashier_shift} ({shiftAktif.nama_shift || 'Shift Aktif'})</strong>
+                                        ) : (
+                                            <strong className="text-red-500">Belum Ada Shift Terbuka!</strong>
+                                        )}
+                                    </span>
                                 </div>
                             </div>
                         )}

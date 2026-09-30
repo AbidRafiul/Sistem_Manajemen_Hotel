@@ -1,17 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ReservasiBaruState, initValue } from './interfaces';
 import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { Tag } from 'primereact/tag';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { apiSubmitBooking } from './endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import DialogInvoice from '@/app/components/dialogComponents/dialog_invoice';
+import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
+import CashierPicCard from '@/app/components/payment/CashierPicCard';
+import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 
 interface StepConfirmationProps {
     state: ReservasiBaruState;
@@ -22,7 +26,30 @@ interface StepConfirmationProps {
 
 const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, formik, toast }) => {
     const router = useRouter();
+    const { data: session } = useSession();
     const [showInvoice, setShowInvoice] = useState(false);
+    const [activeShift, setActiveShift] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchShift = async () => {
+            try {
+                const res = await postData('/api/v1/kasir/shift-current', {});
+                if (res?.data?.data) {
+                    setActiveShift(res.data.data);
+                    if (!formik.values.kode_cashier_shift) {
+                        formik.setFieldValue('kode_cashier_shift', res.data.data.kode_cashier_shift);
+                    }
+                }
+            } catch (err) {}
+        };
+        fetchShift();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const selectedShiftObj = (state.cashierShiftOptions || []).find(
+        s => s.kode_cashier_shift === formik.values.kode_cashier_shift
+    );
+    const selectedShiftLabel = selectedShiftObj?.nama_shift || formik.values.kode_cashier_shift || 'Shift Kasir';
 
     const submitBooking = async () => {
         const errors = await formik.validateForm();
@@ -46,7 +73,15 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                 nights: formik.values.nights,
                 deposit_amount: formik.values.deposit_amount,
                 payment_method: formik.values.payment_method || null,
+                bank_name: formik.values.bank_name || null,
+                card_type: formik.values.card_type || null,
                 kode_cashier_shift: formik.values.kode_cashier_shift || null,
+                reference_no: buildStandardReferenceNo(
+                    formik.values.payment_method || 'cash',
+                    formik.values.reference_no,
+                    formik.values.bank_name,
+                    formik.values.card_type
+                ) || null,
                 extra_facilities: activeExtraFacilities,
                 special_request: formik.values.special_request || ""
             };
@@ -204,9 +239,9 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                 <div className="col-12 md:col-6">
                     <div className="p-3 border-1 surface-border border-round h-full">
                         <h6>Data Tamu</h6>
-                        <p className="m-0 text-secondary">ID Tamu: <strong>{formik.values.kode_guest}</strong></p>
-                        <p className="m-0 text-secondary">Nama: <strong>{formik.values.full_name || state.foundGuest?.full_name}</strong></p>
-                        <p className="m-0 text-secondary">Phone: <strong>{formik.values.phone || state.foundGuest?.phone}</strong></p>
+                        <p className="m-0 text-secondary">ID Tamu: <strong>{formik.values.kode_guest || '-'}</strong></p>
+                        <p className="m-0 text-secondary">Nama: <strong>{formik.values.full_name || state.foundGuest?.full_name || '-'}</strong></p>
+                        <p className="m-0 text-secondary">Phone: <strong>{formik.values.phone || state.foundGuest?.phone || '-'}</strong></p>
                     </div>
                 </div>
                 <div className="col-12 md:col-6">
@@ -235,7 +270,9 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                                     ))}
                                 </div>
                             ) : (
-                                <p className="m-0 text-secondary">Tipe: <strong>{state.rateInfo?.nama_tipe || '-'}</strong> ({state.rateInfo?.nama_rate_plan || '-'})</p>
+                                <p className="m-0 text-secondary">
+                                    Tipe: <strong>{state.rateInfo?.nama_tipe || formik.values.kode_tipe_kamar}</strong> • Tarif: <strong>{state.rateInfo?.nama_rate_plan || formik.values.kode_rate_plan}</strong>
+                                </p>
                             )}
                         </div>
                     </div>
@@ -299,10 +336,10 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                                     <div className="flex justify-content-between align-items-center">
                                         <div>
                                             <span className="font-semibold text-green-800 text-sm flex align-items-center gap-1">
-                                                <i className="pi pi-check-circle text-green-600"></i> Pembayaran di Muka (DP / Lunas)
+                                                <i className="pi pi-shield text-green-600"></i> Uang Jaminan (Deposit / DP Diterima)
                                             </span>
                                             <span className="text-xs text-color-secondary block mt-1">
-                                                Metode: <strong className="uppercase">{formik.values.payment_method || 'CASH'}</strong> • Sisa tagihan saat check-in: <strong>Rp {sisaTagihan.toLocaleString('id-ID')}</strong>
+                                                Metode: <strong className="uppercase">{formik.values.payment_method || 'CASH'}</strong> • Shift: <strong>{selectedShiftLabel}</strong> • Sisa tagihan saat check-in: <strong>Rp {sisaTagihan.toLocaleString('id-ID')}</strong>
                                             </span>
                                         </div>
                                         <div className="text-right">
@@ -315,9 +352,71 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                             </div>
                         ) : (
                             <div className="mt-2 text-xs text-color-secondary">
-                                <i className="pi pi-info-circle mr-1"></i> Tidak ada pembayaran di muka. Seluruh tagihan diselesaikan saat tamu check-in atau checkout.
+                                <i className="pi pi-info-circle mr-1"></i> Tidak ada pembayaran deposit awal. Seluruh tagihan diselesaikan saat tamu check-in atau checkout.
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* Metode Pembayaran & Kasir Section */}
+                <div className="col-12">
+                    <div className="p-3 border-1 surface-border border-round surface-card">
+                        <div className="flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                            <div>
+                                <h6 className="m-0 font-bold text-900 flex align-items-center gap-2">
+                                    <i className="pi pi-credit-card text-primary"></i>
+                                    Metode Pembayaran & Kasir Penerima
+                                </h6>
+                                <p className="text-xs text-color-secondary m-0 mt-1">
+                                    {paymentAmount > 0 
+                                        ? `Tentukan metode penyetoran deposit/DP sebesar Rp ${paymentAmount.toLocaleString('id-ID')}`
+                                        : 'Pilih shift kasir yang memproses reservasi & metode bayar default'}
+                                </p>
+                            </div>
+                            <Tag 
+                                severity={paymentAmount > 0 ? "success" : "info"} 
+                                value={paymentAmount > 0 ? `Deposit: Rp ${paymentAmount.toLocaleString('id-ID')}` : "Tanpa Deposit"} 
+                                icon="pi pi-shield"
+                            />
+                        </div>
+
+                        {/* PIC Kasir Front Desk & Selektor Metode Pembayaran */}
+                        <div className="grid">
+                            <div className="col-12 lg:col-5">
+                                <CashierPicCard
+                                    sessionUser={session?.user}
+                                    activeShift={activeShift}
+                                    kodeCabang={formik.values.kode_cabang}
+                                    onShiftUpdated={(s) => {
+                                        setActiveShift(s);
+                                        if (s?.kode_cashier_shift) {
+                                            formik.setFieldValue('kode_cashier_shift', s.kode_cashier_shift);
+                                        }
+                                    }}
+                                    toast={toast}
+                                />
+                            </div>
+                            <div className="col-12 lg:col-7">
+                                <div className="surface-card p-3 border-round-xl border-1 surface-border shadow-1">
+                                    <PaymentMethodSelector
+                                        value={{
+                                            method: (formik.values.payment_method as any) || 'cash',
+                                            bank_name: formik.values.bank_name,
+                                            card_type: formik.values.card_type,
+                                            reference_no: formik.values.reference_no
+                                        }}
+                                        onChange={(detail) => {
+                                            formik.setFieldValue('payment_method', detail.method);
+                                            formik.setFieldValue('bank_name', detail.bank_name || '');
+                                            formik.setFieldValue('card_type', detail.card_type || 'debit');
+                                            formik.setFieldValue('reference_no', detail.reference_no || '');
+                                        }}
+                                        totalAmount={paymentAmount}
+                                        compact={true}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -325,7 +424,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
             <div className="col-12 flex justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top-1 surface-border">
                 <Button 
                     type="button" 
-                    label="Kembali ke Pembayaran" 
+                    label="Kembali ke Data Tamu" 
                     icon="pi pi-arrow-left" 
                     outlined 
                     severity="secondary" 

@@ -35,12 +35,12 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
     const hotelEmail = hotel.email || '-';
 
     return (
-        <div 
-            ref={ref} 
-            className="p-4 text-gray-900 bg-white shadow-1 border-round-xl print-compact-container" 
-            style={{ 
-                fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif', 
-                fontSize: '11.5px', 
+        <div
+            ref={ref}
+            className="p-4 text-gray-900 bg-white shadow-1 border-round-xl print-compact-container"
+            style={{
+                fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif',
+                fontSize: '11.5px',
                 lineHeight: 1.45,
                 minWidth: '720px',
                 color: '#1e293b'
@@ -228,15 +228,18 @@ export const CetakInvoiceHotel = React.forwardRef<HTMLDivElement, CetakInvoiceHo
                     </tr>
 
                     {/* Pembayaran Masuk */}
-                    {payments.map((p: any, idx: number) => (
-                        <tr key={`p-${idx}`} className="text-xs text-green-700 border-bottom-1 border-100">
-                            <td colSpan={4} className="py-1 px-2 text-left font-medium">
-                                Bayar ({String(p.payment_method).toUpperCase()}
-                                {p.reference_no ? ` - Ref: ${p.reference_no}` : ''}):
-                            </td>
-                            <td className="py-1 px-2 text-right font-bold">- {formatCurrency(p.amount)}</td>
-                        </tr>
-                    ))}
+                    {payments.map((p: any, idx: number) => {
+                        const bankInfo = p.bank_name ? ` ${p.bank_name}${p.card_type ? ' ' + p.card_type.toUpperCase() : ''}` : '';
+                        const refInfo = p.reference_no ? ` - Ref: ${p.reference_no}` : '';
+                        return (
+                            <div key={`p-${idx}`} className="flex justify-content-between py-1 text-green-700">
+                                <span>
+                                    Bayar ({String(p.payment_method || '').toUpperCase()}{bankInfo}{refInfo}):
+                                </span>
+                                <span className="font-semibold">- {formatCurrency(p.amount)}</span>
+                            </div>
+                        );
+                    })}
 
                     <tr className="text-sm font-bold border-top-2 border-bottom-2 border-900 surface-100">
                         <td colSpan={4} className="py-2 px-2 text-left uppercase text-900">SISA TAGIHAN (SALDO):</td>

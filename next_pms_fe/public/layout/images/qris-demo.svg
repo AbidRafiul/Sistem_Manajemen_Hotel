@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <!-- Background Card -->
+  <rect width="400" height="500" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  
+  <!-- Header QRIS -->
+  <rect x="0" y="0" width="400" height="70" rx="16" fill="#c0262d" />
+  <rect x="0" y="54" width="400" height="16" fill="#c0262d" />
+  
+  <!-- QRIS Text Header -->
+  <text x="200" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">QRIS</text>
+  <text x="200" y="56" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="middle" letter-spacing="1">QR STANDARD PEMBAYARAN NASIONAL</text>
+  
+  <!-- Merchant Info -->
+  <text x="200" y="105" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="bold" fill="#0f172a" text-anchor="middle">GRAND MARSTECH HOTEL</text>
+  <text x="200" y="125" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="500" fill="#64748b" text-anchor="middle">NMID: ID1020039485721</text>
+  <text x="200" y="142" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">A01 • KASIR UTAMA &amp; RESERVASI</text>
+
+  <!-- QR Code Frame Border -->
+  <rect x="70" y="160" width="260" height="260" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  
+  <!-- Stylized QR Code Pattern (Sample Matrix) -->
+  <!-- Top-Left Target -->
+  <rect x="85" y="175" width="60" height="60" rx="4" fill="#0f172a"/>
+  <rect x="95" y="185" width="40" height="40" rx="2" fill="#ffffff"/>
+  <rect x="103" y="193" width="24" height="24" rx="2" fill="#0f172a"/>
+
+  <!-- Top-Right Target -->
+  <rect x="255" y="175" width="60" height="60" rx="4" fill="#0f172a"/>
+  <rect x="265" y="185" width="40" height="40" rx="2" fill="#ffffff"/>
+  <rect x="273" y="193" width="24" height="24" rx="2" fill="#0f172a"/>
+
+  <!-- Bottom-Left Target -->
+  <rect x="85" y="345" width="60" height="60" rx="4" fill="#0f172a"/>
+  <rect x="95" y="355" width="40" height="40" rx="2" fill="#ffffff"/>
+  <rect x="103" y="363" width="24" height="24" rx="2" fill="#0f172a"/>
+
+  <!-- QR Bits Mock Data Grid -->
+  <g fill="#0f172a">
+    <!-- Row segments -->
+    <rect x="160" y="175" width="16" height="16" />
+    <rect x="185" y="175" width="24" height="16" />
+    <rect x="220" y="175" width="16" height="16" />
+    
+    <rect x="160" y="200" width="24" height="16" />
+    <rect x="200" y="200" width="16" height="16" />
+    <rect x="225" y="200" width="16" height="24" />
+
+    <rect x="160" y="225" width="16" height="16" />
+    <rect x="185" y="225" width="30" height="16" />
+
+    <!-- Center QR elements -->
+    <rect x="85" y="250" width="20" height="16" />
+    <rect x="115" y="250" width="16" height="20" />
+    <rect x="140" y="250" width="30" height="16" />
+    <rect x="180" y="250" width="40" height="40" rx="4" fill="#c0262d" />
+    <text x="200" y="275" font-family="system-ui, sans-serif" font-size="12" font-weight="900" fill="#ffffff" text-anchor="middle">QRIS</text>
+
+    <rect x="230" y="250" width="20" height="16" />
+    <rect x="260" y="250" width="24" height="20" />
+    <rect x="295" y="250" width="20" height="16" />
+
+    <rect x="85" y="280" width="30" height="16" />
+    <rect x="130" y="280" width="20" height="24" />
+    <rect x="230" y="280" width="24" height="16" />
+    <rect x="265" y="280" width="50" height="16" />
+
+    <rect x="85" y="310" width="45" height="16" />
+    <rect x="140" y="310" width="20" height="16" />
+    <rect x="170" y="300" width="16" height="30" />
+    <rect x="195" y="300" width="25" height="16" />
+    <rect x="230" y="310" width="40" height="16" />
+    <rect x="280" y="310" width="35" height="20" />
+
+    <!-- Bottom area -->
+    <rect x="160" y="345" width="25" height="16" />
+    <rect x="195" y="345" width="40" height="16" />
+    <rect x="245" y="345" width="20" height="16" />
+    <rect x="275" y="345" width="40" height="25" />
+
+    <rect x="160" y="370" width="35" height="20" />
+    <rect x="205" y="370" width="25" height="35" />
+    <rect x="240" y="370" width="25" height="16" />
+
+    <rect x="160" y="400" width="20" height="20" />
+    <rect x="240" y="395" width="30" height="25" />
+    <rect x="280" y="380" width="35" height="40" />
+  </g>
+
+  <!-- Footer support logos note -->
+  <text x="200" y="445" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">Menerima Pembayaran Seluruh Aplikasi QRIS</text>
+  <text x="200" y="465" font-family="system-ui, -apple-system, sans-serif" font-size="9.5" fill="#94a3b8" text-anchor="middle">BCA Mobile • Livin' Mandiri • BRImo • BNI Mobile • GoPay • OVO • DANA • ShopeePay</text>
+  <text x="200" y="482" font-family="system-ui, -apple-system, sans-serif" font-size="8.5" fill="#cbd5e1" text-anchor="middle">VERIFIKASI SISTEM PMS HOTEL • PT MARSTECH GLOBAL</text>
+</svg>

@@ -306,7 +306,7 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
             )}
 
             {state.isGuestNew && (
-                <div className="col-12 flex justify-content-end mt-4">
+                <div className="col-12 flex justify-content-end mt-2">
                     <Button
                         label="Simpan Tamu Baru"
                         icon="pi pi-save"

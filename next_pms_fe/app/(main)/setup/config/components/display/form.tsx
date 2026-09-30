@@ -286,7 +286,6 @@ const Form = ({
 
                                 <div className="field col-12 md:col-6 mb-4">
                                     <label htmlFor="msTeleponPerusahaan" className="font-semibold mb-2">Nomor Telepon</label>
-                                    {/* Catatan: p-inputgroup tetap valid digunakan di v10 untuk menyatukan komponen */}
                                     <div className="p-inputgroup">
                                         <span className="p-inputgroup-addon bg-white">
                                             <i className="pi pi-phone text-primary"></i>
@@ -303,6 +302,110 @@ const Form = ({
                                         />
                                     </div>
                                     {isFormFieldInvalid('msTeleponPerusahaan') && getFormErrorMessage('msTeleponPerusahaan')}
+                                </div>
+
+                                {/* Section 3: Pengaturan QRIS Statis & Pembayaran Digital */}
+                                <div className="col-12 mt-3 mb-2">
+                                    <div className="flex align-items-center gap-2">
+                                        <i className="pi pi-qrcode text-red-600 font-bold"></i>
+                                        <span className="text-red-600 font-bold uppercase text-xs tracking-wider">
+                                            Pengaturan QRIS Statis &amp; Pembayaran Digital Hotel
+                                        </span>
+                                    </div>
+                                    <Divider className="mt-2 mb-4" />
+                                </div>
+
+                                <div className="col-12 mb-3">
+                                    <div className="surface-50 border-round-xl border-1 surface-border p-3 grid align-items-center">
+                                        <div className="col-12 md:col-4 flex flex-column align-items-center text-center">
+                                            <span className="text-xs font-bold text-700 uppercase mb-2">Preview QRIS Statis</span>
+                                            <div className="surface-0 border-round-lg border-2 border-dashed border-red-300 p-2 shadow-1 mb-2">
+                                                <img
+                                                    src={state.qrisImgPrev || formik.values.msQrisImage || '/layout/images/qris-demo.svg'}
+                                                    alt="Preview QRIS"
+                                                    className="w-10rem h-10rem"
+                                                    style={{ objectFit: 'contain' }}
+                                                />
+                                            </div>
+                                            <input
+                                                type="file"
+                                                id="qrisFileInput"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    if (file.size > 2 * 1024 * 1024) {
+                                                        return showError(toast, "Ukuran file QRIS maksimal 2MB");
+                                                    }
+                                                    const reader = new FileReader();
+                                                    reader.onload = (uploadEvent) => {
+                                                        const resultStr = uploadEvent.target?.result as string;
+                                                        formik.setFieldValue('msQrisImage', resultStr);
+                                                        setState(p => ({ ...p, qrisImgPrev: resultStr }));
+                                                        showSuccess(toast, "File gambar QRIS berhasil dimuat ke form");
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }}
+                                            />
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    type="button"
+                                                    label="Ganti Gambar QRIS"
+                                                    icon="pi pi-upload"
+                                                    size="small"
+                                                    severity="danger"
+                                                    outlined
+                                                    className="text-xs py-1 px-2"
+                                                    onClick={() => document.getElementById('qrisFileInput')?.click()}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    icon="pi pi-refresh"
+                                                    size="small"
+                                                    severity="secondary"
+                                                    text
+                                                    tooltip="Reset ke Demo"
+                                                    tooltipOptions={{ position: 'bottom' }}
+                                                    onClick={() => {
+                                                        formik.setFieldValue('msQrisImage', '/layout/images/qris-demo.svg');
+                                                        setState(p => ({ ...p, qrisImgPrev: '/layout/images/qris-demo.svg' }));
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-12 md:col-8">
+                                            <div className="field mb-3">
+                                                <label htmlFor="msQrisMerchantName" className="font-semibold text-xs mb-1 block">
+                                                    Nama Merchant QRIS (Tampil di Kasir &amp; Struk)
+                                                </label>
+                                                <InputText
+                                                    id="msQrisMerchantName"
+                                                    value={formik.values.msQrisMerchantName || ''}
+                                                    onChange={(e) => formik.setFieldValue('msQrisMerchantName', e.target.value)}
+                                                    placeholder="Contoh: Grand Marstech Hotel & Resort"
+                                                    className="w-full text-sm"
+                                                />
+                                            </div>
+
+                                            <div className="field mb-2">
+                                                <label htmlFor="msQrisNmid" className="font-semibold text-xs mb-1 block">
+                                                    National Merchant ID (NMID) QRIS
+                                                </label>
+                                                <InputText
+                                                    id="msQrisNmid"
+                                                    value={formik.values.msQrisNmid || ''}
+                                                    onChange={(e) => formik.setFieldValue('msQrisNmid', e.target.value)}
+                                                    placeholder="Contoh: ID1020039485721"
+                                                    className="w-full text-sm font-mono"
+                                                />
+                                                <small className="text-500 text-xs block mt-1">
+                                                    NMID resmi yang tertera pada sertifikat QRIS dari Bank Indonesia / PJSP.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>

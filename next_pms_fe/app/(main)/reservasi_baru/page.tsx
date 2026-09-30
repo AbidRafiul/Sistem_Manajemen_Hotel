@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
 import FormWalkIn from './components/form_walk_in';
+// import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 const WalkInContent = () => {
     const toast = useRef<Toast>(null);
@@ -19,7 +20,7 @@ const WalkInContent = () => {
         cabangOptions: [],
         cashierShiftLoad: false,
         cashierShiftOptions: [],
-        
+
         searchGuestLoad: false,
         foundGuest: null,
         isGuestNew: false,
@@ -53,28 +54,19 @@ const WalkInContent = () => {
             selected_rooms: [],
             extra_facilities: [],
             special_request: '',
+            payment_amount: 0,
             deposit_amount: 0,
-            payment_method: '',
-            kode_cashier_shift: ''
+            payment_method: 'cash',
+            kode_cashier_shift: '',
+            reference_no: ''
         },
         validate: (data) => {
             let errors: any = {};
-            const checkStep0 = state.activeStep === 0 || state.activeStep === 4;
-            const checkStep1 = state.activeStep === 1 || state.activeStep === 4;
-            const checkStep3 = state.activeStep === 3 || state.activeStep === 4;
+            const isTabKamar = state.activeStep === 0;
+            const isTabTamu = state.activeStep === 3;
 
-            if (checkStep0) {
-                if (!data.kode_cabang) errors.kode_cabang = 'Cabang wajib dipilih';
-                if (!state.foundGuest && !state.isGuestNew && !data.kode_guest) {
-                    errors.keyword_guest = 'Silakan cari atau buat data tamu baru';
-                }
-                if (state.isGuestNew) {
-                    if (!data.full_name) errors.full_name = 'Nama lengkap wajib diisi';
-                    if (!data.id_number) errors.id_number = 'Nomor ID wajib diisi';
-                    if (!data.phone) errors.phone = 'Nomor Telepon wajib diisi';
-                }
-            }
-            if (checkStep1) {
+            // Validasi Kamar (Tab 0 atau saat submit final)
+            if (isTabKamar || formik.submitCount > 0) {
                 if (!data.check_in_date) errors.check_in_date = 'Tanggal Check In wajib diisi';
                 if (!data.check_out_date) errors.check_out_date = 'Tanggal Check Out wajib diisi';
                 const hasRooms = (data.selected_rooms && data.selected_rooms.length > 0) || (data.kode_kamar && data.kode_tipe_kamar);
@@ -82,12 +74,26 @@ const WalkInContent = () => {
                     errors.kode_kamar = 'Silakan pilih minimal 1 kamar fisik yang tersedia';
                 }
             }
-            if (checkStep3) {
-                if (data.deposit_amount > 0) {
-                    if (!data.payment_method) errors.payment_method = 'Metode pembayaran wajib dipilih';
-                    if (!data.kode_cashier_shift) errors.kode_cashier_shift = 'Shift kasir wajib dipilih';
+
+            // Validasi Tamu (Tab 3 atau saat submit final)
+            if (isTabTamu || formik.submitCount > 0) {
+                if (!data.kode_cabang) errors.kode_cabang = 'Cabang wajib dipilih';
+                if (!state.foundGuest && !state.isGuestNew && !data.kode_guest && !data.full_name) {
+                    errors.keyword_guest = 'Silakan cari atau pilih data tamu';
+                }
+                if (state.isGuestNew) {
+                    if (!data.full_name) errors.full_name = 'Nama lengkap wajib diisi';
+                    if (!data.id_number) errors.id_number = 'Nomor ID wajib diisi';
+                    if (!data.phone) errors.phone = 'Nomor Telepon wajib diisi';
                 }
             }
+
+            // Validasi Metode Bayar jika ada uang masuk
+            const totalMoneyCollected = (Number(data.payment_amount || 0) + Number(data.deposit_amount || 0));
+            if (totalMoneyCollected > 0 && formik.submitCount > 0) {
+                if (!data.payment_method) errors.payment_method = 'Metode pembayaran wajib dipilih';
+            }
+
             return errors;
         },
         onSubmit: () => {
@@ -126,6 +132,7 @@ const WalkInContent = () => {
     return (
         <div className="p-0">
             <Toast ref={toast} position="top-right" />
+            {/* <FrontOfficeNav /> */}
             <FormWalkIn state={state} setState={setState} formik={formik} toast={toast} />
         </div>
     );

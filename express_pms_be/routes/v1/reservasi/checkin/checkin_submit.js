@@ -23,7 +23,11 @@ const router = express.Router();
 const schema = Joi.object({
     kode_reservasi_room: Joi.string().required(),
     kode_cashier_shift: Joi.string().optional().allow(null, ""), // untuk memasukkan deposit ke shift jika ada
-    payment_method: Joi.string().optional().allow(null, "")
+    payment_method: Joi.string().optional().allow(null, ""),
+    deposit_amount: Joi.number().min(0).optional().allow(null),
+    bank_name: Joi.string().max(50).optional().allow(null, ""),
+    card_type: Joi.string().max(20).optional().allow(null, ""),
+    reference_no: Joi.string().max(100).optional().allow(null, "")
 });
 
 router.post("/", async (req, res) => {
@@ -76,24 +80,53 @@ router.post("/", async (req, res) => {
                 throw new Error(`Tamu masuk dalam daftar blacklist. Alasan: ${resRoom.blacklist_reason || 'Tidak ada alasan.'}`);
             }
 
+            // Cari shift aktif kasir jika tidak dikirim dalam payload
+            let shiftCode = oPayload.kode_cashier_shift || null;
+            if (!shiftCode && userId) {
+                const activeShift = await trx("trx_cashier_shift")
+                    .where("user_id", userId)
+                    .where("status", "open")
+                    .orderBy("opened_at", "desc")
+                    .first();
+                if (activeShift) {
+                    shiftCode = activeShift.kode_cashier_shift;
+                }
+            }
+
             // 3. Proses Check-in (Helper)
             // Ini akan assign kamar secara otomatis, buat folio, charge kamar, dll.
             const checkinData = await processCheckIn({
                 kode_reservasi_room: oPayload.kode_reservasi_room,
                 trx: trx,
-                userId: userId
+                userId: userId,
+                kode_cashier_shift: shiftCode,
+                guest_count: oPayload.guest_count || null
             });
 
-            // 4. Proses Deposit (jika ada deposit_amount > 0 di trx_reservation dan belum pernah dicatat)
-            const depositAmount = parseFloat(resRoom.deposit_amount || 0);
+            // 4. Proses Deposit (jika ada deposit_amount > 0 dari payload atau trx_reservation)
+            let depositAmount = (oPayload.deposit_amount !== undefined && oPayload.deposit_amount !== null)
+                ? parseFloat(oPayload.deposit_amount)
+                : parseFloat(resRoom.deposit_amount || 0);
+
             if (depositAmount > 0) {
+                // Update trx_reservation deposit_amount jika berbeda
+                if (depositAmount !== parseFloat(resRoom.deposit_amount || 0)) {
+                    await trx("trx_reservation")
+                        .where("kode_reservasi", resRoom.kode_reservation)
+                        .update({
+                            deposit_amount: depositAmount,
+                            updated_by: userId,
+                            updated_at: formatDateSystem()
+                        });
+                }
+
                 const existingPayment = await trx("trx_payment")
                     .where("kode_folio", checkinData.kode_folio)
                     .first();
 
                 if (!existingPayment) {
-                    if (!oPayload.kode_cashier_shift || !oPayload.payment_method) {
-                        throw new Error("Reservasi ini memiliki deposit. Harap kirimkan kode_cashier_shift dan payment_method untuk memproses deposit ke folio.");
+                    if (!shiftCode || !oPayload.payment_method) {
+                        throw new Error("Penerimaan deposit membutuhkan shift kasir aktif dan metode pembayaran.");
                     }
 
                     const noPayment = await generateSequence("FMT-PAYMENT", trx);
@@ -104,8 +137,11 @@ router.post("/", async (req, res) => {
                         kode_payment: noPayment,
                         kode_folio: checkinData.kode_folio,
                         payment_method: oPayload.payment_method,
+                        bank_name: oPayload.bank_name || null,
+                        card_type: oPayload.card_type || null,
+                        reference_no: oPayload.reference_no || null,
                         amount: depositAmount,
-                        kode_cashier_shift: oPayload.kode_cashier_shift,
+                        kode_cashier_shift: shiftCode,
                         received_by: userId,
                         paid_at: tNow,
                         created_by: userId,

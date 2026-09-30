@@ -277,7 +277,7 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
             )}
 
             {state.isGuestNew && (
-                <div className="col-12 flex justify-content-end mt-4">
+                <div className="col-12 flex justify-content-end mt-2">
                     <Button
                         label="Simpan Tamu Baru"
                         icon="pi pi-save"
@@ -287,6 +287,28 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
                     />
                 </div>
             )}
+
+            {/* Bottom Navigation */}
+            <div className="col-12 flex justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top-1 surface-border">
+                <Button
+                    type="button"
+                    label="Kembali ke Uang Jaminan (Deposit)"
+                    icon="pi pi-arrow-left"
+                    outlined
+                    severity="secondary"
+                    className="p-button-sm font-medium px-3 py-2"
+                    onClick={() => setState(p => ({ ...p, activeStep: 2 }))}
+                />
+                <Button
+                    type="button"
+                    label="Lanjut ke Konfirmasi & Pembayaran"
+                    icon="pi pi-arrow-right"
+                    iconPos="right"
+                    severity="success"
+                    className="p-button-sm font-bold px-4 py-2"
+                    onClick={() => setState(p => ({ ...p, activeStep: 4 }))}
+                />
+            </div>
         </div>
     );
 };

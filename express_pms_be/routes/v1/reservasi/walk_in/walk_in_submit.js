@@ -59,17 +59,13 @@ router.post("/", async (req, res) => {
       extra_facilities: Joi.array().optional().allow(null),
       special_request: Joi.string().optional().allow(null, "").label("Catatan Khusus"),
       kode_season: Joi.string().optional().allow(null, "").label("Kode Season"),
-      deposit_amount: Joi.number().min(0).optional().default(0).label("Deposit"),
-      payment_method: Joi.string().when('deposit_amount', {
-          is: Joi.number().greater(0),
-          then: Joi.required(),
-          otherwise: Joi.optional().allow(null, "")
-      }).label("Metode Pembayaran"),
-      kode_cashier_shift: Joi.string().when('deposit_amount', {
-          is: Joi.number().greater(0),
-          then: Joi.required(),
-          otherwise: Joi.optional().allow(null, "")
-      }).label("Kode Cashier Shift")
+      payment_amount: Joi.number().min(0).optional().default(0).label("Pembayaran Sewa Kamar"),
+      deposit_amount: Joi.number().min(0).optional().default(0).label("Uang Jaminan (Deposit)"),
+      payment_method: Joi.string().optional().allow(null, "").label("Metode Pembayaran"),
+      bank_name: Joi.string().optional().allow(null, "").label("Nama Bank"),
+      card_type: Joi.string().optional().allow(null, "").label("Jenis Kartu"),
+      reference_no: Joi.string().optional().allow(null, "").label("Nomor Referensi"),
+      kode_cashier_shift: Joi.string().optional().allow(null, "").label("Kode Cashier Shift")
     };
 
     const cValidation = await validatePayload(
@@ -149,12 +145,29 @@ router.post("/", async (req, res) => {
         if (!noReservasi) throw new Error("Gagal membuat nomor transaksi reservasi");
 
         const tNow = formatDateSystem();
+
+        // Cari shift kasir aktif jika tidak disertakan dalam payload
+        let shiftCode = oPayload.kode_cashier_shift || null;
+        if (!shiftCode && userId) {
+            const activeShift = await trx("trx_cashier_shift")
+                .where("user_id", userId)
+                .where("status", "open")
+                .orderBy("opened_at", "desc")
+                .first();
+            if (activeShift) {
+                shiftCode = activeShift.kode_cashier_shift;
+            }
+        }
+
+        const totalGuests = parseInt(oPayload.guest_count, 10) || 1;
+
         await trx("trx_reservation").insert({
             kode_cabang: oPayload.kode_cabang,
             kode_reservasi: noReservasi,
             kode_guest: oPayload.kode_guest,
             check_in_date: formatDateSystem(checkinDate, "yyyy-MM-dd"),
             check_out_date: formatDateSystem(checkoutDate, "yyyy-MM-dd"),
+            guest_count: totalGuests,
             deposit_amount: oPayload.deposit_amount,
             status: "reserved", // akan di-update oleh processCheckIn
             source_channel: "walk_in",
@@ -215,7 +228,9 @@ router.post("/", async (req, res) => {
                 kode_reservasi_room: noResRoom,
                 trx: trx,
                 userId: userId,
-                kode_kamar_manual: rm.kode_kamar
+                kode_kamar_manual: rm.kode_kamar,
+                kode_cashier_shift: shiftCode,
+                guest_count: totalGuests
             });
 
             lastFolioCode = checkinData.kode_folio;
@@ -248,6 +263,7 @@ router.post("/", async (req, res) => {
                         amount: subtotal,
                         ref_source_type: "trx_reservation",
                         kode_ref_source: noReservasi,
+                        kode_cashier_shift: shiftCode,
                         posted_by: userId,
                         posted_at: tNow,
                         created_by: userId,
@@ -289,8 +305,12 @@ router.post("/", async (req, res) => {
                 updated_at: tNow
             });
 
-        // Insert trx_payment (Deposit / Pelunasan) jika ada
-        const paymentAmount = parseFloat(oPayload.deposit_amount || oPayload.payment_amount || 0);
+        // 1. Uang Jaminan (Security Deposit): Disimpan di trx_reservation (TIDAK memotong total tagihan sewa kamar)
+        const depositAmount = parseFloat(oPayload.deposit_amount || 0);
+
+        // 2. Pembayaran Sewa Kamar / Folio Payment (MENGURANGI saldo tagihan folio)
+        const paymentAmount = parseFloat(oPayload.payment_amount !== undefined ? oPayload.payment_amount : 0);
+
         if (paymentAmount > 0 && lastFolioCode) {
             const noPayment = await generateSequence("FMT-PAYMENT", trx);
             if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
@@ -299,8 +319,10 @@ router.post("/", async (req, res) => {
                 kode_payment: noPayment,
                 kode_folio: lastFolioCode,
                 payment_method: oPayload.payment_method || 'cash',
+                bank_name: oPayload.bank_name || null,
+                card_type: oPayload.card_type || null,
                 amount: paymentAmount,
-                kode_cashier_shift: oPayload.kode_cashier_shift || null,
+                kode_cashier_shift: shiftCode,
                 reference_no: oPayload.reference_no || null,
                 received_by: userId,
                 paid_at: tNow,
@@ -341,6 +363,8 @@ router.post("/", async (req, res) => {
             service_charge_amount: totalServiceCharge,
             grand_total: finalGrandTotal,
             total_paid: paymentAmount,
+            deposit_amount: depositAmount,
+            total_collected: paymentAmount + depositAmount,
             balance: finalBalance,
             is_settled: isSettled,
             payment_status: isSettled ? "paid" : (paymentAmount > 0 ? "partially_paid" : "unpaid"),

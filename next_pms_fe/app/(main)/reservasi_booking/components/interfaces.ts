@@ -102,6 +102,9 @@ export interface initValue {
     // Step 4: Payment
     deposit_amount: number;
     payment_method: string;
+    bank_name?: string;
+    card_type?: 'debit' | 'credit';
     kode_cashier_shift: string;
+    reference_no?: string;
 }
 
