@@ -19,7 +19,7 @@ import { DialogTambahFasilitas } from './components/dialog_tambah_fasilitas';
 import { DialogExtendStay } from './components/dialog_extend_stay';
 import { showError } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
-import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
+// import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 const TamuMenginapPage = () => {
     const toast = useRef<Toast>(null);
@@ -89,7 +89,7 @@ const TamuMenginapPage = () => {
             <Toast ref={toast} />
 
             <div className="col-12">
-                <FrontOfficeNav />
+                {/* <FrontOfficeNav /> */}
                 {/* Header Title Card */}
                 <div className="surface-card p-4 border-round-xl shadow-1 border-1 surface-border mb-3">
                     <div className="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center gap-3">

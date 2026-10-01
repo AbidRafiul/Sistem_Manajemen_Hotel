@@ -33,7 +33,7 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
     useEffect(() => {
         const fetchShift = async () => {
             try {
-                const res = await postData('/api/v1/kasir/shift-current', {});
+                const res = await postData('/kasir/shift-current', {});
                 if (res?.data?.data) {
                     setActiveShift(res.data.data);
                     if (!formik.values.kode_cashier_shift) {

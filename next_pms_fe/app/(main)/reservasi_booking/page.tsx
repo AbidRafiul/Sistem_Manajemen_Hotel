@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { ReservasiBaruState, initValue } from './components/interfaces';
 import { useFormik } from 'formik';
 import FormBooking from './components/form_booking';
-import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
+// import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 const BookingContent = () => {
     const toast = useRef<Toast>(null);
@@ -132,7 +132,7 @@ const BookingContent = () => {
     return (
         <div className="p-0">
             <Toast ref={toast} position="top-right" />
-            <FrontOfficeNav />
+            {/* <FrontOfficeNav /> */}
             <FormBooking state={state} setState={setState} formik={formik} toast={toast} />
         </div>
     );

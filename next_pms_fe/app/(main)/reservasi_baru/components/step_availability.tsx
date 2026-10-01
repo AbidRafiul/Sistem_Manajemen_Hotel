@@ -611,56 +611,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                 </div>
             )}
 
-            {/* Ringkasan Keranjang Kamar Terpilih (Floating / Prominent Bottom Card) */}
-            {selectedRooms.length > 0 && (
-                <div className="col-12 mt-3">
-                    <div 
-                        className="p-3 border-round-xl border-1 surface-border shadow-3 flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-3"
-                        style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', borderLeft: '5px solid #22c55e' }}
-                    >
-                        <div>
-                            <div className="flex align-items-center gap-2 mb-1">
-                                <i className="pi pi-check-circle text-green-600 text-xl font-bold"></i>
-                                <span className="font-bold text-lg text-green-900">{selectedRooms.length} Kamar Terpilih</span>
-                                <Tag severity="success" value={`${selectedRooms.length} Unit`} className="text-xs" />
-                            </div>
-
-                            {/* Daftar badge kamar terpilih dengan tombol hapus */}
-                            <div className="flex flex-wrap gap-2 my-2">
-                                {selectedRooms.map((s, idx) => (
-                                    <span 
-                                        key={idx} 
-                                        className="bg-white text-green-800 text-xs font-bold px-2 py-1 border-round-lg flex align-items-center gap-2 shadow-1 border-1 border-green-300"
-                                    >
-                                        <span>Kamar {s.nomor_kamar} • {s.nama_tipe}</span>
-                                        <i 
-                                            className="pi pi-times-circle text-red-500 cursor-pointer hover:text-red-700" 
-                                            style={{ fontSize: '0.85rem' }}
-                                            onClick={() => removeRoomSelection(s.kode_kamar)}
-                                            title="Hapus kamar ini"
-                                        />
-                                    </span>
-                                ))}
-                            </div>
-
-                            <div className="text-xs text-green-800">
-                                Total ({formik.values.nights} malam): <strong className="text-green-900 text-base font-bold ml-1">Rp {totalSelectedPrice.toLocaleString('id-ID')}</strong>
-                            </div>
-                        </div>
-
-                        <Button 
-                            label="Lanjut ke Fasilitas Tambahan" 
-                            icon="pi pi-arrow-right" 
-                            iconPos="right" 
-                            severity="success"
-                            className="font-bold px-4 py-3 border-round-lg shadow-2"
-                            onClick={() => setState(p => ({ ...p, activeStep: 1 }))}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Deskripsi Panduan di Bagian Bawah (Sesuai Foto User) */}
+            {/* Deskripsi Panduan di Bagian Bawah */}
             <div className="col-12 mt-3">
                 <div className="p-3 border-round surface-50 border-1 surface-border text-center text-600 text-sm">
                     <i className="pi pi-info-circle mr-2 text-primary"></i>

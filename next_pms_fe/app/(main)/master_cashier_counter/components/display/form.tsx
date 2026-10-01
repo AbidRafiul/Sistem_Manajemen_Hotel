@@ -34,7 +34,8 @@ const Form = ({ state, setState, formik, toast, getData, dataRekap, setDataRekap
                     showSuccess(toast, 'Data berhasil disimpan');
                 } else if (state.edit) {
                     await postData(apiEndpointUpdate, {
-                        kode_cashier_counter: formik.values.kode_cashier_counter,
+                        id: formik.values.id,
+                        kode_cashier_counter: formik.values.kode_cashier_counter || formik.values.kode_counter,
                         kode_cabang: formik.values.kode_cabang,
                         name: formik.values.name,
                         is_active: formik.values.is_active
@@ -57,7 +58,7 @@ const Form = ({ state, setState, formik, toast, getData, dataRekap, setDataRekap
         setSubmitLoad(true);
         try {
             for (const data of state.selectedDatas) {
-                await postData(apiEndpointDelete, { kode_cashier_counter: data.kode_cashier_counter });
+                await postData(apiEndpointDelete, { id: data.id, kode_cashier_counter: data.kode_counter || data.kode_cashier_counter });
             }
             showSuccess(toast, 'Data berhasil dihapus');
             setState((p: any) => ({ ...p, delete: false, selectedDatas: [] }));

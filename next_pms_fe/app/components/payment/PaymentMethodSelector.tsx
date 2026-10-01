@@ -46,6 +46,31 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     const [showQrisModal, setShowQrisModal] = useState(false);
     const [copiedBank, setCopiedBank] = useState<string | null>(null);
 
+    // State internal uang tunai diterima jika prop cashTendered / onCashTenderedChange tidak dipasok dari luar
+    const [internalCashTendered, setInternalCashTendered] = useState<number>(() => {
+        if (cashTendered !== undefined) return cashTendered;
+        if (totalAmount !== undefined && totalAmount > 0) return totalAmount;
+        return 0;
+    });
+
+    useEffect(() => {
+        if (cashTendered !== undefined) {
+            setInternalCashTendered(cashTendered);
+        } else if (totalAmount !== undefined && totalAmount > 0 && internalCashTendered === 0) {
+            setInternalCashTendered(totalAmount);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cashTendered, totalAmount]);
+
+    const effectiveTendered = cashTendered !== undefined ? cashTendered : internalCashTendered;
+
+    const handleTenderedChange = (val: number) => {
+        setInternalCashTendered(val);
+        if (onCashTenderedChange) {
+            onCashTenderedChange(val);
+        }
+    };
+
     const currentMethod = value?.method || 'cash';
     const currentBank = value?.bank_name || '';
     const currentCardType = value?.card_type || 'debit';
@@ -277,7 +302,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                             disabled={disabled}
                         />
                         <small className="text-500 text-xs mt-1 block">
-                            Pastikan tamu telah menunjukkan notifikasi atau bukti "Berhasil" pada aplikasi pembayarannya.
+                            Pastikan tamu telah menunjukkan notifikasi atau bukti &quot;Berhasil&quot; pada aplikasi pembayarannya.
                         </small>
                     </div>
                 </div>
@@ -358,89 +383,143 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             {/* ─── METODE TUNAI (CASH) ─── */}
             {currentMethod === 'cash' && (
                 <div className="surface-50 border-round-xl border-1 surface-border p-3 mb-2 animation-duration-200">
-                    <div className="flex align-items-center justify-content-between mb-2">
+                    {/* Header Bar Kasir Tunai */}
+                    <div className="flex align-items-center justify-content-between pb-2 mb-2.5 border-bottom-1 surface-border flex-wrap gap-2">
                         <span className="text-xs font-bold text-800 uppercase flex align-items-center gap-1.5">
                             <i className="pi pi-wallet text-green-600 text-sm"></i>
                             Penerimaan Uang Tunai (Laci Kasir Front Desk)
                         </span>
                         {totalAmount !== undefined && totalAmount > 0 && (
-                            <span className="text-xs text-600">
+                            <div className="text-xs text-700 bg-surface-0 px-2.5 py-1 border-round-lg border-1 surface-border font-medium shadow-none">
                                 Total Tagihan: <strong className="text-primary font-bold">Rp {totalAmount.toLocaleString('id-ID')}</strong>
-                            </span>
+                            </div>
                         )}
                     </div>
 
-                    {totalAmount !== undefined && totalAmount > 0 && onCashTenderedChange ? (
-                        <div className="grid align-items-center mt-1">
-                            <div className="col-12 sm:col-7">
-                                <label className="text-xs font-semibold text-700 block mb-1">
-                                    Uang Fisik Diterima dari Tamu (Cash Tendered):
-                                </label>
-                                <InputNumber
-                                    value={cashTendered ?? totalAmount}
-                                    onValueChange={(e) => onCashTenderedChange(e.value ?? 0)}
-                                    mode="currency"
-                                    currency="IDR"
-                                    locale="id-ID"
-                                    className="w-full text-sm font-bold"
-                                    min={0}
-                                    disabled={disabled}
-                                />
-                                {/* Quick nominal buttons */}
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                    <Button
-                                        type="button"
-                                        label="Uang Pas"
-                                        size="small"
-                                        severity="secondary"
-                                        outlined
-                                        className="text-xs py-1 px-2 border-round-lg font-semibold"
-                                        onClick={() => onCashTenderedChange(totalAmount)}
-                                    />
-                                    {[50000, 100000, 200000, 500000, 1000000, 2000000].map((nom) => {
-                                        if (nom < totalAmount && nom !== 50000 && nom !== 100000) return null;
-                                        return (
-                                            <Button
-                                                key={nom}
-                                                type="button"
-                                                label={`Rp ${(nom / 1000).toLocaleString('id-ID')}rb`}
-                                                size="small"
-                                                severity="secondary"
-                                                outlined
-                                                className="text-xs py-1 px-2 border-round-lg"
-                                                onClick={() => onCashTenderedChange(nom)}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                    {/* Formulir Isian Kasir & Hitungan Kalkulator Kembalian */}
+                    {(() => {
+                        const billAmount = totalAmount !== undefined ? totalAmount : 0;
+                        const changeAmount = effectiveTendered - billAmount;
 
-                            <div className="col-12 sm:col-5">
-                                <div className="p-2.5 border-round-xl border-1 surface-border surface-0 text-center shadow-1">
-                                    <span className="text-xs text-500 uppercase block font-semibold">Uang Kembalian:</span>
-                                    <div className={`text-xl font-bold my-1 ${((cashTendered ?? totalAmount) - totalAmount) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-                                        Rp {Math.max(0, (cashTendered ?? totalAmount) - totalAmount).toLocaleString('id-ID')}
+                        return (
+                            <>
+                                <div className="grid align-items-stretch mt-1">
+                                    {/* Kolom Kiri: Isian Manual Kasir Sesuai Uang Tamu */}
+                                    <div className="col-12 sm:col-7 flex flex-column justify-content-between">
+                                        <div>
+                                            <label className="text-xs font-bold text-700 block mb-1.5">
+                                                Nominal Uang Tunai Diberikan Tamu: <span className="text-red-500">*</span>
+                                            </label>
+                                            <InputNumber
+                                                value={effectiveTendered}
+                                                onValueChange={(e) => handleTenderedChange(e.value ?? 0)}
+                                                mode="currency"
+                                                currency="IDR"
+                                                locale="id-ID"
+                                                placeholder="Masukkan nominal uang tunai..."
+                                                className="w-full text-base font-bold"
+                                                inputClassName="font-bold text-900 py-2.5 text-base"
+                                                min={0}
+                                                disabled={disabled}
+                                            />
+                                        </div>
+
+                                        {/* Pilihan Cepat Nominal (Quick Buttons) */}
+                                        <div className="mt-2.5">
+                                            <span className="text-500 text-xs block mb-1.5 font-medium">Pilihan Cepat Nominal:</span>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {billAmount > 0 && (
+                                                    <Button
+                                                        type="button"
+                                                        label="Uang Pas"
+                                                        icon="pi pi-check"
+                                                        size="small"
+                                                        severity="success"
+                                                        outlined={effectiveTendered !== billAmount}
+                                                        className="text-xs py-1 px-2.5 border-round-lg font-bold"
+                                                        onClick={() => handleTenderedChange(billAmount)}
+                                                    />
+                                                )}
+                                                {[50000, 100000, 200000, 500000, 1000000].map((nom) => {
+                                                    if (billAmount > 0 && nom < billAmount && nom !== 50000 && nom !== 100000) return null;
+                                                    const isSelected = effectiveTendered === nom;
+                                                    return (
+                                                        <Button
+                                                            key={nom}
+                                                            type="button"
+                                                            label={`Rp ${(nom / 1000).toLocaleString('id-ID')}rb`}
+                                                            size="small"
+                                                            severity={isSelected ? undefined : 'secondary'}
+                                                            outlined={!isSelected}
+                                                            className="text-xs py-1 px-2 border-round-lg font-medium"
+                                                            onClick={() => handleTenderedChange(nom)}
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     </div>
-                                    {((cashTendered ?? totalAmount) - totalAmount) < 0 && (
-                                        <span className="text-xs text-red-500 font-semibold block">⚠️ Uang tunai masih kurang</span>
-                                    )}
-                                    {((cashTendered ?? totalAmount) - totalAmount) === 0 && (
-                                        <span className="text-xs text-green-600 font-semibold block">✓ Uang Pas Diterima</span>
-                                    )}
-                                    {((cashTendered ?? totalAmount) - totalAmount) > 0 && (
-                                        <span className="text-xs text-blue-600 font-semibold block">Kembalikan ke Tamu</span>
-                                    )}
+
+                                    {/* Kolom Kanan: Card Kalkulator Hitungan Uang Kembalian */}
+                                    <div className="col-12 sm:col-5 mt-2 sm:mt-0">
+                                        <div
+                                            className={`p-3 border-round-xl border-1 surface-0 h-full flex flex-column align-items-center justify-content-center text-center shadow-1 ${
+                                                changeAmount >= 0 ? 'border-green-300' : 'border-red-300'
+                                            }`}
+                                        >
+                                            <span className="text-xs text-600 uppercase font-bold tracking-wider block mb-1">
+                                                <i className="pi pi-calculator mr-1"></i>
+                                                {changeAmount >= 0 ? 'Uang Kembalian' : 'Kekurangan Uang'}
+                                            </span>
+
+                                            <div
+                                                className={`text-2xl font-bold font-mono my-1.5 ${
+                                                    changeAmount >= 0
+                                                        ? changeAmount === 0
+                                                            ? 'text-green-700'
+                                                            : 'text-blue-700'
+                                                        : 'text-red-600'
+                                                }`}
+                                            >
+                                                Rp {Math.abs(changeAmount).toLocaleString('id-ID')}
+                                            </div>
+
+                                            <div className="mt-1">
+                                                {billAmount > 0 && changeAmount === 0 && (
+                                                    <span className="text-xs font-semibold text-green-700 bg-green-50 border-1 border-green-200 px-2 py-0.5 border-round inline-block">
+                                                        ✓ Uang Pas Diterima
+                                                    </span>
+                                                )}
+                                                {changeAmount > 0 && (
+                                                    <span className="text-xs font-semibold text-blue-700 bg-blue-50 border-1 border-blue-200 px-2 py-0.5 border-round inline-block">
+                                                        Kembalikan ke Tamu
+                                                    </span>
+                                                )}
+                                                {changeAmount < 0 && (
+                                                    <span className="text-xs font-semibold text-red-600 bg-red-50 border-1 border-red-200 px-2 py-0.5 border-round inline-block">
+                                                        ⚠️ Uang tunai masih kurang
+                                                    </span>
+                                                )}
+                                                {billAmount === 0 && changeAmount === 0 && (
+                                                    <span className="text-xs font-semibold text-600 bg-surface-100 px-2 py-0.5 border-round inline-block">
+                                                        Nominal Tercatat
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-xs text-600 flex align-items-center gap-2">
-                            <i className="pi pi-info-circle text-green-600 text-sm"></i>
-                            <span>
-                                Pembayaran uang tunai (Cash) diserahkan langsung oleh tamu kepada kasir dan dicatat ke dalam laci kasir Front Desk.
-                            </span>
-                        </div>
-                    )}
+
+                                {/* Informasi SOP Kasir & Laci */}
+                                <div className="mt-2.5 pt-2 border-top-1 surface-border flex align-items-center gap-2 text-xs text-500">
+                                    <i className="pi pi-info-circle text-green-600 text-xs flex-shrink-0"></i>
+                                    <span>
+                                        Pembayaran tunai diserahkan langsung oleh tamu kepada kasir dan dicatat ke dalam laci kasir Front Desk.
+                                    </span>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             )}
 
@@ -496,7 +575,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                     </div>
 
                     <p className="text-xs text-500 m-0">
-                        Scan menggunakan BCA Mobile, Livin' Mandiri, BRImo, BNI, GoPay, OVO, DANA, atau aplikasi pembayaran QRIS lainnya.
+                        Scan menggunakan BCA Mobile, Livin&apos; Mandiri, BRImo, BNI, GoPay, OVO, DANA, atau aplikasi pembayaran QRIS lainnya.
                     </p>
                 </div>
             </Dialog>

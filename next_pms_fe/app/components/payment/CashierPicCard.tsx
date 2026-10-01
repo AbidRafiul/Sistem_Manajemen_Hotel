@@ -78,10 +78,10 @@ export const CashierPicCard: React.FC<CashierPicCardProps> = ({
 
     return (
         <div className="surface-card p-3 border-round-xl border-1 surface-border">
-            <div className="flex align-items-center justify-content-between mb-2">
+            <div className="flex align-items-center justify-content-between mb-2.5">
                 <span className="text-xs font-bold text-color-secondary uppercase tracking-wider flex align-items-center gap-2">
                     <i className="pi pi-id-card text-primary text-sm"></i>
-                    PIC Kasir & Sesi Front Desk
+                    PIC Kasir &amp; Sesi Front Desk
                 </span>
                 {isShiftActive ? (
                     <Tag
@@ -100,7 +100,7 @@ export const CashierPicCard: React.FC<CashierPicCardProps> = ({
                 )}
             </div>
 
-            <div className="flex align-items-center justify-content-between flex-wrap gap-2 pt-1">
+            <div className="flex align-items-center justify-content-between flex-wrap gap-2 py-1">
                 {/* Info PIC Kasir */}
                 <div className="flex align-items-center gap-3">
                     <div
@@ -118,7 +118,7 @@ export const CashierPicCard: React.FC<CashierPicCardProps> = ({
                     </div>
                     <div>
                         <div className="text-sm font-bold text-900 line-height-2">{picName}</div>
-                        <div className="text-xs text-500 flex align-items-center gap-2">
+                        <div className="text-xs text-500 flex align-items-center gap-2 mt-0.5">
                             <span>{picRole}</span>
                             <span>•</span>
                             <span className="text-primary font-medium">Front Desk Reception</span>
@@ -157,7 +157,7 @@ export const CashierPicCard: React.FC<CashierPicCardProps> = ({
             </div>
 
             {/* Helper Keterangan Status */}
-            <div className="mt-2 pt-2 border-top-1 surface-border flex align-items-center justify-content-between text-xs text-600">
+            <div className="mt-2.5 pt-2 border-top-1 surface-border flex align-items-center justify-content-between text-xs text-600">
                 <span className="flex align-items-center gap-1">
                     <i className="pi pi-info-circle text-primary text-xs"></i>
                     {isShiftActive ? (

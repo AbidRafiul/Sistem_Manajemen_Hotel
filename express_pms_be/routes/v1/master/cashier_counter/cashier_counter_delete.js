@@ -17,7 +17,7 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 
 const router = express.Router();
 
-router.delete("/", async (req, res) => {
+const handleDelete = async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
   const user_id = req?.auth?.user_id || 0;
@@ -80,6 +80,8 @@ router.delete("/", async (req, res) => {
       data: null,
     });
   }
-});
+};
+router.delete("/", handleDelete);
+router.post("/", handleDelete);
 
 export default router;

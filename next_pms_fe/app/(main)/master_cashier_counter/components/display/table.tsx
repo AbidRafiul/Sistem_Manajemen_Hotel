@@ -9,10 +9,8 @@ import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
-import { Tag } from 'primereact/tag';
 import Form from './form';
 import { apiEndpointGet } from '../endpoints';
-import { showError } from '@/lib/tools/generalTools';
 import { useRef } from 'react';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
 import StatusLegend from '@/app/components/status/StatusLegend';
@@ -74,6 +72,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 onClick={() => {
                     formik.setValues({
                         id: rowData.id,
+                        kode_counter: rowData.kode_counter || '',
+                        kode_cashier_counter: rowData.kode_counter || '',
                         kode_cabang: rowData.kode_cabang || '',
                         name: rowData.name || '',
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
@@ -119,7 +119,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         onClick={() => {
                             formik.resetForm();
                             formik.setValues({
-                                kode_cabang: '',
+                                kode_cabang: state.session?.user?.active_kode_cabang || '',
                                 name: '',
                                 is_active: 1
                             });
@@ -136,27 +136,25 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         severity="danger"
                         outlined
                         onClick={() => {
-                            if (state.selectedDatas.length > 0) {
-                                setState((p) => ({ ...p, delete: true }));
-                            } else {
-                                showError(toast, 'Pilih data yang akan dihapus terlebih dahulu');
+                            if (state.selectedDatas.length < 1) {
+                                setState((p) => ({ ...p, selectedDatas: [], delete: false }));
+                                return;
                             }
+                            setState((p) => ({ ...p, delete: true }));
                         }}
                         disabled={state.selectedDatas.length === 0}
                     />
+                    <Divider layout="vertical" />
+                    <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
+
+                <StatusLegend />
 
                 <DataTable
                     value={state.data}
-                    loading={state.load}
-                    header={headerTemplate}
-                    emptyMessage="Data Cashier Counter tidak ditemukan."
-                    responsiveLayout="scroll"
-                    selectionMode="checkbox"
-                    selection={state.selectedDatas}
-                    onSelectionChange={(e) => setState((p) => ({ ...p, selectedDatas: e.value }))}
-                    dataKey="id"
-                    lazy
+                    scrollable
+                    lazy={true}
+                    paginator={true}
                     first={state.first}
                     rows={state.rows}
                     totalRecords={state.totalData}
@@ -164,26 +162,29 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     onSort={onLazyLoad}
                     sortField={state.sortField}
                     sortOrder={state.sortOrder === 'asc' ? 1 : -1}
-                    paginator
-                    rowsPerPageOptions={[10, 20, 50]}
-                    className="p-datatable-sm"
-                    stripedRows
+                    selectionMode={'multiple'}
+                    header={headerTemplate}
+                    loading={state.load}
+                    selection={state.selectedDatas}
+                    onSelectionChange={(e) => setState((p) => ({ ...p, selectedDatas: e.value }))}
+                    dataKey="id"
+                    emptyMessage="Tidak ada data cashier counter"
+                    rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data cashier counter"
                 >
-                    <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
-                    <Column header="No" body={(_, options) => options.rowIndex + 1 + state.first} style={{ width: '3rem' }} align="center" />
-                    <Column field="kode_counter" header="Kode Counter" sortable />
-                    <Column field="cabang_name" header="Cabang" sortable />
-                    <Column field="name" header="Nama Counter" sortable />
-                    <Column field="is_active" header="Status Aktif" body={activeStatusBodyTemplate} sortable align="center" />
-                    <Column header="Aksi" body={actionBodyTemplate} align="center" style={{ minWidth: '8rem' }} />
+                    <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
+                    <Column field="kode_counter" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '12rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
+                    <Column field="name" header="Nama Counter" sortable style={{ minWidth: '16rem' }}></Column>
+                    <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
+                    <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
+                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
                 </DataTable>
-                
-                <div className="mt-3">
-                    <StatusLegend />
-                </div>
             </div>
-            
-            {(state.add || state.edit || state.delete) && <Form state={state} setState={setState} formik={formik} toast={toast} getData={getData} />}
+
+            <Form getData={getData} toast={toast} state={state} setState={setState} formik={formik} />
         </>
     );
 };

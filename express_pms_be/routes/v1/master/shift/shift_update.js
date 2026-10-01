@@ -16,7 +16,7 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 
 const router = express.Router();
 
-router.put("/", async (req, res) => {
+const handleUpdate = async (req, res) => {
   const oPayload = req.body;
   const username = req?.auth?.username || "";
   const user_id = req?.auth?.user_id || 0;
@@ -110,6 +110,8 @@ router.put("/", async (req, res) => {
       datetime: formatDateSystem(),
     });
   }
-});
+};
+router.put("/", handleUpdate);
+router.post("/", handleUpdate);
 
 export default router;

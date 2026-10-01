@@ -65,3 +65,31 @@
         }
     }
 }
+
+/* Responsive Sticky Summary Sidebar (Pusat Ringkasan Folio / Booking Tetap Stabil) */
+.sticky-summary-sidebar {
+    position: relative;
+
+    @media screen and (min-width: 992px) {
+        position: sticky !important;
+        top: 5.5rem !important;
+        max-height: calc(100vh - 7rem) !important;
+        overflow-y: auto !important;
+        scrollbar-width: thin;
+        z-index: 20;
+
+        &::-webkit-scrollbar {
+            width: 5px;
+        }
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(100, 116, 139, 0.6);
+        }
+    }
+}

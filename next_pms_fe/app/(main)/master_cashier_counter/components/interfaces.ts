@@ -19,6 +19,8 @@ export interface TableData {
 
 export interface initValue {
     id?: number;
+    kode_counter?: string;
+    kode_cashier_counter?: string;
     kode_cabang: string;
     name: string;
     is_active: number;
