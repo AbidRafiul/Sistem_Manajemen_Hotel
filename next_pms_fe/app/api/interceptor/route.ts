@@ -68,13 +68,14 @@ async function postCRUD(request: NextRequest, session: any) {
             }
         });
 
-        const endpoint = headers['x-endpoint'];
-        if (!endpoint) {
+        const rawEndpoint = headers['x-endpoint'];
+        if (!rawEndpoint) {
             return NextResponse.json(
                 { status: '99', message: 'Endpoint not specified', datetime: formatDateSystem(new Date()) },
                 { status: 500 }
             );
         }
+        const endpoint = rawEndpoint.startsWith('/api/v1') ? rawEndpoint.replace(/^\/api\/v1/, '') : rawEndpoint;
 
         const body = await request.json();
 

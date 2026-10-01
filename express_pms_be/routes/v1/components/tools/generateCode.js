@@ -25,7 +25,7 @@ const TABLE_MAP = {
   "FMT-PAY": "trx_payment",
   "FMT-RESERVASI": "trx_reservation",
   "FMT-RESROOM": "trx_reservation_room",
-  "FMT-INVOICE": "mst_invoice",
+  "FMT-INVOICE": "trx_fiscal_document",
   "FMT-TAMU": "mst_guest",
   "FMT-KAMAR": "mst_kamar",
   "FMT-TIPEKAMAR": "mst_tipe_kamar",
@@ -61,6 +61,7 @@ const COL_MAP = {
   trx_folio: "kode_folio",
   trx_folio_charge: "kode_folio_charge",
   trx_payment: "kode_payment",
+  trx_fiscal_document: "doc_number",
   mst_invoice: "kode_invoice",
   trx_cashier_shift: "kode_shift",
   mst_shift: "kode_shift",
@@ -94,6 +95,7 @@ const PREFIX_MAP = {
   "FMT-TASK": "TSK",
   "FMT-PAY": "PAY",
   "FMT-PAYMENT": "PAY",
+  "FMT-INVOICE": "INV",
   "FMT-MSTSHIFT": "SFT"
 };
 

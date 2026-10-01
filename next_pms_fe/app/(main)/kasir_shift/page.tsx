@@ -29,7 +29,7 @@ import {
 } from './components/endpoints';
 import DialogShiftDetail, { formatCurrency, getSesiBadge } from './components/dialog_shift_detail';
 import { formatPaymentDisplay } from '@/lib/tools/paymentTools';
-import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
+// import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
 interface ShiftStats {
     total_checkin_kamar: number;
@@ -420,7 +420,7 @@ const Page = () => {
             <Toast ref={toast} />
 
             <div className="col-12">
-                <FrontOfficeNav />
+                {/* <FrontOfficeNav /> */}
 
                 <div className="card p-0" style={{ overflow: 'hidden', borderRadius: '16px' }}>
 

@@ -179,11 +179,10 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                 </div>
             </div>
 
-            {/* Order Summary Sidebar */}
-            <div className="col-12 lg:col-4 mt-4 lg:mt-0">
+            {/* Order Summary Sidebar (Pusat Navigasi & Aksi Kasir - Fixed / Sticky Viewport) */}
+            <div className="col-12 lg:col-4 mt-4 lg:mt-0" style={{ position: 'relative' }}>
                 <div
-                    className="card shadow-2 p-4"
-                    style={{ position: 'sticky', top: '6.5rem', zIndex: 10 }}
+                    className="card shadow-2 border-round-xl border-1 surface-border p-3 lg:p-4 sticky-summary-sidebar"
                 >
                     {/* Header */}
                     <div className="flex align-items-center gap-2 mb-3">
@@ -239,11 +238,31 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                             <div className="flex flex-column gap-2">
                                 {selectedRooms.map((rm, idx) => (
                                     <div key={idx} className="p-2 border-round surface-100 flex justify-content-between align-items-center">
-                                        <div>
-                                            <div className="font-bold text-sm text-primary">No. {rm.nomor_kamar}</div>
-                                            <div className="text-xs text-color-secondary">{rm.nama_tipe} &bull; {rm.nama_rate_plan}</div>
+                                        <div className="flex align-items-center gap-2 overflow-hidden pr-2">
+                                            <i
+                                                className="pi pi-times-circle text-red-500 cursor-pointer hover:text-red-700 flex-shrink-0"
+                                                style={{ fontSize: '0.9rem' }}
+                                                title="Hapus kamar ini"
+                                                onClick={() => {
+                                                    const updated = (formik.values.selected_rooms || []).filter((s: any) => s.kode_kamar !== rm.kode_kamar);
+                                                    formik.setFieldValue('selected_rooms', updated);
+                                                    if (updated.length > 0) {
+                                                        formik.setFieldValue('kode_kamar', updated[0].kode_kamar);
+                                                        formik.setFieldValue('kode_tipe_kamar', updated[0].kode_tipe_kamar);
+                                                    } else {
+                                                        formik.setFieldValue('kode_kamar', '');
+                                                        formik.setFieldValue('kode_tipe_kamar', '');
+                                                    }
+                                                }}
+                                            />
+                                            <div className="overflow-hidden">
+                                                <div className="font-bold text-sm text-primary">No. {rm.nomor_kamar}</div>
+                                                <div className="text-xs text-color-secondary white-space-nowrap overflow-hidden text-overflow-ellipsis">
+                                                    {rm.nama_tipe} &bull; {rm.nama_rate_plan}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="text-xs font-bold text-right">
+                                        <div className="text-xs font-bold text-right flex-shrink-0">
                                             Rp {(rm.price_per_night * (rm.nights || formik.values.nights)).toLocaleString('id-ID')}
                                         </div>
                                     </div>
@@ -409,6 +428,52 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                 </span>
                             </div>
                         ))}
+                    </div>
+
+                    {/* ACTION NAVIGATION HUB */}
+                    <div className="mt-3 pt-3 border-top-1 surface-border">
+                        <div className="flex gap-2">
+                            {state.activeStep > 0 && (
+                                <Button
+                                    type="button"
+                                    label="Kembali"
+                                    icon="pi pi-arrow-left"
+                                    outlined
+                                    severity="secondary"
+                                    className="p-button-sm text-xs font-medium py-2 px-3"
+                                    onClick={() => setState(p => ({ ...p, activeStep: Math.max(0, p.activeStep - 1) }))}
+                                />
+                            )}
+                            {state.activeStep < 4 ? (
+                                <Button
+                                    type="button"
+                                    label={
+                                        state.activeStep === 0 ? "Lanjut ke Fasilitas ➔" :
+                                        state.activeStep === 1 ? "Lanjut ke Uang Jaminan ➔" :
+                                        state.activeStep === 2 ? "Lanjut ke Data Tamu ➔" :
+                                        "Lanjut ke Konfirmasi ➔"
+                                    }
+                                    iconPos="right"
+                                    severity="success"
+                                    className="p-button-sm text-xs font-bold flex-1 shadow-2 py-2"
+                                    onClick={() => {
+                                        if (state.activeStep === 0) {
+                                            const hasRooms = (formik.values.selected_rooms && formik.values.selected_rooms.length > 0) || (formik.values.kode_kamar && formik.values.kode_tipe_kamar);
+                                            if (!hasRooms) {
+                                                toast.current?.show({
+                                                    severity: 'warn',
+                                                    summary: 'Pilih Kamar',
+                                                    detail: 'Silakan pilih minimal 1 kamar fisik terlebih dahulu.',
+                                                    life: 3000
+                                                });
+                                                return;
+                                            }
+                                        }
+                                        setState(p => ({ ...p, activeStep: p.activeStep + 1 }));
+                                    }}
+                                />
+                            ) : null}
+                        </div>
                     </div>
                 </div>
             </div>

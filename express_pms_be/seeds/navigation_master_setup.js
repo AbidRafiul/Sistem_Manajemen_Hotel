@@ -22,7 +22,8 @@ export async function seed(knex) {
             { label: "Master Lantai", icon: "pi pi-fw pi-bars", to: "/master_lantai" },
             { label: "Corporate / Travel Agent", icon: "pi pi-fw pi-briefcase", to: "/master_corporate" },
             { label: "Pajak & Service Charge", icon: "pi pi-fw pi-percentage", to: "/master_pajak" },
-            { label: "Master Cashier Counter", icon: "pi pi-fw pi-desktop", to: "/master_cashier_counter" }
+            { label: "Master Cashier Counter", icon: "pi pi-fw pi-desktop", to: "/master_cashier_counter" },
+            { label: "Master Shift Kasir", icon: "pi pi-fw pi-clock", to: "/master_shift" }
           ]
         },
         {
@@ -84,6 +85,7 @@ export async function seed(knex) {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
+        { label: "Front Office Desk", icon: "pi pi-fw pi-desktop", to: "/front_office" },
         { label: "Dashboard Reservasi", icon: "pi pi-fw pi-th-large", to: "/reservasi_dashboard" },
         { label: "Walk-In Check-in", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
         { label: "Booking Reservasi", icon: "pi pi-fw pi-calendar", to: "/reservasi_booking" },

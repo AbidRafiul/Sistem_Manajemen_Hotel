@@ -200,11 +200,10 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                 </div>
             </div>
 
-            {/* Order Summary Sidebar (Pusat Navigasi & Aksi Kasir) */}
-            <div className="col-12 lg:col-4 mt-4 lg:mt-0">
+            {/* Order Summary Sidebar (Pusat Navigasi & Aksi Kasir - Fixed / Sticky Viewport) */}
+            <div className="col-12 lg:col-4 mt-4 lg:mt-0" style={{ position: 'relative' }}>
                 <div
-                    className="card sticky"
-                    style={{ top: '2rem' }}
+                    className="card shadow-2 border-round-xl border-1 surface-border p-3 lg:p-4 sticky-summary-sidebar"
                 >
                     <div className="flex align-items-center justify-content-between mb-3 pb-2 border-bottom-1 surface-border">
                         <span className="font-bold text-lg text-900">Ringkasan Folio</span>
@@ -239,19 +238,42 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
                             <span className="font-medium text-900">{selectedRooms.length > 0 ? selectedRooms.length : 1} Kamar</span>
                         </div>
 
-                        {/* List selected rooms */}
+                        {/* List selected rooms with quick removal */}
                         {selectedRooms.length > 0 && (
                             <div className="my-2 p-2 border-round bg-blue-50 border-1 border-blue-100">
-                                <div className="text-xs font-bold text-blue-900 mb-1">Kamar Dipilih:</div>
+                                <div className="text-xs font-bold text-blue-900 mb-1 flex justify-content-between align-items-center">
+                                    <span>Kamar Dipilih ({selectedRooms.length}):</span>
+                                    <span className="text-500 font-normal" style={{ fontSize: '10px' }}>Klik ✕ untuk hapus</span>
+                                </div>
                                 {selectedRooms.map((rm, idx) => (
                                     <div
                                         key={idx}
-                                        className="flex justify-content-between text-xs py-1 text-blue-800"
+                                        className="flex justify-content-between align-items-center text-xs py-1 text-blue-800 border-bottom-1 border-blue-100 last:border-bottom-none"
                                     >
-                                        <span>
-                                            No. {rm.nomor_kamar} ({rm.nama_tipe})
+                                        <div className="flex align-items-center gap-1 overflow-hidden pr-2">
+                                            <i
+                                                className="pi pi-times-circle text-red-500 cursor-pointer hover:text-red-700 flex-shrink-0"
+                                                style={{ fontSize: '0.9rem' }}
+                                                title="Hapus kamar ini"
+                                                onClick={() => {
+                                                    const updated = (formik.values.selected_rooms || []).filter((s: any) => s.kode_kamar !== rm.kode_kamar);
+                                                    formik.setFieldValue('selected_rooms', updated);
+                                                    if (updated.length > 0) {
+                                                        formik.setFieldValue('kode_kamar', updated[0].kode_kamar);
+                                                        formik.setFieldValue('kode_tipe_kamar', updated[0].kode_tipe_kamar);
+                                                    } else {
+                                                        formik.setFieldValue('kode_kamar', '');
+                                                        formik.setFieldValue('kode_tipe_kamar', '');
+                                                    }
+                                                }}
+                                            />
+                                            <span className="white-space-nowrap overflow-hidden text-overflow-ellipsis font-medium">
+                                                No. {rm.nomor_kamar} ({rm.nama_tipe})
+                                            </span>
+                                        </div>
+                                        <span className="font-semibold flex-shrink-0">
+                                            Rp {(rm.price_per_night * (rm.nights || formik.values.nights)).toLocaleString('id-ID')}
                                         </span>
-                                        <span className="font-semibold">Rp {(rm.price_per_night * (rm.nights || formik.values.nights)).toLocaleString('id-ID')}</span>
                                     </div>
                                 ))}
                             </div>

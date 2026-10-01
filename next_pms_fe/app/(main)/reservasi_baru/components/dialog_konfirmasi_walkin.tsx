@@ -62,7 +62,7 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
     // Fetch shift kasir aktif saat modal dibuka
     const fetchActiveShift = async () => {
         try {
-            const res = await postData('/api/v1/kasir/shift-current', {});
+            const res = await postData('/kasir/shift-current', {});
             if (res?.data?.data) {
                 const shiftData = res.data.data;
                 setActiveShift(shiftData);
@@ -79,11 +79,16 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
 
     useEffect(() => {
         if (visible) {
-            setCashTendered(totalUangDiterima);
+            if ((!formik.values.payment_amount || Number(formik.values.payment_amount) === 0) && totalTagihan > 0) {
+                formik.setFieldValue('payment_amount', totalTagihan);
+                setCashTendered(totalTagihan + Number(formik.values.deposit_amount || 0));
+            } else {
+                setCashTendered(totalUangDiterima > 0 ? totalUangDiterima : totalTagihan);
+            }
             fetchActiveShift();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [visible, totalUangDiterima]);
+    }, [visible, totalTagihan]);
 
     const submitWalkIn = async () => {
         // Validasi kelengkapan form
@@ -284,14 +289,14 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
                     <div className="col-12 lg:col-6 flex flex-column gap-3">
                         {/* 1. Kartu Tamu & Kamar */}
                         <div className="surface-card p-3 border-round-xl border-1 surface-border shadow-1">
-                            <span className="text-xs font-bold text-color-secondary uppercase tracking-wider block mb-2 flex align-items-center gap-1.5">
+                            <span className="text-xs font-bold text-color-secondary uppercase tracking-wider block mb-2.5 flex align-items-center gap-1.5">
                                 <i className="pi pi-user text-primary text-sm"></i>
                                 Data Tamu &amp; Kamar Menginap
                             </span>
                             
-                            <div className="bg-surface-50 p-2.5 border-round-lg mb-2">
+                            <div className="bg-surface-50 p-2.5 border-round-lg mb-2.5">
                                 <div className="text-sm font-bold text-900">{guestName}</div>
-                                <div className="text-xs text-600 mt-1 flex flex-wrap gap-2">
+                                <div className="text-xs text-600 mt-1.5 flex flex-wrap gap-2">
                                     <span>
                                         <i className="pi pi-phone mr-1 text-xs text-400"></i>
                                         {formik.values.phone || state.foundGuest?.phone || '-'}
@@ -304,8 +309,8 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
                                 </div>
                             </div>
 
-                            <div className="text-xs text-700 flex flex-column gap-1.5">
-                                <div className="flex justify-content-between align-items-center">
+                            <div className="text-xs text-700 flex flex-column gap-2.5">
+                                <div className="flex justify-content-between align-items-center py-0.5">
                                     <span className="text-500">Kamar Terpilih:</span>
                                     <span className="font-bold text-primary bg-primary-50 px-2 py-0.5 border-round">
                                         {hasMultiRooms
@@ -313,11 +318,11 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
                                             : (selectedRoom ? `No.${selectedRoom.nomor_kamar}` : formik.values.kode_kamar || '-')}
                                     </span>
                                 </div>
-                                <div className="flex justify-content-between">
+                                <div className="flex justify-content-between align-items-center py-0.5">
                                     <span className="text-500">Durasi Inap:</span>
                                     <strong>{formik.values.nights} Malam ({hasMultiRooms ? selectedRooms.length : 1} Kamar)</strong>
                                 </div>
-                                <div className="flex justify-content-between">
+                                <div className="flex justify-content-between align-items-center py-0.5">
                                     <span className="text-500">Check In - Out:</span>
                                     <span>
                                         {formik.values.check_in_date ? formatDateSystem(formik.values.check_in_date, 'dd/MM/yyyy') : '-'} s/d {formik.values.check_out_date ? formatDateSystem(formik.values.check_out_date, 'dd/MM/yyyy') : '-'}
@@ -328,7 +333,7 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
 
                         {/* 2. Rincian Folio & Billing */}
                         <div className="surface-card p-3 border-round-xl border-1 surface-border shadow-1">
-                            <div className="flex justify-content-between align-items-center mb-2">
+                            <div className="flex justify-content-between align-items-center mb-2.5">
                                 <span className="font-bold text-xs text-color-secondary uppercase tracking-wider flex align-items-center gap-1.5">
                                     <i className="pi pi-receipt text-primary text-sm"></i>
                                     Rincian Folio Tagihan
@@ -340,35 +345,35 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
                                 />
                             </div>
 
-                            <div className="text-xs flex flex-column gap-2">
-                                <div className="flex justify-content-between py-1 border-bottom-1 surface-border">
+                            <div className="text-xs flex flex-column gap-1">
+                                <div className="flex justify-content-between py-1.5 border-bottom-1 surface-border">
                                     <span className="text-600">Sewa Kamar ({formik.values.nights} Malam):</span>
                                     <span className="font-semibold text-900">Rp {totalKamar.toLocaleString('id-ID')}</span>
                                 </div>
                                 {totalFasilitas > 0 && (
-                                    <div className="flex justify-content-between py-1 border-bottom-1 surface-border">
+                                    <div className="flex justify-content-between py-1.5 border-bottom-1 surface-border">
                                         <span className="text-600">Layanan &amp; Fasilitas Tambahan:</span>
                                         <span className="font-semibold text-purple-600">+ Rp {totalFasilitas.toLocaleString('id-ID')}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-content-between py-1 text-xs font-bold text-900 bg-surface-50 p-2 border-round-lg">
+                                <div className="flex justify-content-between py-1.5 text-xs font-bold text-900 bg-surface-50 p-2 border-round-lg my-1">
                                     <span>Total Tagihan Sewa:</span>
                                     <span className="text-primary text-sm font-bold">Rp {totalTagihan.toLocaleString('id-ID')}</span>
                                 </div>
 
-                                <div className="flex justify-content-between py-1 border-bottom-1 surface-border">
+                                <div className="flex justify-content-between py-1.5 border-bottom-1 surface-border">
                                     <span className="text-green-700 font-semibold flex align-items-center gap-1">
                                         <i className="pi pi-check text-xs"></i> 1. Pembayaran Sewa Kamar:
                                     </span>
                                     <strong className="text-green-700">Rp {paymentAmount.toLocaleString('id-ID')}</strong>
                                 </div>
-                                <div className="flex justify-content-between py-1 border-bottom-1 surface-border">
+                                <div className="flex justify-content-between py-1.5 border-bottom-1 surface-border">
                                     <span className="text-blue-700 font-semibold flex align-items-center gap-1">
                                         <i className="pi pi-shield text-xs"></i> 2. Uang Jaminan (Deposit Refundable):
                                     </span>
                                     <strong className="text-blue-700">Rp {depositAmount.toLocaleString('id-ID')}</strong>
                                 </div>
-                                <div className="flex justify-content-between py-1">
+                                <div className="flex justify-content-between py-1.5">
                                     <span className="text-500">Sisa Tagihan Pelunasan Checkout:</span>
                                     <strong className={sisaTagihan === 0 ? "text-green-700" : "text-red-600"}>
                                         Rp {sisaTagihan.toLocaleString('id-ID')}
@@ -377,12 +382,12 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
                             </div>
 
                             {/* Banner Besar Total Uang Fisik Yang Diserahkan Tamu */}
-                            <div className="mt-3 p-2.5 border-round-xl bg-primary-50 border-1 border-primary-200 flex justify-content-between align-items-center">
+                            <div className="mt-2.5 p-2.5 border-round-xl bg-primary-50 border-1 border-primary-200 flex justify-content-between align-items-center">
                                 <div>
-                                    <span className="text-xs text-primary-900 font-bold block uppercase">
+                                    <span className="text-xs text-primary-900 font-bold block uppercase mb-0.5">
                                         Total Uang Fisik Diterima Kasir:
                                     </span>
-                                    <small className="text-500 text-xs">(Pembayaran Sewa + Titipan Deposit)</small>
+                                    <small className="text-500 text-xs block">(Pembayaran Sewa + Titipan Deposit)</small>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-primary text-xl font-bold font-mono">
@@ -429,7 +434,7 @@ const DialogKonfirmasiWalkin: React.FC<DialogKonfirmasiWalkinProps> = ({
                                     formik.setFieldValue('card_type', detail.card_type || 'debit');
                                     formik.setFieldValue('reference_no', detail.reference_no || '');
                                 }}
-                                totalAmount={totalUangDiterima}
+                                totalAmount={totalUangDiterima > 0 ? totalUangDiterima : totalTagihan}
                                 cashTendered={cashTendered}
                                 onCashTenderedChange={setCashTendered}
                                 compact={false}

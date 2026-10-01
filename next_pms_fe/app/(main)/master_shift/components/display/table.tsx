@@ -11,7 +11,6 @@ import { InputIcon } from 'primereact/inputicon';
 import { Tag } from 'primereact/tag';
 import Form from './form';
 import { apiEndpointGet } from '../endpoints';
-import { showError } from '@/lib/tools/generalTools';
 import { useRef } from 'react';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
 import StatusLegend from '@/app/components/status/StatusLegend';
@@ -25,7 +24,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
 
     const headerTemplate = (
         <div className="flex flex-wrap align-items-center justify-content-between gap-2">
-            <span className="text-xl font-bold">Daftar Jadwal Shift Operasional</span>
+            <span className="text-xl font-bold">Daftar Shift Kasir</span>
 
             <div className="flex align-items-center gap-2 ml-auto w-full md:w-auto">
                 <span className="p-input-icon-left w-full md:w-20rem">
@@ -34,7 +33,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         <InputText
                             value={state.searchVal}
                             className="w-full"
-                            placeholder="Cari Shift (Kode / Nama)..."
+                            placeholder="Cari Shift..."
                             onChange={(e) => {
                                 const value = e.target.value;
                                 setState((p) => ({ ...p, searchVal: value }));
@@ -52,7 +51,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     icon="pi pi-filter-slash"
                     outlined
                     severity="danger"
-                    tooltip="Reset Filter"
+                    tooltip="Reset Semua Filter"
                     tooltipOptions={{ position: 'bottom' }}
                     onClick={() => {
                         setState((p) => ({
@@ -89,7 +88,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     });
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
                 }}
-                tooltip="Edit Master Shift"
+                tooltip="Edit Shift"
             />
             <Button
                 icon="pi pi-trash"
@@ -103,7 +102,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const jamBodyTemplate = (rowData: TableData) => (
-        <div className="flex align-items-center gap-2">
+        <div className="flex align-items-center justify-content-center gap-2">
             <i className="pi pi-clock text-500 text-xs"></i>
             <span className="font-semibold text-sm">
                 {rowData.waktu_mulai ? rowData.waktu_mulai.substring(0, 5) : '-'} – {rowData.waktu_selesai ? rowData.waktu_selesai.substring(0, 5) : '-'}
@@ -173,20 +172,25 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         severity="danger"
                         outlined
                         onClick={() => {
-                            if (state.selectedDatas.length > 0) {
-                                setState((p) => ({ ...p, delete: true }));
-                            } else {
-                                showError(toast, 'Pilih data yang akan dihapus terlebih dahulu');
+                            if (state.selectedDatas.length < 1) {
+                                setState((p) => ({ ...p, selectedDatas: [], delete: false }));
+                                return;
                             }
+                            setState((p) => ({ ...p, delete: true }));
                         }}
                         disabled={state.selectedDatas.length === 0}
                     />
+                    <Divider layout="vertical" />
+                    <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
+
+                <StatusLegend />
 
                 <DataTable
                     value={state.data}
-                    lazy
-                    paginator
+                    scrollable
+                    lazy={true}
+                    paginator={true}
                     first={state.first}
                     rows={state.rows}
                     totalRecords={state.totalData}
@@ -194,42 +198,38 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     onSort={onLazyLoad}
                     sortField={state.sortField}
                     sortOrder={state.sortOrder === 'asc' ? 1 : -1}
-                    loading={state.load}
-                    selectionMode="checkbox"
-                    selection={state.selectedDatas}
-                    onSelectionChange={(e: any) => setState((p) => ({ ...p, selectedDatas: e.value }))}
-                    dataKey="id"
+                    selectionMode={'multiple'}
                     header={headerTemplate}
-                    emptyMessage="Tidak ada data master shift ditemukan."
-                    className="p-datatable-sm"
-                    stripedRows
-                    responsiveLayout="scroll"
+                    loading={state.load}
+                    selection={state.selectedDatas}
+                    onSelectionChange={(e) => setState((p) => ({ ...p, selectedDatas: e.value }))}
+                    dataKey="id"
+                    emptyMessage="Tidak ada data shift"
+                    rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data shift"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
-                    <Column field="urutan" header="#" style={{ width: '3.5rem', textAlign: 'center' }} />
-                    <Column field="kode_shift" header="Kode" sortable style={{ width: '8rem' }} />
-                    <Column field="cabang_name" header="Cabang" sortable style={{ minWidth: '12rem' }} />
-                    <Column field="nama_shift" header="Nama Shift" sortable style={{ minWidth: '14rem' }} />
-                    <Column header="Jam Operasional" body={jamBodyTemplate} style={{ minWidth: '11rem' }} />
-                    <Column field="default_opening_cash" header="Modal Standar" body={openingCashBodyTemplate} sortable style={{ minWidth: '11rem' }} />
-                    <Column field="is_night_audit" header="Sesi" body={nightAuditBodyTemplate} sortable style={{ width: '9rem' }} />
-                    <Column field="is_active" header="Status" body={activeStatusBodyTemplate} sortable style={{ width: '7rem' }} />
-                    <Column header="Aksi" body={actionBodyTemplate} exportable={false} style={{ width: '7.5rem', textAlign: 'center' }} />
+                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
+                    <Column field="kode_shift" header="Kode" align="center" sortable style={{ minWidth: '8rem' }}></Column>
+                    <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '12rem' }} body={(rowData) => rowData.cabang_name || rowData.kode_cabang}></Column>
+                    <Column field="nama_shift" header="Nama Shift" sortable style={{ minWidth: '14rem' }}></Column>
+                    <Column header="Jam Operasional" align="center" body={jamBodyTemplate} style={{ minWidth: '11rem' }}></Column>
+                    <Column field="default_opening_cash" header="Modal Standar" align="right" body={openingCashBodyTemplate} sortable style={{ minWidth: '11rem' }}></Column>
+                    <Column field="is_night_audit" header="Sesi" align="center" body={nightAuditBodyTemplate} sortable style={{ minWidth: '8rem' }}></Column>
+                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
                 </DataTable>
-
-                <Divider />
-                <StatusLegend />
-
-                <Form
-                    state={state}
-                    setState={setState}
-                    formik={formik}
-                    toast={toast}
-                    getData={getData}
-                    dataRekap={dataRekap}
-                    setDataRekap={setDataRekap}
-                />
             </div>
+
+            <Form
+                state={state}
+                setState={setState}
+                formik={formik}
+                toast={toast}
+                getData={getData}
+                dataRekap={dataRekap}
+                setDataRekap={setDataRekap}
+            />
         </>
     );
 };
