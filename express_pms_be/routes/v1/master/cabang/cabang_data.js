@@ -39,6 +39,7 @@ router.post("/", async (req, res) => {
       "o.name as nama_wilayah",
       "o.code as kode_wilayah",
       "b.kode_cabang",
+      "b.nama_hotel",
       "b.nama_hotel as name",
       "b.alamat as address",
       "b.waktu_checkin as check_in_time",

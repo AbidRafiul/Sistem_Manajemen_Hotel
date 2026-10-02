@@ -18,11 +18,29 @@ const Form = ({ state, setState, formik, toast, getData, dataRekap, setDataRekap
         const fetchCabang = async () => {
             try {
                 const res = await postData(apiEndpointCabang, {});
-                setCabangOptions(res.data.data);
+                const raw = res?.data?.data || res?.data || [];
+                const branches = (Array.isArray(raw) ? raw : []).map((c: any) => ({
+                    ...c,
+                    nama_hotel: c.nama_hotel || c.name || c.kode_cabang,
+                    name: c.name || c.nama_hotel || c.kode_cabang
+                }));
+                setCabangOptions(branches);
             } catch (e) {}
         };
         fetchCabang();
     }, []);
+
+    useEffect(() => {
+        if (!formik.values.kode_cabang && cabangOptions.length > 0) {
+            const activeBranch = state.session?.user?.active_kode_cabang || state.session?.user?.default_kode_cabang;
+            const found = cabangOptions.find((b: any) => b.kode_cabang === activeBranch);
+            if (found) {
+                formik.setFieldValue('kode_cabang', found.kode_cabang);
+            } else if (cabangOptions[0]?.kode_cabang) {
+                formik.setFieldValue('kode_cabang', cabangOptions[0].kode_cabang);
+            }
+        }
+    }, [cabangOptions, state.session, formik.values.kode_cabang]);
 
     const handleSubmit = async () => {
         formik.handleSubmit();
@@ -131,7 +149,7 @@ const Form = ({ state, setState, formik, toast, getData, dataRekap, setDataRekap
                         options={cabangOptions}
                         optionLabel="nama_hotel"
                         optionValue="kode_cabang"
-                        onChange={formik.handleChange}
+                        onChange={(e) => formik.setFieldValue('kode_cabang', e.value)}
                         placeholder="Pilih Cabang"
                         className={isFormFieldInvalid('kode_cabang') ? 'p-invalid' : ''}
                         disabled={state.edit}

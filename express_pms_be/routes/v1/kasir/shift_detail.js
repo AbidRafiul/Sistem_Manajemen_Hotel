@@ -33,12 +33,21 @@ router.post("/", async (req, res) => {
     const shiftInfo = await DB("trx_cashier_shift as cs")
       .select(
         "cs.*",
+        "ms.nama_shift",
+        "ms.is_night_audit",
+        "ms.waktu_mulai as shift_mulai",
+        "ms.waktu_selesai as shift_selesai",
         "cc.name as nama_counter",
         "c.nama_hotel as cabang_name",
         "u.username as cashier_username",
         "u.fullname as cashier_name"
       )
       .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_counter")
+      .leftJoin("mst_shift as ms", function () {
+        this.on(function () {
+          this.on("cs.sesi", "=", "ms.kode_shift").orOn("cs.sesi", "=", "ms.nama_shift");
+        }).andOn("cs.kode_cabang", "=", "ms.kode_cabang");
+      })
       .leftJoin("mst_cabang as c", "cs.kode_cabang", "c.kode_cabang")
       .leftJoin("mst_user as u", "cs.user_id", "u.id")
       .where("cs.kode_cashier_shift", shiftCode)

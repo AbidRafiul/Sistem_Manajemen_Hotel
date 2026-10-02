@@ -54,6 +54,8 @@ interface ShiftData {
     kode_cabang: string;
     kode_cashier_counter: string;
     sesi: string;
+    nama_shift?: string;
+    is_night_audit?: number;
     nama_counter: string;
     cabang_name: string;
     opening_cash: string | number;
@@ -218,6 +220,7 @@ const Page = () => {
         try {
             const res = await postData(apiCashierCounterDropdown, {
                 kode_cabang,
+                is_active: 1,
                 perPage: 100,
                 page: 1
             });
@@ -258,9 +261,10 @@ const Page = () => {
     // Fetch past shift history
     const fetchHistory = async () => {
         setHistoryLoading(true);
+        const branchCode = session?.user?.active_kode_cabang || session?.user?.default_kode_cabang;
         try {
             const res = await postData(apiShiftHistory, {
-                kode_cabang: session?.user?.active_kode_cabang,
+                kode_cabang: branchCode,
                 search: historySearch,
                 page: historyPage,
                 perPage: historyPerPage
@@ -320,15 +324,16 @@ const Page = () => {
 
     // On branch change or mount
     useEffect(() => {
-        if (session?.user?.active_kode_cabang) {
-            formikOpen.setFieldValue('kode_cabang', session.user.active_kode_cabang);
-            getCounter(session.user.active_kode_cabang);
-            getMasterShifts(session.user.active_kode_cabang);
+        const branchCode = session?.user?.active_kode_cabang || session?.user?.default_kode_cabang;
+        if (branchCode) {
+            formikOpen.setFieldValue('kode_cabang', branchCode);
+            getCounter(branchCode);
+            getMasterShifts(branchCode);
             fetchCurrentShift();
             fetchHistory();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.active_kode_cabang]);
+    }, [session?.user?.active_kode_cabang, session?.user?.default_kode_cabang]);
 
     // Re-fetch history when search/page changes
     useEffect(() => {
@@ -538,7 +543,7 @@ const Page = () => {
                                             align="center"
                                             alignHeader="center"
                                             headerStyle={{ textAlign: 'center' }}
-                                            body={(r) => getSesiBadge(r.sesi)}
+                                            body={(r) => getSesiBadge(r.sesi, r.nama_shift, r.is_night_audit)}
                                             style={{ minWidth: '130px', width: '130px' }}
                                         />
                                         <Column
@@ -750,21 +755,33 @@ const Page = () => {
 
                                             {/* Loket Counter */}
                                             <div className="field mb-3">
-                                                <label htmlFor="kode_cashier_counter" className="font-semibold text-xs text-700">
-                                                    Loket / Cashier Counter <span className="text-red-500">*</span>
-                                                </label>
+                                                <div className="flex justify-content-between align-items-center mb-1">
+                                                    <label htmlFor="kode_cashier_counter" className="font-semibold text-xs text-700 m-0">
+                                                        Loket / Cashier Counter <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <span className="text-xs text-500">
+                                                        {counterOptions.length} loket aktif
+                                                    </span>
+                                                </div>
                                                 <Dropdown
                                                     id="kode_cashier_counter"
+                                                    name="kode_cashier_counter"
                                                     value={formikOpen.values.kode_cashier_counter}
                                                     options={counterOptions}
                                                     optionLabel="name"
                                                     optionValue="kode_counter"
-                                                    onChange={formikOpen.handleChange}
-                                                    placeholder="Pilih Loket Kasir"
+                                                    onChange={(e) => formikOpen.setFieldValue('kode_cashier_counter', e.value)}
+                                                    placeholder={counterOptions.length === 0 ? "Belum ada loket aktif di cabang ini" : "Pilih Loket Kasir"}
                                                     className={`text-sm ${formikOpen.errors.kode_cashier_counter && formikOpen.touched.kode_cashier_counter ? 'p-invalid' : ''}`}
                                                 />
                                                 {formikOpen.errors.kode_cashier_counter && formikOpen.touched.kode_cashier_counter && (
                                                     <small className="p-error">{formikOpen.errors.kode_cashier_counter}</small>
+                                                )}
+                                                {counterOptions.length === 0 && (
+                                                    <small className="text-orange-600 block mt-1 text-xs">
+                                                        <i className="pi pi-exclamation-triangle mr-1" />
+                                                        Belum ada loket kasir aktif untuk cabang ini. Daftarkan loket terlebih dahulu di menu Master Shift Kasir.
+                                                    </small>
                                                 )}
                                             </div>
 
@@ -917,7 +934,7 @@ const Page = () => {
                                                 <div className="flex align-items-center gap-2 flex-wrap mb-1">
                                                     <span className="text-xl font-bold text-900">{shiftAktif.kode_cashier_shift}</span>
                                                     <Tag severity="success" value="AKTIF" icon="pi pi-circle-fill text-xs mr-1 animate-pulse" className="font-bold text-xs" />
-                                                    {getSesiBadge(shiftAktif.sesi)}
+                                                    {getSesiBadge(shiftAktif.sesi, shiftAktif.nama_shift, shiftAktif.is_night_audit)}
                                                 </div>
                                                 <div className="text-xs text-600 flex align-items-center gap-2 flex-wrap">
                                                     <span><strong>Kasir:</strong> {shiftAktif.cashier_name || shiftAktif.cashier_username || session?.user?.name || '-'}</span>
