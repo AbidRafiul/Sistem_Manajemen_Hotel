@@ -538,17 +538,25 @@ const DialogShiftDetail: React.FC<DialogShiftDetailProps> = ({ visible, onHide, 
                                             <div className="text-xs text-500">{r.nama_tamu || '-'}</div>
                                         </div>
                                     )} />
-                                    <Column field="payment_method" header="Metode Pembayaran" body={(r) => (
-                                        <div>
-                                            {formatPaymentDisplay(r.payment_method, r.bank_name, r.card_type)}
-                                            {r.reference_no && (
-                                                <div className="text-xs text-500 mt-1 font-monospace flex align-items-center">
-                                                    <i className="pi pi-hashtag mr-1 text-xs text-400"></i>
-                                                    <span className="surface-100 px-1 border-round">{r.reference_no}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )} style={{ minWidth: '180px' }} />
+                                    <Column field="payment_method" header="Metode Pembayaran" body={(r) => {
+                                        const disp = formatPaymentDisplay(r.payment_method, r.bank_name, r.card_type);
+                                        return (
+                                            <div>
+                                                <Tag
+                                                    severity={disp.severity}
+                                                    value={disp.label}
+                                                    icon={disp.icon}
+                                                    className="text-xs px-2 py-1 font-bold"
+                                                />
+                                                {r.reference_no && (
+                                                    <div className="text-xs text-500 mt-1 font-monospace flex align-items-center">
+                                                        <i className="pi pi-hashtag mr-1 text-xs text-400"></i>
+                                                        <span className="surface-100 px-1 border-round">{r.reference_no}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    }} style={{ minWidth: '180px' }} />
                                     <Column field="amount" header="Nominal" body={(r) => formatCurrency(r.amount)} className="text-right font-bold text-primary" style={{ width: '150px' }} />
                                 </DataTable>
                             </TabPanel>

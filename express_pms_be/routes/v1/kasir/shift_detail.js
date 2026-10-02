@@ -45,8 +45,20 @@ router.post("/", async (req, res) => {
       .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_counter")
       .leftJoin("mst_shift as ms", function () {
         this.on(function () {
-          this.on("cs.sesi", "=", "ms.kode_shift").orOn("cs.sesi", "=", "ms.nama_shift");
-        }).andOn("cs.kode_cabang", "=", "ms.kode_cabang");
+          this.on(
+            DB.raw("cs.sesi COLLATE utf8mb4_unicode_ci"),
+            "=",
+            DB.raw("ms.kode_shift COLLATE utf8mb4_unicode_ci")
+          ).orOn(
+            DB.raw("cs.sesi COLLATE utf8mb4_unicode_ci"),
+            "=",
+            DB.raw("ms.nama_shift COLLATE utf8mb4_unicode_ci")
+          );
+        }).andOn(
+          DB.raw("cs.kode_cabang COLLATE utf8mb4_unicode_ci"),
+          "=",
+          DB.raw("ms.kode_cabang COLLATE utf8mb4_unicode_ci")
+        );
       })
       .leftJoin("mst_cabang as c", "cs.kode_cabang", "c.kode_cabang")
       .leftJoin("mst_user as u", "cs.user_id", "u.id")
@@ -152,41 +164,79 @@ router.post("/", async (req, res) => {
       .orderBy("fc.posted_at", "asc");
 
     // 5. Jurnal Pembayaran (Cash, Non-Cash, Deposit, Pelunasan)
-    const paymentList = await DB("trx_payment as p")
-      .select(
-        "p.id",
-        "p.kode_payment",
-        "p.paid_at",
-        "p.payment_method",
-        "p.bank_name",
-        "p.card_type",
-        "p.amount",
-        "p.reference_no",
-        "p.kode_folio",
-        "r.kode_reservasi",
-        "g.full_name as nama_tamu",
-        DB.raw("GROUP_CONCAT(DISTINCT mk.nomor_kamar SEPARATOR ', ') as nomor_kamar")
-      )
-      .leftJoin("trx_folio as f", "p.kode_folio", "f.kode_folio")
-      .leftJoin("trx_reservation as r", "f.kode_reservation", "r.kode_reservasi")
-      .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
-      .leftJoin("trx_reservation_room as rr", "r.kode_reservasi", "rr.kode_reservation")
-      .leftJoin("mst_kamar as mk", "rr.kode_kamar", "mk.kode_kamar")
-      .where("p.kode_cashier_shift", shiftCode)
-      .groupBy(
-        "p.id",
-        "p.kode_payment",
-        "p.paid_at",
-        "p.payment_method",
-        "p.bank_name",
-        "p.card_type",
-        "p.amount",
-        "p.reference_no",
-        "p.kode_folio",
-        "r.kode_reservasi",
-        "g.full_name"
-      )
-      .orderBy("p.paid_at", "asc");
+    let paymentList = [];
+    try {
+      paymentList = await DB("trx_payment as p")
+        .select(
+          "p.id",
+          "p.kode_payment",
+          "p.paid_at",
+          "p.payment_method",
+          "p.bank_name",
+          "p.card_type",
+          "p.amount",
+          "p.reference_no",
+          "p.kode_folio",
+          "r.kode_reservasi",
+          "g.full_name as nama_tamu",
+          DB.raw("GROUP_CONCAT(DISTINCT mk.nomor_kamar SEPARATOR ', ') as nomor_kamar")
+        )
+        .leftJoin("trx_folio as f", "p.kode_folio", "f.kode_folio")
+        .leftJoin("trx_reservation as r", "f.kode_reservation", "r.kode_reservasi")
+        .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
+        .leftJoin("trx_reservation_room as rr", "r.kode_reservasi", "rr.kode_reservation")
+        .leftJoin("mst_kamar as mk", "rr.kode_kamar", "mk.kode_kamar")
+        .where("p.kode_cashier_shift", shiftCode)
+        .groupBy(
+          "p.id",
+          "p.kode_payment",
+          "p.paid_at",
+          "p.payment_method",
+          "p.bank_name",
+          "p.card_type",
+          "p.amount",
+          "p.reference_no",
+          "p.kode_folio",
+          "r.kode_reservasi",
+          "g.full_name"
+        )
+        .orderBy("p.paid_at", "asc");
+    } catch (ePay) {
+      // Fallback aman jika kolom bank_name atau card_type belum ditambahkan di database production
+      paymentList = await DB("trx_payment as p")
+        .select(
+          "p.id",
+          "p.kode_payment",
+          "p.paid_at",
+          "p.payment_method",
+          DB.raw("NULL as bank_name"),
+          DB.raw("NULL as card_type"),
+          "p.amount",
+          "p.reference_no",
+          "p.kode_folio",
+          "r.kode_reservasi",
+          "g.full_name as nama_tamu",
+          DB.raw("GROUP_CONCAT(DISTINCT mk.nomor_kamar SEPARATOR ', ') as nomor_kamar")
+        )
+        .leftJoin("trx_folio as f", "p.kode_folio", "f.kode_folio")
+        .leftJoin("trx_reservation as r", "f.kode_reservation", "r.kode_reservasi")
+        .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
+        .leftJoin("trx_reservation_room as rr", "r.kode_reservasi", "rr.kode_reservation")
+        .leftJoin("mst_kamar as mk", "rr.kode_kamar", "mk.kode_kamar")
+        .where("p.kode_cashier_shift", shiftCode)
+        .groupBy(
+          "p.id",
+          "p.kode_payment",
+          "p.paid_at",
+          "p.payment_method",
+          "p.amount",
+          "p.reference_no",
+          "p.kode_folio",
+          "r.kode_reservasi",
+          "g.full_name"
+        )
+        .orderBy("p.paid_at", "asc");
+    }
 
     // Rekapitulasi Pembayaran per Metode
     const paymentSummary = {

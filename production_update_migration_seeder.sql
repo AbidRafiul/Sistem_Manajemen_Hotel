@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `mst_shift` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_kode_shift` (`kode_shift`),
   KEY `fk_shift_cabang` (`kode_cabang`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 1.5 Tabel mst_tipe_kamar_foto (Galeri Foto Tipe Kamar)
 CREATE TABLE IF NOT EXISTS `mst_tipe_kamar_foto` (
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS `mst_tipe_kamar_foto` (
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   KEY `idx_tkf_tipe_kamar` (`kode_tipe_kamar`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 1.6 Tabel mst_cashier_counter (Master Loket / Cashier Counter)
 CREATE TABLE IF NOT EXISTS `mst_cashier_counter` (
@@ -119,7 +119,27 @@ CREATE TABLE IF NOT EXISTS `mst_cashier_counter` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode` (`kode_counter`),
   UNIQUE KEY `uq_counter` (`kode_cabang`, `kode_counter`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 1.7 Tabel user_navigation (Custom Menu Per User)
+CREATE TABLE IF NOT EXISTS `user_navigation` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `user_code` VARCHAR(50) NOT NULL,
+  `menu` LONGTEXT NULL,
+  `tz` VARCHAR(50) NOT NULL DEFAULT 'UTC',
+  `created_at` DATETIME NULL,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_user_navigation_uniqueid` (`user_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -------------------------------------------------------------
+-- [BAGIAN 1.7] PENYELARASAN COLLATION TABEL OPERASIONAL (FIX ILLEGAL MIX OF COLLATIONS)
+-- Memastikan tabel operasional yang sudah terlanjur dibuat di production diselaraskan ke utf8mb4_0900_ai_ci
+-- -------------------------------------------------------------
+ALTER TABLE `mst_shift` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+ALTER TABLE `mst_cashier_counter` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+ALTER TABLE `mst_tipe_kamar_foto` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 
 -- -------------------------------------------------------------
@@ -317,6 +337,30 @@ PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stm
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_guest' AND COLUMN_NAME = 'merged_into_guest_id');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_guest` ADD COLUMN `merged_into_guest_id` VARCHAR(50) NULL AFTER `is_merged`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+
+-- 2.14 Kolom Bank & Card pada `trx_payment`
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_payment' AND COLUMN_NAME = 'bank_name');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_payment` ADD COLUMN `bank_name` VARCHAR(50) NULL AFTER `payment_method`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_payment' AND COLUMN_NAME = 'card_type');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_payment` ADD COLUMN `card_type` VARCHAR(20) NULL AFTER `bank_name`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+
+ALTER TABLE `trx_payment` MODIFY COLUMN `payment_method` ENUM('cash','card','transfer','qris','edc','deposit','voucher') NOT NULL;
+
+-- 2.15 Kolom Task Lifecycle pada `trx_housekeeping_task`
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_housekeeping_task' AND COLUMN_NAME = 'cancel_reason');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_housekeeping_task` ADD COLUMN `cancel_reason` VARCHAR(255) NULL AFTER `is_active`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_housekeeping_task' AND COLUMN_NAME = 'started_at');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_housekeeping_task` ADD COLUMN `started_at` DATETIME NULL AFTER `cancel_reason`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_housekeeping_task' AND COLUMN_NAME = 'finished_at');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_housekeeping_task` ADD COLUMN `finished_at` DATETIME NULL AFTER `started_at`', 'SELECT 1');
 PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
 
 

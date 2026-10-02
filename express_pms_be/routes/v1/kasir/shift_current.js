@@ -43,8 +43,20 @@ router.post("/", async (req, res) => {
       .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_counter")
       .leftJoin("mst_shift as ms", function () {
         this.on(function () {
-          this.on("cs.sesi", "=", "ms.kode_shift").orOn("cs.sesi", "=", "ms.nama_shift");
-        }).andOn("cs.kode_cabang", "=", "ms.kode_cabang");
+          this.on(
+            DB.raw("cs.sesi COLLATE utf8mb4_unicode_ci"),
+            "=",
+            DB.raw("ms.kode_shift COLLATE utf8mb4_unicode_ci")
+          ).orOn(
+            DB.raw("cs.sesi COLLATE utf8mb4_unicode_ci"),
+            "=",
+            DB.raw("ms.nama_shift COLLATE utf8mb4_unicode_ci")
+          );
+        }).andOn(
+          DB.raw("cs.kode_cabang COLLATE utf8mb4_unicode_ci"),
+          "=",
+          DB.raw("ms.kode_cabang COLLATE utf8mb4_unicode_ci")
+        );
       })
       .leftJoin("mst_cabang as c", "cs.kode_cabang", "c.kode_cabang")
       .leftJoin("mst_user as u", "cs.user_id", "u.id")
