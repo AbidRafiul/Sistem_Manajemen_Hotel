@@ -1,7 +1,7 @@
 -- ====================================================================
 -- PEMBARUAN LENGKAP DATABASE PRODUCTION (RAILWAY MYSQL / DBEAVER)
 -- Proyek       : Sistem Manajemen Hotel (PMS) Multi-Branch Enterprise
--- File         : production_railway_update.sql
+-- File         : production_update_migration_seeder.sql
 -- Kompatibilitas: MySQL 8.0+ / MariaDB 10.5+ / Railway / DBeaver / Navicat
 -- Sifat Skrip  : 100% IDEMPOTENT (Aman dijalankan berulang kali tanpa error/duplikasi)
 --

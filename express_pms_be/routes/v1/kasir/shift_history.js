@@ -26,6 +26,11 @@ router.post("/", async (req, res) => {
 
     const baseQuery = DB("trx_cashier_shift as cs")
       .leftJoin("mst_cashier_counter as cc", "cs.kode_cashier_counter", "cc.kode_counter")
+      .leftJoin("mst_shift as ms", function () {
+        this.on(function () {
+          this.on("cs.sesi", "=", "ms.kode_shift").orOn("cs.sesi", "=", "ms.nama_shift");
+        }).andOn("cs.kode_cabang", "=", "ms.kode_cabang");
+      })
       .leftJoin("mst_cabang as c", "cs.kode_cabang", "c.kode_cabang")
       .leftJoin("mst_user as u", "cs.user_id", "u.id")
       .modify((qb) => {
@@ -39,7 +44,9 @@ router.post("/", async (req, res) => {
           qb.where("cs.status", oPayload.status);
         }
         if (oPayload.sesi) {
-          qb.where("cs.sesi", oPayload.sesi);
+          qb.where((w) => {
+            w.where("cs.sesi", oPayload.sesi).orWhere("ms.kode_shift", oPayload.sesi);
+          });
         }
         if (oPayload.tgl_mulai) {
           qb.where("cs.opened_at", ">=", `${oPayload.tgl_mulai} 00:00:00`);
@@ -52,7 +59,8 @@ router.post("/", async (req, res) => {
           qb.where((w) => {
             w.where("cs.kode_cashier_shift", "like", s)
               .orWhere("u.fullname", "like", s)
-              .orWhere("cc.name", "like", s);
+              .orWhere("cc.name", "like", s)
+              .orWhere("ms.nama_shift", "like", s);
           });
         }
       });
@@ -70,6 +78,10 @@ router.post("/", async (req, res) => {
         "cs.kode_cabang",
         "cs.kode_cashier_counter",
         "cs.sesi",
+        "ms.nama_shift",
+        "ms.is_night_audit",
+        "ms.waktu_mulai as shift_waktu_mulai",
+        "ms.waktu_selesai as shift_waktu_selesai",
         "cs.user_id",
         "cs.opening_cash",
         "cs.closing_cash",

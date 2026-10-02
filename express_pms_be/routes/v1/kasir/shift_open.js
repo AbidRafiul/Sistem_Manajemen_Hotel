@@ -73,10 +73,50 @@ router.post("/", async (req, res) => {
         throw new Error("Anda masih memiliki shift aktif. Tutup shift sebelumnya sebelum membuka yang baru.");
       }
 
-      // 2. Generate kode shift baru
+      // 2. Validasi kevalidan & ketersediaan Cashier Counter
+      const counter = await trx("mst_cashier_counter")
+        .where("kode_counter", oPayload.kode_cashier_counter)
+        .andWhere("kode_cabang", oPayload.kode_cabang)
+        .whereNull("deleted_at")
+        .first();
+
+      if (!counter) {
+        throw new Error("Loket / Cashier counter tidak valid atau tidak terdaftar pada cabang ini.");
+      }
+
+      if (counter.is_active === 0) {
+        throw new Error(`Loket / Cashier counter '${counter.name}' saat ini berstatus tidak aktif.`);
+      }
+
+      const counterInUse = await trx("trx_cashier_shift")
+        .where("kode_cabang", oPayload.kode_cabang)
+        .andWhere("kode_cashier_counter", oPayload.kode_cashier_counter)
+        .andWhere("status", "open")
+        .first();
+
+      if (counterInUse) {
+        throw new Error(`Loket '${counter.name}' sedang aktif digunakan pada sesi shift kasir lain. Tutup shift pada loket tersebut terlebih dahulu.`);
+      }
+
+      // 3. Validasi & normalisasi Master Shift jika disediakan
+      if (oPayload.sesi) {
+        const shiftRecord = await trx("mst_shift")
+          .where(function () {
+            this.where("kode_shift", oPayload.sesi).orWhere("nama_shift", oPayload.sesi);
+          })
+          .andWhere("kode_cabang", oPayload.kode_cabang)
+          .whereNull("deleted_at")
+          .first();
+
+        if (shiftRecord) {
+          oPayload.sesi = shiftRecord.kode_shift;
+        }
+      }
+
+      // 4. Generate kode shift baru
       cUniqueCode = await generateSequence("FMT-SHIFT", trx);
 
-      // 3. Insert shift baru
+      // 5. Insert shift baru
       const oData = {
         kode_cashier_shift: cUniqueCode,
         kode_cabang: oPayload.kode_cabang,

@@ -27,16 +27,18 @@ export const formatCurrency = (val: number | string | null | undefined) => {
     }).format(Number(val || 0));
 };
 
-export const getSesiBadge = (sesi: string) => {
-    const s = (sesi || '').toLowerCase();
-    if (s.includes('pagi') || s === 'a') {
-        return <Tag severity="info" value="Sesi A (Pagi)" icon="pi pi-sun" className="font-semibold" />;
-    } else if (s.includes('sore') || s.includes('siang') || s === 'b') {
-        return <Tag severity="warning" value="Sesi B (Sore)" icon="pi pi-clock" className="font-semibold" />;
-    } else if (s.includes('malam') || s.includes('audit') || s === 'c') {
-        return <Tag severity="contrast" value="Sesi C (Malam)" icon="pi pi-moon" className="font-semibold" />;
+export const getSesiBadge = (sesi: string, nama_shift?: string, is_night_audit?: number) => {
+    const displayLabel = nama_shift || (sesi === 'pagi' ? 'Sesi A (Pagi)' : sesi === 'sore' ? 'Sesi B (Sore)' : sesi === 'malam' ? 'Sesi C (Malam)' : sesi || 'Sesi Shift');
+    const s = (displayLabel + ' ' + (sesi || '')).toLowerCase();
+
+    if (is_night_audit === 1 || s.includes('night') || s.includes('audit') || s.includes('malam') || s === 'c') {
+        return <Tag severity="contrast" value={displayLabel} icon="pi pi-moon" className="font-semibold" />;
+    } else if (s.includes('sore') || s.includes('siang') || s.includes('evening') || s === 'b') {
+        return <Tag severity="warning" value={displayLabel} icon="pi pi-clock" className="font-semibold" />;
+    } else if (s.includes('pagi') || s.includes('morning') || s === 'a') {
+        return <Tag severity="info" value={displayLabel} icon="pi pi-sun" className="font-semibold" />;
     }
-    return <Tag severity="secondary" value={sesi || 'Sesi Shift'} className="font-semibold" />;
+    return <Tag severity="secondary" value={displayLabel} icon="pi pi-calendar" className="font-semibold" />;
 };
 
 const DialogShiftDetail: React.FC<DialogShiftDetailProps> = ({ visible, onHide, detailData, loading }) => {
@@ -116,7 +118,7 @@ const DialogShiftDetail: React.FC<DialogShiftDetailProps> = ({ visible, onHide, 
                         <div class="meta-item"><span class="label">Counter / Loket:</span> <span class="value">${shift.nama_counter || '-'}</span></div>
                     </div>
                     <div class="meta-col">
-                        <div class="meta-item"><span class="label">Sesi Kerja:</span> <span class="value">${(shift.sesi || 'Pagi').toUpperCase()}</span></div>
+                        <div class="meta-item"><span class="label">Sesi Kerja:</span> <span class="value">${shift.nama_shift || (shift.sesi || 'Pagi').toUpperCase()}</span></div>
                         <div class="meta-item"><span class="label">Waktu Buka:</span> <span class="value">${formatDateSystem(shift.opened_at, 'dd-MM-yyyy HH:mm:ss')}</span></div>
                         <div class="meta-item"><span class="label">Waktu Tutup:</span> <span class="value">${shift.closed_at ? formatDateSystem(shift.closed_at, 'dd-MM-yyyy HH:mm:ss') : 'SEDANG AKTIF'}</span></div>
                     </div>
@@ -343,7 +345,7 @@ const DialogShiftDetail: React.FC<DialogShiftDetailProps> = ({ visible, onHide, 
                                 <div className="col-12 md:col-3 p-2 border-right-none md:border-right-1 surface-border">
                                     <span className="text-xs text-500 block uppercase font-semibold">Petugas Kasir</span>
                                     <span className="font-bold text-base text-900">{shift.cashier_name || shift.cashier_username || '-'}</span>
-                                    <div className="mt-1">{getSesiBadge(shift.sesi)}</div>
+                                    <div className="mt-1">{getSesiBadge(shift.sesi, shift.nama_shift, shift.is_night_audit)}</div>
                                 </div>
                                 <div className="col-12 md:col-3 p-2 border-right-none md:border-right-1 surface-border">
                                     <span className="text-xs text-500 block uppercase font-semibold">Waktu Operasional</span>

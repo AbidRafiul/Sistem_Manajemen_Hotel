@@ -39,10 +39,11 @@ router.post("/", async (req, res) => {
 
   try {
     const baseQuery = DB("mst_cashier_counter as cc")
-      .join("mst_cabang as c", "cc.kode_cabang", "c.kode_cabang")
+      .leftJoin("mst_cabang as c", "cc.kode_cabang", "c.kode_cabang")
       .whereNull("cc.deleted_at")
       .modify((qb) => {
         if (oPayload.kode_cabang) qb.where("cc.kode_cabang", oPayload.kode_cabang);
+        if (oPayload.is_active !== undefined) qb.where("cc.is_active", oPayload.is_active);
         if (keyword) {
           qb.where(function () {
             this.whereRaw("LOWER(cc.name) LIKE ?", [`%${keyword.toLowerCase()}%`])

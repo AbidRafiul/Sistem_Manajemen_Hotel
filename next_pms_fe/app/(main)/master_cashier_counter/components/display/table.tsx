@@ -119,7 +119,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                         onClick={() => {
                             formik.resetForm();
                             formik.setValues({
-                                kode_cabang: state.session?.user?.active_kode_cabang || '',
+                                kode_cabang: state.session?.user?.active_kode_cabang || state.session?.user?.default_kode_cabang || '',
                                 name: '',
                                 is_active: 1
                             });
