@@ -88,14 +88,21 @@ router.post("/", async (req, res) => {
         throw new Error(`Loket / Cashier counter '${counter.name}' saat ini berstatus tidak aktif.`);
       }
 
-      const counterInUse = await trx("trx_cashier_shift")
-        .where("kode_cabang", oPayload.kode_cabang)
-        .andWhere("kode_cashier_counter", oPayload.kode_cashier_counter)
-        .andWhere("status", "open")
+      const counterInUse = await trx("trx_cashier_shift as cs")
+        .leftJoin("mst_user as u", "cs.user_id", "u.id")
+        .where("cs.kode_cabang", oPayload.kode_cabang)
+        .andWhere("cs.kode_cashier_counter", oPayload.kode_cashier_counter)
+        .andWhere("cs.status", "open")
+        .select("cs.id", "cs.user_id", "cs.kode_cashier_shift", "u.username", "u.fullname")
         .first();
 
       if (counterInUse) {
-        throw new Error(`Loket '${counter.name}' sedang aktif digunakan pada sesi shift kasir lain. Tutup shift pada loket tersebut terlebih dahulu.`);
+        const rawUser = counterInUse.username || counterInUse.fullname || `user_${counterInUse.user_id}`;
+        const cleanUser = rawUser.includes("@") ? rawUser.split("@")[0] : rawUser;
+        const userName = `@${cleanUser}`;
+        throw new Error(
+          `Loket '${counter.name}' sudah digunakan oleh user ${userName}. Silakan pilih loket lain atau tunggu shift tersebut ditutup.`
+        );
       }
 
       // 3. Validasi & normalisasi Master Shift jika disediakan
@@ -152,12 +159,12 @@ router.post("/", async (req, res) => {
       username: username,
     });
     
-    const isKnownError = error.message === "Anda masih memiliki shift aktif. Tutup shift sebelumnya sebelum membuka yang baru." || error.message.includes("Akses ditolak");
-    const httpStatus = error.status || error.statusCode || 500;
+    const isSystemError = !error.message || error.name === "TypeError" || error.name === "ReferenceError";
+    const httpStatus = error.status || error.statusCode || 400;
     
     return res.status(httpStatus).json({
       status: status.GAGAL,
-      message: isKnownError ? error.message : "Terjadi kesalahan sistem.",
+      message: isSystemError ? "Terjadi kesalahan sistem." : error.message,
       datetime: formatDateSystem(),
       data: null,
     });

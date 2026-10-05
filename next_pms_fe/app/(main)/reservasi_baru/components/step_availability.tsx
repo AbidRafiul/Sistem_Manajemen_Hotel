@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ReservasiBaruState, initValue, SelectedRoomItem } from './interfaces';
 import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
@@ -23,6 +24,7 @@ interface StepAvailabilityProps {
 }
 
 const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, formik, toast }) => {
+    const router = useRouter();
     const [galleryVisible, setGalleryVisible] = useState(false);
     const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
     const [galleryLoading, setGalleryLoading] = useState(false);
@@ -163,6 +165,11 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
 
     // Toggle pemilihan nomor kamar fisik (Multi-room selection)
     const toggleRoomSelection = (tk: any, rm: any) => {
+        if (!formik.values.kode_cashier_shift) {
+            showError(toast, "shift kasir belum dibuka, silahkan buka shift kasir");
+            return;
+        }
+
         if (rm.status !== 'available') {
             if (rm.status === 'occupied') {
                 showError(toast, `Kamar ${rm.nomor_kamar} sedang terisi tamu saat ini.`);
@@ -308,6 +315,33 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
             <div className="col-12 mt-1 mb-2">
                 <Button label="Cari Ketersediaan Kamar" icon="pi pi-search" onClick={searchPackages} loading={state.packagesLoad} className="p-button-outlined" />
             </div>
+
+            {/* Warning Banner: Shift Kasir Belum Dibuka */}
+            {!formik.values.kode_cashier_shift && (
+                <div className="col-12">
+                    <div className="p-3 border-round-xl bg-orange-50 border-1 border-orange-300 text-orange-900 flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between gap-3 shadow-1 mb-3">
+                        <div className="flex align-items-center gap-3">
+                            <div className="w-3rem h-3rem border-circle bg-orange-100 flex align-items-center justify-content-center flex-shrink-0">
+                                <i className="pi pi-lock text-orange-600 text-xl font-bold" />
+                            </div>
+                            <div>
+                                <h6 className="m-0 font-bold text-orange-900 text-base">Shift Kasir Belum Dibuka!</h6>
+                                <p className="m-0 text-xs text-orange-800 mt-1">
+                                    Pemilihan kamar dan proses check-in dikunci. Silakan buka sesi shift kasir terlebih dahulu untuk melanjutkan.
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            label="Buka Shift Kasir Sekarang"
+                            icon="pi pi-lock-open"
+                            severity="warning"
+                            size="small"
+                            className="font-bold flex-shrink-0"
+                            onClick={() => router.push('/kasir_shift')}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Status Legend Bar (Walk-In: Status Riil Hari Ini) */}
             <div className="col-12">
