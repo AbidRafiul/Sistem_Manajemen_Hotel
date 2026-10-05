@@ -319,26 +319,32 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
             {/* Warning Banner: Shift Kasir Belum Dibuka */}
             {!formik.values.kode_cashier_shift && (
                 <div className="col-12">
-                    <div className="p-3 border-round-xl bg-orange-50 border-1 border-orange-300 text-orange-900 flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between gap-3 shadow-1 mb-3">
-                        <div className="flex align-items-center gap-3">
-                            <div className="w-3rem h-3rem border-circle bg-orange-100 flex align-items-center justify-content-center flex-shrink-0">
-                                <i className="pi pi-lock text-orange-600 text-xl font-bold" />
+                    <div 
+                        className="p-3 border-round-xl bg-orange-50 border-1 border-orange-200 text-orange-900 flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-3 shadow-1 mb-3"
+                        style={{ width: '100%', boxSizing: 'border-box' }}
+                    >
+                        <div className="flex align-items-center gap-3 flex-1" style={{ minWidth: 0 }}>
+                            <div className="w-3rem h-3rem border-circle bg-orange-100 flex align-items-center justify-content-center flex-shrink-0 text-orange-600">
+                                <i className="pi pi-lock text-xl font-bold" />
                             </div>
-                            <div>
-                                <h6 className="m-0 font-bold text-orange-900 text-base">Shift Kasir Belum Dibuka!</h6>
-                                <p className="m-0 text-xs text-orange-800 mt-1">
+                            <div className="flex-1" style={{ minWidth: 0 }}>
+                                <h6 className="m-0 font-bold text-orange-900 text-base line-height-2">Shift Kasir Belum Dibuka!</h6>
+                                <p className="m-0 text-xs text-orange-800 mt-1 line-height-3">
                                     Pemilihan kamar dan proses check-in dikunci. Silakan buka sesi shift kasir terlebih dahulu untuk melanjutkan.
                                 </p>
                             </div>
                         </div>
-                        <Button
-                            label="Buka Shift Kasir Sekarang"
-                            icon="pi pi-lock-open"
-                            severity="warning"
-                            size="small"
-                            className="font-bold flex-shrink-0"
-                            onClick={() => router.push('/kasir_shift')}
-                        />
+                        <div className="flex-shrink-0 w-full md:w-auto" style={{ width: 'auto' }}>
+                            <Button
+                                label="Buka Shift Kasir Sekarang"
+                                icon="pi pi-lock-open"
+                                severity="warning"
+                                size="small"
+                                className="font-bold w-full md:w-auto px-4 py-2"
+                                style={{ width: 'auto', minWidth: '220px', whiteSpace: 'nowrap' }}
+                                onClick={() => router.push('/kasir_shift')}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
