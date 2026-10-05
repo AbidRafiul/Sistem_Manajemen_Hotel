@@ -107,6 +107,7 @@ const authOptions: NextAuthConfig = {
 
                 const expireDurationInSeconds = u.remember_me === '1' || u.remember_me === true ? (24 * 60 * 60) : (7 * 60 * 60);
                 token.access_token_expires = Math.floor(Date.now() / 1000) + expireDurationInSeconds - 120;
+                delete token.error;
 
                 return token;
             }

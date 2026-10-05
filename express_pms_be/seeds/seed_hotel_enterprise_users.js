@@ -48,6 +48,7 @@ export async function seedHotelEnterpriseUsers() {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
+        { label: "Front Office Desk", icon: "pi pi-fw pi-desktop", to: "/front_office" },
         { label: "Dashboard Reservasi", icon: "pi pi-fw pi-th-large", to: "/reservasi_dashboard" },
         { label: "Walk-In Check-in", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
         { label: "Booking Reservasi", icon: "pi pi-fw pi-calendar", to: "/reservasi_booking" },
@@ -61,6 +62,7 @@ export async function seedHotelEnterpriseUsers() {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
+        { label: "Front Office Desk", icon: "pi pi-fw pi-desktop", to: "/front_office" },
         { label: "Dashboard Reservasi", icon: "pi pi-fw pi-th-large", to: "/reservasi_dashboard" },
         { label: "Walk-In Check-in", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
         { label: "Booking Reservasi", icon: "pi pi-fw pi-calendar", to: "/reservasi_booking" },
@@ -73,6 +75,7 @@ export async function seedHotelEnterpriseUsers() {
       label: "Reservasi",
       icon: "pi pi-fw pi-calendar-plus",
       items: [
+        { label: "Front Office Desk", icon: "pi pi-fw pi-desktop", to: "/front_office" },
         { label: "Walk-In Check-in", icon: "pi pi-fw pi-user-plus", to: "/reservasi_baru" },
         { label: "Booking Reservasi", icon: "pi pi-fw pi-calendar", to: "/reservasi_booking" },
         { label: "Kedatangan (Arrivals)", icon: "pi pi-fw pi-sign-in", to: "/reservasi_checkin" },
@@ -179,6 +182,7 @@ export async function seedHotelEnterpriseUsers() {
             label: "Operasional Group",
             icon: "pi pi-fw pi-globe",
             items: [
+              { label: "Front Office Desk", icon: "pi pi-fw pi-desktop", to: "/front_office" },
               { label: "Dashboard Reservasi", icon: "pi pi-fw pi-th-large", to: "/reservasi_dashboard" },
               { label: "Tamu Menginap (In-House)", icon: "pi pi-fw pi-users", to: "/tamu_menginap" },
               { label: "Room Status Board", icon: "pi pi-fw pi-refresh", to: "/housekeeping/room_status_board" },
@@ -207,6 +211,7 @@ export async function seedHotelEnterpriseUsers() {
             label: "Monitoring Wilayah",
             icon: "pi pi-fw pi-map",
             items: [
+              { label: "Front Office Desk", icon: "pi pi-fw pi-desktop", to: "/front_office" },
               { label: "Dashboard Reservasi", icon: "pi pi-fw pi-th-large", to: "/reservasi_dashboard" },
               { label: "Tamu Menginap (In-House)", icon: "pi pi-fw pi-users", to: "/tamu_menginap" },
               { label: "Room Status Board", icon: "pi pi-fw pi-refresh", to: "/housekeeping/room_status_board" },

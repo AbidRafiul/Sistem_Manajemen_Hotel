@@ -44,23 +44,19 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
             if (!formik.values.kode_cabang) return;
             setState(p => ({ ...p, cashierShiftLoad: true }));
             try {
-                try {
-                    const currentShiftRes = await postData(apiShiftCurrent, {});
-                    if (currentShiftRes?.data?.data?.kode_cashier_shift) {
-                        formik.setFieldValue('kode_cashier_shift', currentShiftRes.data.data.kode_cashier_shift);
-                    }
-                } catch (err) { }
-
-                const res = await postData(apiCashierShiftDropdown, {
-                    kode_cabang: formik.values.kode_cabang
-                });
-                const shifts = res.data.data || [];
-                setState(p => ({ ...p, cashierShiftOptions: shifts }));
-                if (shifts.length > 0 && !formik.values.kode_cashier_shift) {
-                    formik.setFieldValue('kode_cashier_shift', shifts[0].kode_cashier_shift);
+                const currentShiftRes = await postData(apiShiftCurrent, {});
+                const activeShift = currentShiftRes?.data?.data;
+                if (activeShift?.kode_cashier_shift) {
+                    formik.setFieldValue('kode_cashier_shift', activeShift.kode_cashier_shift);
+                    setState(p => ({ ...p, cashierShiftOptions: [activeShift] }));
+                } else {
+                    formik.setFieldValue('kode_cashier_shift', '');
+                    setState(p => ({ ...p, cashierShiftOptions: [] }));
                 }
             } catch (e: any) {
                 console.error("Gagal memuat data shift kasir:", e);
+                formik.setFieldValue('kode_cashier_shift', '');
+                setState(p => ({ ...p, cashierShiftOptions: [] }));
             } finally {
                 setState(p => ({ ...p, cashierShiftLoad: false }));
             }
@@ -89,6 +85,10 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
     };
 
     const handleNextStep = () => {
+        if (!formik.values.kode_cashier_shift) {
+            showError(toast, "shift kasir belum dibuka, silahkan buka shift kasir");
+            return;
+        }
         if (state.activeStep === 0) {
             if (!hasRoom) {
                 showError(toast, "Silakan pilih minimal 1 kamar fisik yang tersedia.");
@@ -105,6 +105,10 @@ const FormWalkIn: React.FC<FormWalkInProps> = ({ state, setState, formik, toast 
     };
 
     const handleOpenConfirmModal = () => {
+        if (!formik.values.kode_cashier_shift) {
+            showError(toast, "shift kasir belum dibuka, silahkan buka shift kasir");
+            return;
+        }
         if (!hasRoom) {
             showError(toast, "Silakan pilih kamar terlebih dahulu di Tab Kamar & Tarif.");
             setState(p => ({ ...p, activeStep: 0 }));

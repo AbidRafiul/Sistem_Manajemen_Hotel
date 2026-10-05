@@ -309,6 +309,19 @@ router.post("/", async (req, res) => {
                     }
                 }
 
+                if (!shiftCode) {
+                    throw new Error("shift kasir belum dibuka, silahkan buka shift kasir");
+                }
+
+                const validShift = await trx("trx_cashier_shift")
+                    .where("kode_cashier_shift", shiftCode)
+                    .andWhere("status", "open")
+                    .first();
+
+                if (!validShift) {
+                    throw new Error("shift kasir belum dibuka, silahkan buka shift kasir");
+                }
+
                 const noPayment = await generateSequence("FMT-PAYMENT", trx);
                 if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
 
@@ -374,7 +387,7 @@ router.post("/", async (req, res) => {
             data: result
         });
     } catch (e) {
-        const httpStatus = e.status || e.statusCode || 500;
+        const httpStatus = e.status || e.statusCode || 400;
         return res.status(httpStatus).json({
             status: status.GAGAL,
             message: e.message,

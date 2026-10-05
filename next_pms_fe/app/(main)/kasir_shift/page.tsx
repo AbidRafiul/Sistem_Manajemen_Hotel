@@ -133,7 +133,14 @@ const Page = () => {
         validate: (data) => {
             let errors: any = {};
             if (!data.kode_cabang) errors.kode_cabang = 'Cabang wajib dipilih';
-            if (!data.kode_cashier_counter) errors.kode_cashier_counter = 'Counter wajib dipilih';
+            if (!data.kode_cashier_counter) {
+                errors.kode_cashier_counter = 'Counter / Loket wajib dipilih';
+            } else {
+                const selectedCtr = counterOptions.find((c: any) => c.kode_counter === data.kode_cashier_counter);
+                if (selectedCtr && selectedCtr.is_in_use) {
+                    errors.kode_cashier_counter = `Loket ${selectedCtr.name} sudah digunakan oleh user ${selectedCtr.active_user || ''}. Silakan pilih loket lain.`;
+                }
+            }
             if (!data.sesi) errors.sesi = 'Sesi kerja wajib dipilih';
             if (data.opening_cash < 0) errors.opening_cash = 'Uang modal awal tidak valid';
             return errors;
@@ -224,10 +231,22 @@ const Page = () => {
                 perPage: 100,
                 page: 1
             });
-            const list = res.data.data || [];
+            const rawList = res.data?.data || [];
+            const list = rawList.map((c: any) => ({
+                ...c,
+                displayName: c.is_in_use 
+                    ? `${c.name} [Sudah Digunakan ${c.active_user || 'User Lain'}]` 
+                    : `${c.name} [Tersedia]`
+            }));
             setCounterOptions(list);
-            if (list.length > 0 && !formikOpen.values.kode_cashier_counter) {
-                formikOpen.setFieldValue('kode_cashier_counter', list[0].kode_counter);
+            if (list.length > 0) {
+                // Utamakan loket yang masih tersedia (belum digunakan)
+                const availableCounter = list.find((c: any) => !c.is_in_use);
+                if (availableCounter) {
+                    formikOpen.setFieldValue('kode_cashier_counter', availableCounter.kode_counter);
+                } else if (!formikOpen.values.kode_cashier_counter) {
+                    formikOpen.setFieldValue('kode_cashier_counter', list[0].kode_counter);
+                }
             }
         } catch (e) { }
     };
@@ -768,15 +787,91 @@ const Page = () => {
                                                     name="kode_cashier_counter"
                                                     value={formikOpen.values.kode_cashier_counter}
                                                     options={counterOptions}
-                                                    optionLabel="name"
+                                                    optionLabel="displayName"
                                                     optionValue="kode_counter"
                                                     onChange={(e) => formikOpen.setFieldValue('kode_cashier_counter', e.value)}
                                                     placeholder={counterOptions.length === 0 ? "Belum ada loket aktif di cabang ini" : "Pilih Loket Kasir"}
+                                                    itemTemplate={(option: any) => {
+                                                        const opt = (typeof option === 'object' && option?.name)
+                                                            ? option
+                                                            : counterOptions.find((c: any) => c.kode_counter === option);
+                                                        if (!opt) return null;
+                                                        const isInUse = !!opt.is_in_use;
+                                                        return (
+                                                            <div className={`flex align-items-center justify-content-between w-full py-1 ${isInUse ? 'text-red-700' : ''}`}>
+                                                                <div className="flex align-items-center gap-2">
+                                                                    <i className={`pi pi-desktop ${isInUse ? 'text-red-500 font-bold' : 'text-green-500 font-bold'}`} />
+                                                                    <span className={`text-sm ${isInUse ? 'font-semibold text-red-800' : 'font-semibold text-900'}`}>
+                                                                        {opt.name} <span className="text-xs text-500">({opt.kode_counter})</span>
+                                                                    </span>
+                                                                </div>
+                                                                {isInUse ? (
+                                                                    <Tag
+                                                                        severity="danger"
+                                                                        value={`Dipakai ${opt.active_user || '@user'}`}
+                                                                        className="text-xs font-bold px-2 py-0"
+                                                                        icon="pi pi-lock"
+                                                                    />
+                                                                ) : (
+                                                                    <Tag
+                                                                        severity="success"
+                                                                        value="Tersedia"
+                                                                        className="text-xs font-semibold px-2 py-0"
+                                                                        icon="pi pi-check"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    }}
+                                                    valueTemplate={(option: any, props: any) => {
+                                                        const selectedOpt = counterOptions.find((c: any) => c.kode_counter === (option?.kode_counter || option || formikOpen.values.kode_cashier_counter));
+                                                        if (!selectedOpt) {
+                                                            return <span>{props.placeholder}</span>;
+                                                        }
+                                                        const isInUse = !!selectedOpt.is_in_use;
+                                                        return (
+                                                            <div className="flex align-items-center justify-content-between w-full">
+                                                                <div className="flex align-items-center gap-2">
+                                                                    <i className={`pi pi-desktop ${isInUse ? 'text-red-500' : 'text-green-500'}`} />
+                                                                    <span className="font-semibold text-sm">{selectedOpt.name}</span>
+                                                                </div>
+                                                                {isInUse ? (
+                                                                    <Tag
+                                                                        severity="danger"
+                                                                        value={`Sudah digunakan user ${selectedOpt.active_user || ''}`}
+                                                                        className="text-xs py-0 px-2 font-bold"
+                                                                        icon="pi pi-lock"
+                                                                    />
+                                                                ) : (
+                                                                    <Tag
+                                                                        severity="success"
+                                                                        value="Tersedia"
+                                                                        className="text-xs py-0 px-2 font-semibold"
+                                                                        icon="pi pi-check"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    }}
                                                     className={`text-sm ${formikOpen.errors.kode_cashier_counter && formikOpen.touched.kode_cashier_counter ? 'p-invalid' : ''}`}
                                                 />
                                                 {formikOpen.errors.kode_cashier_counter && formikOpen.touched.kode_cashier_counter && (
-                                                    <small className="p-error">{formikOpen.errors.kode_cashier_counter}</small>
+                                                    <small className="p-error block mt-1">{formikOpen.errors.kode_cashier_counter}</small>
                                                 )}
+                                                {(() => {
+                                                    const selectedCtr = counterOptions.find((c: any) => c.kode_counter === formikOpen.values.kode_cashier_counter);
+                                                    if (selectedCtr?.is_in_use) {
+                                                        return (
+                                                            <div className="p-2 border-round-lg mt-2 bg-red-50 text-red-700 border-1 border-red-300 text-xs flex align-items-center gap-2">
+                                                                <i className="pi pi-exclamation-triangle text-base text-red-500 flex-shrink-0" />
+                                                                <span>
+                                                                    <strong>Peringatan:</strong> Loket <em>{selectedCtr.name}</em> saat ini <strong>sudah digunakan oleh user {selectedCtr.active_user}</strong>. Silakan pilih loket lain yang berstatus <em>Tersedia</em> atau tunggu shift pada loket tersebut ditutup.
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
                                                 {counterOptions.length === 0 && (
                                                     <small className="text-orange-600 block mt-1 text-xs">
                                                         <i className="pi pi-exclamation-triangle mr-1" />
@@ -908,13 +1003,21 @@ const Page = () => {
                                                 </div>
                                             </div>
 
-                                            <Button
-                                                label="Buka Sesi Shift Sekarang"
-                                                icon="pi pi-check-circle"
-                                                type="submit"
-                                                loading={submitLoad}
-                                                className="w-full py-3 font-bold text-sm"
-                                            />
+                                            {(() => {
+                                                const selectedCtr = counterOptions.find((c: any) => c.kode_counter === formikOpen.values.kode_cashier_counter);
+                                                const isInUse = !!selectedCtr?.is_in_use;
+                                                return (
+                                                    <Button
+                                                        label={isInUse ? `Loket Sedang Digunakan ${selectedCtr?.active_user} (Pilih Loket Lain)` : "Buka Sesi Shift Sekarang"}
+                                                        icon={isInUse ? "pi pi-exclamation-triangle" : "pi pi-check-circle"}
+                                                        type="submit"
+                                                        disabled={isInUse}
+                                                        loading={submitLoad}
+                                                        severity={isInUse ? "danger" : undefined}
+                                                        className="w-full py-3 font-bold text-sm"
+                                                    />
+                                                );
+                                            })()}
                                         </form>
                                     </div>
                                 </div>

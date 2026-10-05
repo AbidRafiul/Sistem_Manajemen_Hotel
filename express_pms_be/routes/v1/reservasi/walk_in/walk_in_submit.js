@@ -159,6 +159,19 @@ router.post("/", async (req, res) => {
             }
         }
 
+        if (!shiftCode) {
+            throw new Error("shift kasir belum dibuka, silahkan buka shift kasir");
+        }
+
+        const validShift = await trx("trx_cashier_shift")
+            .where("kode_cashier_shift", shiftCode)
+            .andWhere("status", "open")
+            .first();
+
+        if (!validShift) {
+            throw new Error("shift kasir belum dibuka, silahkan buka shift kasir");
+        }
+
         const totalGuests = parseInt(oPayload.guest_count, 10) || 1;
 
         await trx("trx_reservation").insert({
@@ -392,7 +405,7 @@ router.post("/", async (req, res) => {
       response: oResult,
       user: username,
     });
-    const httpStatus = error.status || error.statusCode || 500;
+    const httpStatus = error.status || error.statusCode || 400;
     return res.status(httpStatus).json(oResult);
   }
 });

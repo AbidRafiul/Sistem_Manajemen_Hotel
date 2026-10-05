@@ -23,23 +23,35 @@ router.post("/", async (req, res) => {
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
   
-  const sortField = [
-    "kode_counter",
-    "kode_cabang",
-    "cabang_name",
-    "name",
-    "is_active",
-    "created_at",
-    "updated_at",
-  ].includes(oPayload.sortField)
-    ? oPayload.sortField
-    : "updated_at";
-    
+  const sortMap = {
+    kode_counter: "cc.kode_counter",
+    kode_cabang: "cc.kode_cabang",
+    cabang_name: "c.nama_hotel",
+    name: "cc.name",
+    is_active: "cc.is_active",
+    created_at: "cc.created_at",
+    updated_at: "cc.updated_at",
+  };
+  const sortField = sortMap[oPayload.sortField] || "cc.updated_at";
   const sortOrder = oPayload.sortOrder || "desc";
 
   try {
     const baseQuery = DB("mst_cashier_counter as cc")
       .leftJoin("mst_cabang as c", "cc.kode_cabang", "c.kode_cabang")
+      .leftJoin("trx_cashier_shift as cs", function () {
+        this.on(
+          DB.raw("cc.kode_counter COLLATE utf8mb4_unicode_ci"),
+          "=",
+          DB.raw("cs.kode_cashier_counter COLLATE utf8mb4_unicode_ci")
+        )
+        .andOn(
+          DB.raw("cc.kode_cabang COLLATE utf8mb4_unicode_ci"),
+          "=",
+          DB.raw("cs.kode_cabang COLLATE utf8mb4_unicode_ci")
+        )
+        .andOn(DB.raw("cs.status COLLATE utf8mb4_unicode_ci"), "=", DB.raw("'open'"));
+      })
+      .leftJoin("mst_user as u", "cs.user_id", "u.id")
       .whereNull("cc.deleted_at")
       .modify((qb) => {
         if (oPayload.kode_cabang) qb.where("cc.kode_cabang", oPayload.kode_cabang);
@@ -61,7 +73,30 @@ router.post("/", async (req, res) => {
       "cc.is_active",
       "cc.created_at",
       "cc.updated_at",
+      "cs.kode_cashier_shift as active_shift_code",
+      "cs.user_id as active_user_id",
+      "cs.opened_at as active_opened_at",
+      "u.username as active_username",
+      "u.fullname as active_fullname",
     ];
+
+    const formatRow = (row) => {
+      const rawUser = row.active_username || row.active_fullname || (row.active_user_id ? `user_${row.active_user_id}` : null);
+      const cleanUser = rawUser ? (rawUser.includes("@") ? rawUser.split("@")[0] : rawUser) : null;
+      const activeUserDisplay = cleanUser ? `@${cleanUser}` : null;
+      const isInUse = !!row.active_shift_code;
+
+      return {
+        ...row,
+        is_in_use: isInUse,
+        active_username: row.active_username || null,
+        active_fullname: row.active_fullname || null,
+        active_user: activeUserDisplay,
+        status_keterangan: isInUse ? `Sudah digunakan oleh user ${activeUserDisplay}` : "Tersedia",
+        created_at: row.created_at ? formatDateSystem(row.created_at) : null,
+        updated_at: row.updated_at ? formatDateSystem(row.updated_at) : null,
+      };
+    };
 
     let result = [];
     if (hasPagination) {
@@ -76,15 +111,11 @@ router.post("/", async (req, res) => {
         .limit(perPage)
         .offset(offset);
 
-      const totalResult = await baseQuery.clone().count("* as total").first();
+      const totalResult = await baseQuery.clone().count("cc.id as total").first();
       const totalRows = totalResult ? totalResult.total : 0;
       const totalPages = Math.ceil(totalRows / perPage);
 
-      const vaData = result.map((row) => ({
-        ...row,
-        created_at: row.created_at ? formatDateSystem(row.created_at) : null,
-        updated_at: row.updated_at ? formatDateSystem(row.updated_at) : null,
-      }));
+      const vaData = result.map(formatRow);
 
       return res.status(200).json({
         status: status.SUKSES,
@@ -101,11 +132,7 @@ router.post("/", async (req, res) => {
     } else {
       result = await baseQuery.clone().select(selectFields).orderBy(sortField, sortOrder);
 
-      const vaData = result.map((row) => ({
-        ...row,
-        created_at: row.created_at ? formatDateSystem(row.created_at) : null,
-        updated_at: row.updated_at ? formatDateSystem(row.updated_at) : null,
-      }));
+      const vaData = result.map(formatRow);
 
       return res.status(200).json({
         status: status.SUKSES,

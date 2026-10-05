@@ -13,8 +13,9 @@ import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { Tag } from 'primereact/tag';
 import { formatDateSystem } from '@/lib/tools/dateTools';
+import { showError } from '@/lib/tools/generalTools';
 import postData from '@/lib/axios/postData';
-import { apiCashierShiftDropdown } from './endpoints';
+import { apiCashierShiftDropdown, apiShiftCurrent } from './endpoints';
 
 interface FormBookingProps {
     state: ReservasiBaruState;
@@ -43,16 +44,19 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
             if (!formik.values.kode_cabang) return;
             setState(p => ({ ...p, cashierShiftLoad: true }));
             try {
-                const res = await postData(apiCashierShiftDropdown, {
-                    kode_cabang: formik.values.kode_cabang
-                });
-                const shifts = res.data.data || [];
-                setState(p => ({ ...p, cashierShiftOptions: shifts }));
-                if (shifts.length > 0 && !formik.values.kode_cashier_shift) {
-                    formik.setFieldValue('kode_cashier_shift', shifts[0].kode_cashier_shift);
+                const currentShiftRes = await postData(apiShiftCurrent, {});
+                const activeShift = currentShiftRes?.data?.data;
+                if (activeShift?.kode_cashier_shift) {
+                    formik.setFieldValue('kode_cashier_shift', activeShift.kode_cashier_shift);
+                    setState(p => ({ ...p, cashierShiftOptions: [activeShift] }));
+                } else {
+                    formik.setFieldValue('kode_cashier_shift', '');
+                    setState(p => ({ ...p, cashierShiftOptions: [] }));
                 }
             } catch (e: any) {
-                console.error("Gagal memuat data shift kasir:", e);
+                console.error("Gagal memuat data shift kasir aktif:", e);
+                formik.setFieldValue('kode_cashier_shift', '');
+                setState(p => ({ ...p, cashierShiftOptions: [] }));
             } finally {
                 setState(p => ({ ...p, cashierShiftLoad: false }));
             }
@@ -458,14 +462,13 @@ const FormBooking: React.FC<FormBookingProps> = ({ state, setState, formik, toas
                                     className="p-button-sm text-xs font-bold flex-1 shadow-2 py-2"
                                     onClick={() => {
                                         if (state.activeStep === 0) {
+                                            if (!formik.values.kode_cashier_shift) {
+                                                showError(toast, "shift kasir belum dibuka, silahkan buka shift kasir");
+                                                return;
+                                            }
                                             const hasRooms = (formik.values.selected_rooms && formik.values.selected_rooms.length > 0) || (formik.values.kode_kamar && formik.values.kode_tipe_kamar);
                                             if (!hasRooms) {
-                                                toast.current?.show({
-                                                    severity: 'warn',
-                                                    summary: 'Pilih Kamar',
-                                                    detail: 'Silakan pilih minimal 1 kamar fisik terlebih dahulu.',
-                                                    life: 3000
-                                                });
+                                                showError(toast, "Silakan pilih minimal 1 kamar fisik terlebih dahulu.");
                                                 return;
                                             }
                                         }

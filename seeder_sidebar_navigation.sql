@@ -135,6 +135,7 @@ SET @menu_superadmin := '[
     "label": "Reservasi",
     "icon": "pi pi-fw pi-calendar-plus",
     "items": [
+      { "label": "Front Office Desk", "icon": "pi pi-fw pi-desktop", "to": "/front_office" },
       { "label": "Dashboard Reservasi", "icon": "pi pi-fw pi-th-large", "to": "/reservasi_dashboard" },
       { "label": "Walk-In Check-in", "icon": "pi pi-fw pi-user-plus", "to": "/reservasi_baru" },
       { "label": "Booking Reservasi", "icon": "pi pi-fw pi-calendar", "to": "/reservasi_booking" },
@@ -250,6 +251,7 @@ SET @menu_bm := '[
     "label": "Reservasi",
     "icon": "pi pi-fw pi-calendar-plus",
     "items": [
+      { "label": "Front Office Desk", "icon": "pi pi-fw pi-desktop", "to": "/front_office" },
       { "label": "Dashboard Reservasi", "icon": "pi pi-fw pi-th-large", "to": "/reservasi_dashboard" },
       { "label": "Walk-In Check-in", "icon": "pi pi-fw pi-user-plus", "to": "/reservasi_baru" },
       { "label": "Booking Reservasi", "icon": "pi pi-fw pi-calendar", "to": "/reservasi_booking" },
@@ -310,6 +312,7 @@ SET @menu_fo := '[
     "label": "Reservasi",
     "icon": "pi pi-fw pi-calendar-plus",
     "items": [
+      { "label": "Front Office Desk", "icon": "pi pi-fw pi-desktop", "to": "/front_office" },
       { "label": "Dashboard Reservasi", "icon": "pi pi-fw pi-th-large", "to": "/reservasi_dashboard" },
       { "label": "Walk-In Check-in", "icon": "pi pi-fw pi-user-plus", "to": "/reservasi_baru" },
       { "label": "Booking Reservasi", "icon": "pi pi-fw pi-calendar", "to": "/reservasi_booking" },
@@ -339,6 +342,7 @@ SET @menu_rec := '[
     "label": "Reservasi",
     "icon": "pi pi-fw pi-calendar-plus",
     "items": [
+      { "label": "Front Office Desk", "icon": "pi pi-fw pi-desktop", "to": "/front_office" },
       { "label": "Walk-In Check-in", "icon": "pi pi-fw pi-user-plus", "to": "/reservasi_baru" },
       { "label": "Booking Reservasi", "icon": "pi pi-fw pi-calendar", "to": "/reservasi_booking" },
       { "label": "Kedatangan (Arrivals)", "icon": "pi pi-fw pi-sign-in", "to": "/reservasi_checkin" },
