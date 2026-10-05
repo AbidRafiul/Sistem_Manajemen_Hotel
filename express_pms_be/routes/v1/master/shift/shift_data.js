@@ -42,7 +42,13 @@ router.post("/", async (req, res) => {
 
   try {
     const baseQuery = DB("mst_shift as s")
-      .leftJoin("mst_cabang as c", "s.kode_cabang", "c.kode_cabang")
+      .leftJoin("mst_cabang as c", function () {
+        this.on(
+          DB.raw("s.kode_cabang COLLATE utf8mb4_unicode_ci"),
+          "=",
+          DB.raw("c.kode_cabang COLLATE utf8mb4_unicode_ci")
+        );
+      })
       .whereNull("s.deleted_at")
       .modify((qb) => {
         if (oPayload.kode_cabang) qb.where("s.kode_cabang", oPayload.kode_cabang);
