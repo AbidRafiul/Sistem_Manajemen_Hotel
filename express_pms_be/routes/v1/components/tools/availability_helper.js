@@ -90,12 +90,18 @@ export const hitungKetersediaanTipeKamar = async (payload, trx) => {
     }
 
     // 3. Cek reservasi yang overlap pada rentang tanggal
-    const overlappingReservations = await trx('trx_reservation_room as rr')
+    const overlappingQuery = trx('trx_reservation_room as rr')
         .join('trx_reservation as r', 'rr.kode_reservation', 'r.kode_reservasi')
         .where('rr.kode_tipe_kamar', kode_tipe_kamar)
         .where('r.kode_cabang', kode_cabang)
         .whereIn('rr.status', ['booked', 'assigned', 'checked_in'])
-        .whereIn('r.status', ['reserved', 'confirmed', 'checked_in'])
+        .whereIn('r.status', ['reserved', 'confirmed', 'checked_in']);
+
+    if (payload.exclude_kode_reservation) {
+        overlappingQuery.whereNot('r.kode_reservasi', payload.exclude_kode_reservation);
+    }
+
+    const overlappingReservations = await overlappingQuery
         .where(function() {
             this.where(function() {
                 this.where('r.check_in_date', '<', checkoutDateStr)
