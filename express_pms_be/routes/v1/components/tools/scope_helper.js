@@ -301,6 +301,11 @@ export const resolveEffectiveBranch = (req, requestedBranch = null) => {
         namaHotel: branchObj.nama_hotel,
       };
     }
+    return {
+      branchId: null,
+      kodeCabang: branchCandidate,
+      namaHotel: "",
+    };
   }
 
   // Fallback ke active kode cabang

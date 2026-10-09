@@ -22,6 +22,15 @@ router.post("/", async (req, res) => {
   const kode_cabang = oPayload.kode_cabang || req?.auth?.kode_cabang || "";
 
   try {
+    // Subquery untuk mengambil ID task aktif terbaru per kamar
+    const latestTaskSubquery = DB("trx_housekeeping_task")
+      .select("kode_kamar", DB.raw("MAX(id) as max_task_id"))
+      .whereIn("status", ["assigned", "in_progress", "finished"])
+      .where("is_active", 1)
+      .whereNull("deleted_at")
+      .groupBy("kode_kamar")
+      .as("latest_t");
+
     let query = DB("trx_reservation_room as rr")
       .select(
         "rr.kode_reservasi_room",
@@ -31,6 +40,12 @@ router.post("/", async (req, res) => {
         "rr.kode_rate_plan",
         "rr.kode_kamar",
         "mk.nomor_kamar",
+        "mk.housekeeping_status",
+        "t_hk.kode_housekeeping_task",
+        "t_hk.status as task_status",
+        "t_hk.priority as task_priority",
+        "t_hk.notes as task_notes",
+        "u_hk.fullname as task_pic_name",
         "g.kode_tamu",
         "g.full_name as guest_name",
         "g.phone as guest_phone",
@@ -51,6 +66,9 @@ router.post("/", async (req, res) => {
       .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
       .leftJoin("mst_kamar as mk", "rr.kode_kamar", "mk.kode_kamar")
       .leftJoin("mst_tipe_kamar as tk", "rr.kode_tipe_kamar", "tk.kode_tipe_kamar")
+      .leftJoin(latestTaskSubquery, "rr.kode_kamar", "latest_t.kode_kamar")
+      .leftJoin("trx_housekeeping_task as t_hk", "latest_t.max_task_id", "t_hk.id")
+      .leftJoin("mst_user as u_hk", "t_hk.assigned_to", "u_hk.id")
       .leftJoin("trx_folio as f", function () {
         this.on("rr.kode_reservation", "=", "f.kode_reservation")
             .andOn("f.status", "=", DB.raw("?", ["open"]));
@@ -127,7 +145,13 @@ router.post("/", async (req, res) => {
         nomor_kamar: row.nomor_kamar,
         kode_tipe_kamar: row.kode_tipe_kamar,
         nama_tipe_kamar: row.nama_tipe_kamar,
-        rate_per_night: parseFloat(row.rate_per_night || 0)
+        rate_per_night: parseFloat(row.rate_per_night || 0),
+        housekeeping_status: row.housekeeping_status || "clean",
+        kode_housekeeping_task: row.kode_housekeeping_task || null,
+        task_status: row.task_status || null,
+        task_priority: row.task_priority || null,
+        task_notes: row.task_notes || null,
+        task_pic_name: row.task_pic_name || null
       });
     }
 
@@ -138,16 +162,25 @@ router.post("/", async (req, res) => {
       const balance = grandTotal - totalPaid;
       const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
       const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe_kamar).filter(Boolean))];
+      const primaryRoom = group.rooms[0] || {};
 
       return {
         ...group,
         room_count: group.rooms.length,
         nomor_kamar: roomNumbers.join(", "),
         nama_tipe_kamar: roomTypes.join(", "),
+        kode_kamar: primaryRoom.kode_kamar || null,
         grand_total: grandTotal,
         total_paid: totalPaid,
         balance: balance,
-        billing_status: balance <= 0 ? "settled" : "outstanding"
+        billing_status: balance <= 0 ? "settled" : "outstanding",
+        // Housekeeping info (dari primary room)
+        housekeeping_status: primaryRoom.housekeeping_status || "clean",
+        kode_housekeeping_task: primaryRoom.kode_housekeeping_task || null,
+        task_status: primaryRoom.task_status || null,
+        task_priority: primaryRoom.task_priority || null,
+        task_notes: primaryRoom.task_notes || null,
+        task_pic_name: primaryRoom.task_pic_name || null
       };
     });
 

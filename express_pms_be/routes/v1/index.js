@@ -27,6 +27,7 @@ import Function from "./components/index.js";
 import Reservasi from "./reservasi/index.js";
 import Kasir from "./kasir/index.js";
 import Housekeeping from "./housekeeping/index.js";
+import NightAudit from "./night_audit/index.js";
 
 import {
   contextMiddleware,
@@ -86,6 +87,18 @@ router.use(
   "/housekeeping",
   [validateAccessToken, contextMiddleware],
   Housekeeping
+);
+
+// Night Audit
+router.use(
+  "/night-audit",
+  [validateAccessToken, contextMiddleware],
+  NightAudit
+);
+router.use(
+  "/night_audit",
+  [validateAccessToken, contextMiddleware],
+  NightAudit
 );
 
 export default router;

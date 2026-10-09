@@ -247,7 +247,22 @@ router.post("/", async (req, res) => {
           .where("rr.kode_reservasi_room", roomItem.kode_reservasi_room)
           .select("r.guest_count")
           .first();
-        const paxCheckout = resData?.guest_count ? parseInt(resData.guest_count, 10) : 1;
+        // Cek apakah ada tugas inspeksi terkait kamar ini
+        const inspectTask = await trx("trx_housekeeping_task")
+          .where("kode_kamar", roomItem.kode_kamar)
+          .where("task_type", "inspection")
+          .whereIn("status", ["assigned", "in_progress", "finished"])
+          .whereNull("deleted_at")
+          .where("is_active", 1)
+          .orderBy("id", "desc")
+          .first();
+
+        let inspectionStatus = "skipped";
+        let inspectTaskCode = null;
+        if (inspectTask && inspectTask.status === "finished") {
+          inspectTaskCode = inspectTask.kode_housekeeping_task;
+          inspectionStatus = inspectTask.inspection_result === "with_charges" ? "inspected_with_charges" : "inspected_clear";
+        }
 
         // Insert trx_checkout per kamar
         const cCheckoutCode = await generateSequence("FMT-CO", trx);
@@ -255,6 +270,8 @@ router.post("/", async (req, res) => {
           kode_checkout: cCheckoutCode,
           kode_reservation_room: roomItem.kode_reservasi_room,
           late_checkout: 0,
+          inspection_status: inspectionStatus,
+          kode_inspection_task: inspectTaskCode,
           grand_total: roomItem.rate_per_night,
           kode_cashier_shift: shiftCode,
           guest_count: paxCheckout > 0 ? paxCheckout : 1,

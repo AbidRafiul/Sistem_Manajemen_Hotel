@@ -6,3 +6,6 @@ export const apiExtendSubmit = '/reservasi/inhouse/extend-submit';
 export const apiShiftCurrent = '/kasir/shift-current';
 export const apiFasilitasData = '/master/fasilitas/fasilitas-data';
 export const apiCabangDropdown = '/master/cabang/cabang-data';
+export const apiHousekeepingRequest = '/reservasi/inhouse/housekeeping-request';
+export const apiHousekeepingStaff = '/housekeeping/staff';
+

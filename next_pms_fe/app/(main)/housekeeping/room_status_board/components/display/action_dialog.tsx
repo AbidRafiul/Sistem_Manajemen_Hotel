@@ -5,9 +5,10 @@ import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Tag } from 'primereact/tag';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { ActionDialogProps } from '../interfaces';
 import postData from '@/lib/axios/postData';
-import { apiEndpointGetHousekeepingStaff, apiEndpointGetUsers, apiEndpointAssignTask } from '../endpoints';
+import { apiEndpointGetHousekeepingStaff, apiEndpointGetUsers, apiEndpointAssignTask, apiEndpointCreateTask } from '../endpoints';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 
 const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) => {
@@ -17,9 +18,19 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(false);
 
+    // Fields for creating a new task
+    const [taskType, setTaskType] = useState<string>('cleaning');
+    const [priority, setPriority] = useState<'normal' | 'urgent'>('normal');
+    const [notes, setNotes] = useState<string>('');
+
+    const isNewTask = !state.selectedRoom?.kode_housekeeping_task;
+
     useEffect(() => {
         if (state.actionDialogVisible) {
             fetchStaff();
+            setTaskType('cleaning');
+            setPriority('normal');
+            setNotes(state.selectedRoom?.notes || '');
         }
     }, [state.actionDialogVisible]);
 
@@ -42,7 +53,6 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
             }
         } catch (error) {
             console.error('Failed to fetch housekeeping staff', error);
-            // Fallback ke general users jika endpoint belum termuat
             try {
                 const resFallback = await postData(apiEndpointGetUsers, { perPage: 100, role: 'housekeeping' });
                 const fallbackList = resFallback?.data?.data || [];
@@ -70,23 +80,38 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
     };
 
     const handleAssign = async () => {
-        if (!selectedUser || !state.selectedRoom?.kode_housekeeping_task) {
+        if (!selectedUser) {
             showError(toast, 'Pilih petugas terlebih dahulu.');
             return;
         }
 
         setLoading(true);
         try {
-            const res = await postData(
-                apiEndpointAssignTask(state.selectedRoom.kode_housekeeping_task),
-                { assigned_to: selectedUser },
-                { 'X-Level': '1' }
-            );
-            showSuccess(toast, res?.data?.message || 'Berhasil menugaskan task.');
+            if (isNewTask) {
+                // Buat tugas baru dan langsung tugaskan ke petugas terpilih
+                const res = await postData(apiEndpointCreateTask, {
+                    kode_kamar: state.selectedRoom?.kode_kamar,
+                    kode_cabang: state.kode_cabang,
+                    assigned_to: selectedUser,
+                    task_type: taskType,
+                    priority: priority,
+                    notes: notes.trim(),
+                    request_source: 'housekeeping'
+                });
+                showSuccess(toast, res?.data?.message || 'Berhasil membuat tugas pembersihan.');
+            } else {
+                // Penugasan ulang tugas yang sudah ada
+                const res = await postData(
+                    apiEndpointAssignTask(state.selectedRoom!.kode_housekeeping_task!),
+                    { assigned_to: selectedUser },
+                    { 'X-Level': '1' }
+                );
+                showSuccess(toast, res?.data?.message || 'Berhasil menugaskan task.');
+            }
             setState((p) => ({ ...p, actionDialogVisible: false, selectedRoom: null }));
             await getData();
         } catch (error: any) {
-            showError(toast, error?.response?.data?.message || 'Gagal menugaskan task');
+            showError(toast, error?.response?.data?.message || 'Gagal memproses penugasan');
         } finally {
             setLoading(false);
         }
@@ -148,7 +173,7 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
                     size="small"
                 />
                 <Button 
-                    label="Tugaskan" 
+                    label={isNewTask ? "Buat & Tugaskan" : "Tugaskan"} 
                     icon="pi pi-check" 
                     onClick={handleAssign} 
                     loading={loading}
@@ -161,13 +186,38 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
 
     return (
         <Dialog 
-            header={`Penugasan Kamar ${state.selectedRoom?.nomor_kamar || ''}`} 
+            header={
+                isNewTask 
+                    ? `Buat Tugas Pembersihan Kamar ${state.selectedRoom?.nomor_kamar || ''}`
+                    : `Penugasan Kamar ${state.selectedRoom?.nomor_kamar || ''}`
+            } 
             visible={state.actionDialogVisible} 
-            style={{ width: '460px' }} 
+            style={{ width: '500px' }} 
             onHide={() => setState((p) => ({ ...p, actionDialogVisible: false }))}
             footer={footer}
         >
             <div className="flex flex-column gap-3 mt-2">
+                {/* Informasi Singkat Kamar */}
+                <div className="p-2 border-round surface-ground border-1 surface-border flex justify-content-between align-items-center text-xs">
+                    <div>
+                        <span className="text-500">Kamar: </span>
+                        <strong className="text-900">{state.selectedRoom?.nomor_kamar}</strong>
+                        {state.selectedRoom?.nama_tipe_kamar && (
+                            <span className="text-500"> ({state.selectedRoom.nama_tipe_kamar})</span>
+                        )}
+                    </div>
+                    <div className="flex gap-1">
+                        <Tag 
+                            value={(state.selectedRoom?.occupancy_status || 'vacant').toUpperCase()} 
+                            severity={state.selectedRoom?.occupancy_status === 'occupied' ? 'danger' : 'success'} 
+                        />
+                        <Tag 
+                            value={(state.selectedRoom?.housekeeping_status || 'clean').toUpperCase()} 
+                            severity={state.selectedRoom?.housekeeping_status === 'clean' ? 'success' : 'warning'} 
+                        />
+                    </div>
+                </div>
+
                 {/* Banner Rekomendasi Auto-Assign */}
                 {recommendedUser && (
                     <div className="p-3 border-round bg-blue-50 border-1 border-blue-200 flex align-items-center justify-content-between">
@@ -194,6 +244,37 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
                     </div>
                 )}
 
+                {/* Form fields jika membuat task baru */}
+                {isNewTask && (
+                    <div className="grid">
+                        <div className="col-6">
+                            <label className="font-semibold text-xs block mb-1">Tipe Tugas</label>
+                            <Dropdown
+                                value={taskType}
+                                options={[
+                                    { label: 'Pembersihan (Cleaning)', value: 'cleaning' },
+                                    { label: 'Inspeksi (Inspection)', value: 'inspection' },
+                                    { label: 'Cek Maintenance', value: 'maintenance_check' }
+                                ]}
+                                onChange={(e) => setTaskType(e.value)}
+                                className="w-full text-sm"
+                            />
+                        </div>
+                        <div className="col-6">
+                            <label className="font-semibold text-xs block mb-1">Prioritas</label>
+                            <Dropdown
+                                value={priority}
+                                options={[
+                                    { label: 'Normal', value: 'normal' },
+                                    { label: 'Urgent (Mendesak)', value: 'urgent' }
+                                ]}
+                                onChange={(e) => setPriority(e.value)}
+                                className="w-full text-sm"
+                            />
+                        </div>
+                    </div>
+                )}
+
                 <div>
                     <label htmlFor="assigned_to" className="font-semibold text-sm block mb-2">
                         Pilih Petugas (Role Housekeeping) <span className="text-red-500">*</span>
@@ -217,10 +298,22 @@ const ActionDialog = ({ state, setState, toast, getData }: ActionDialogProps) =>
                         *Daftar hanya menampilkan user dengan role <strong>housekeeping</strong> dan beban tugas terkini.
                     </small>
                 </div>
+
+                {isNewTask && (
+                    <div>
+                        <label className="font-semibold text-xs block mb-1">Catatan / Instruksi Khusus</label>
+                        <InputTextarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            rows={2}
+                            placeholder="Catatan tambahan untuk petugas housekeeping..."
+                            className="w-full text-sm"
+                        />
+                    </div>
+                )}
             </div>
         </Dialog>
     );
 };
 
 export default ActionDialog;
-

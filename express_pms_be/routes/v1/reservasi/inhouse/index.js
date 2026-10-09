@@ -14,6 +14,7 @@ import folioDetail from "./folio_detail.js";
 import fasilitasAdd from "./fasilitas_add.js";
 import extendCheck from "./extend_check.js";
 import extendSubmit from "./extend_submit.js";
+import housekeepingRequest from "../../housekeeping/task_create.js";
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use("/folio-detail", folioDetail);
 router.use("/fasilitas-add", fasilitasAdd);
 router.use("/extend-check", extendCheck);
 router.use("/extend-submit", extendSubmit);
+router.use("/housekeeping-request", housekeepingRequest);
 
 export default router;

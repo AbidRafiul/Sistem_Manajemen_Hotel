@@ -104,25 +104,92 @@ const Table = ({ state, setState, toast, getData }: TableProps) => {
         else if (status === 'in_progress') severity = 'warning';
         else severity = 'success';
 
+        const checklistItems = Array.isArray(rowData.checklist) ? rowData.checklist : [];
+        const completedChecks = checklistItems.filter((c) => c.checked).length;
+        const totalChecks = checklistItems.length;
+
         return (
             <div className="flex flex-column gap-1">
-                <Tag value={status.toUpperCase()} severity={severity} />
-                <small className="text-gray-600">{rowData.assigned_to_name}</small>
+                <div className="flex align-items-center gap-1 flex-wrap">
+                    <Tag value={status.toUpperCase()} severity={severity} />
+                    {rowData.priority === 'urgent' && (
+                        <Tag value="URGENT" severity="danger" className="text-xs" />
+                    )}
+                    {rowData.task_type === 'inspection' && (
+                        <Tag value="CEK KAMAR" severity="warning" className="text-xs font-bold" />
+                    )}
+                    {totalChecks > 0 && (
+                        <Tag
+                            value={`${completedChecks}/${totalChecks} Ceklis`}
+                            severity={completedChecks === totalChecks ? 'success' : 'info'}
+                            icon="pi pi-check-square"
+                            className="text-xs cursor-pointer"
+                            onClick={() => setState((p) => ({ ...p, detailDialogVisible: true, selectedRoom: rowData }))}
+                        />
+                    )}
+                </div>
+                <small className="text-gray-600">{rowData.assigned_to_name || 'Belum ada PIC'}</small>
+                {rowData.notes && (
+                    <small
+                        className="text-500 italic block mt-1 cursor-pointer hover:text-primary transition-colors"
+                        title="Klik untuk membuka detail catatan FO"
+                        onClick={() => setState((p) => ({ ...p, detailDialogVisible: true, selectedRoom: rowData }))}
+                    >
+                        <i className="pi pi-comment mr-1 text-primary"></i>
+                        {rowData.notes.length > 28 ? `${rowData.notes.substring(0, 28)}...` : rowData.notes}
+                    </small>
+                )}
             </div>
         );
     };
 
     const actionBodyTemplate = (rowData: RoomStatusData) => {
         return (
-            <div className="flex gap-2">
-                <Button 
-                    label={rowData.kode_housekeeping_task ? "Re-assign" : "Assign"} 
-                    icon="pi pi-user" 
-                    size="small"
-                    outlined
-                    disabled={!rowData.kode_housekeeping_task || (rowData.task_status !== null && !['assigned', 'in_progress'].includes(rowData.task_status))}
-                    onClick={() => setState((p) => ({ ...p, actionDialogVisible: true, selectedRoom: rowData }))}
-                />
+            <div className="flex gap-2 flex-wrap">
+                {/* Tombol Detail & Catatan Interaktif FO */}
+                {rowData.kode_housekeeping_task && (
+                    <Button 
+                        label="Detail" 
+                        icon="pi pi-list-check" 
+                        size="small"
+                        severity="info"
+                        outlined
+                        tooltip="Detail Tugas & Checklist Catatan FO"
+                        onClick={() => setState((p) => ({ ...p, detailDialogVisible: true, selectedRoom: rowData }))}
+                    />
+                )}
+
+                {!rowData.kode_housekeeping_task ? (
+                    <Button 
+                        label="Buat Tugas" 
+                        icon="pi pi-plus-circle" 
+                        size="small"
+                        severity="help"
+                        outlined
+                        onClick={() => setState((p) => ({ ...p, actionDialogVisible: true, selectedRoom: rowData }))}
+                    />
+                ) : (
+                    <Button 
+                        label="Re-assign" 
+                        icon="pi pi-user" 
+                        size="small"
+                        outlined
+                        disabled={rowData.task_status !== null && !['assigned', 'in_progress'].includes(rowData.task_status)}
+                        onClick={() => setState((p) => ({ ...p, actionDialogVisible: true, selectedRoom: rowData }))}
+                    />
+                )}
+                
+                {/* Tombol Input Hasil Cek Kamar jika tipe inspeksi */}
+                {rowData.task_type === 'inspection' && rowData.task_status !== 'finished' && (
+                    <Button 
+                        label="Cek Kamar" 
+                        icon="pi pi-search-plus" 
+                        size="small"
+                        severity="warning"
+                        tooltip="Input Hasil Pemeriksaan Kamar Checkout"
+                        onClick={() => setState((p) => ({ ...p, inspectionDialogVisible: true, selectedRoom: rowData }))}
+                    />
+                )}
                 
                 {rowData.task_status === 'assigned' && (
                     <Button 
@@ -227,13 +294,26 @@ const Table = ({ state, setState, toast, getData }: TableProps) => {
                 rows={10} 
                 rowsPerPageOptions={[10, 25, 50]}
                 filters={state.filters}
-                globalFilterFields={['nomor_kamar', 'assigned_to_name']}
+                globalFilterFields={['nomor_kamar', 'assigned_to_name', 'notes', 'nama_tipe_kamar']}
                 header={header}
                 emptyMessage="Tidak ada data kamar."
                 responsiveLayout="scroll"
                 stripedRows
             >
-                <Column field="nomor_kamar" header="Nomor Kamar" sortable style={{ width: '15%' }}></Column>
+                <Column 
+                    field="nomor_kamar" 
+                    header="Nomor Kamar" 
+                    sortable 
+                    style={{ width: '15%' }}
+                    body={(row) => (
+                        <div>
+                            <span className="font-bold text-base text-900 block">Kamar {row.nomor_kamar}</span>
+                            {row.nama_tipe_kamar && (
+                                <small className="text-color-secondary block">{row.nama_tipe_kamar}</small>
+                            )}
+                        </div>
+                    )}
+                />
                 <Column field="occupancy_status" header="Occupancy" body={occupancyBodyTemplate} sortable style={{ width: '15%' }}></Column>
                 <Column field="housekeeping_status" header="Housekeeping" body={hkBodyTemplate} sortable style={{ width: '15%' }}></Column>
                 <Column field="task_status" header="Task Terkini" body={taskBodyTemplate} style={{ width: '20%' }}></Column>
