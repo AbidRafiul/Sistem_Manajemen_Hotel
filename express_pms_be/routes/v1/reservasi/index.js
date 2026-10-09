@@ -25,6 +25,9 @@ import checkinSubmit from "./checkin/checkin_submit.js";
 import inhouse from "./inhouse/index.js";
 import dashboard from "./dashboard/index.js";
 import invoice from "./invoice/index.js";
+import rescheduleCheck from "./reschedule/reschedule_check.js";
+import rescheduleSubmit from "./reschedule/reschedule_submit.js";
+import cancelSubmit from "./batal/cancel_submit.js";
 
 const router = express.Router();
 
@@ -44,5 +47,8 @@ router.use("/checkin/checkin-submit", checkinSubmit);
 router.use("/inhouse", inhouse);
 router.use("/dashboard", dashboard);
 router.use("/invoice", invoice);
+router.use("/reschedule/reschedule-check", rescheduleCheck);
+router.use("/reschedule/reschedule-submit", rescheduleSubmit);
+router.use("/batal/cancel-submit", cancelSubmit);
 
 export default router;

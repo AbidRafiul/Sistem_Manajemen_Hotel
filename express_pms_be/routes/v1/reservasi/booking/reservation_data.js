@@ -12,6 +12,7 @@ import Joi from "joi";
 import DB from "../../../../core/config/knex.js";
 import { status } from "../../components/tools/general.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { assertBranchScope, applyBranchFilter } from "../../components/tools/scope_helper.js";
 import express from "express";
 
 const router = express.Router();
@@ -22,7 +23,7 @@ const schema = Joi.object({
         Joi.string(),
         Joi.array().items(Joi.string())
     ).optional(), // 'reserved', 'confirmed', dll
-    check_in_date: Joi.date().iso().optional() // untuk filter arrivals
+    check_in_date: Joi.date().iso().optional().allow(null, "") // untuk filter arrivals (bisa tanggal spesifik atau null/kosong untuk semua tanggal)
 });
 
 router.post("/", async (req, res) => {
@@ -43,23 +44,43 @@ router.post("/", async (req, res) => {
             .join('mst_guest as g', 'r.kode_guest', 'g.kode_tamu')
             .join('mst_tipe_kamar as tk', 'rr.kode_tipe_kamar', 'tk.kode_tipe_kamar')
             .leftJoin('mst_kamar as k', 'rr.kode_kamar', 'k.kode_kamar')
+            .leftJoin('trx_folio as f', function() {
+                this.on('f.kode_reservation', '=', 'r.kode_reservasi')
+                    .andOn('f.status', '=', db.raw("'open'"));
+            })
             .select(
                 'rr.kode_reservasi_room',
                 'r.kode_reservasi',
                 'r.kode_cabang',
+                'g.kode_tamu',
                 'g.full_name as guest_name',
                 'g.phone as guest_phone',
+                'g.email as guest_email',
+                'g.id_number as guest_id_number',
                 'r.check_in_date',
                 'r.check_out_date',
+                'r.special_request',
+                'r.status as res_status',
+                'rr.kode_tipe_kamar',
+                'rr.kode_rate_plan',
+                'rr.rate_per_night',
                 'tk.nama_tipe as tipe_kamar_name',
                 'rr.nights',
                 'rr.status as room_status',
                 'r.deposit_amount',
-                'k.nomor_kamar'
+                'k.nomor_kamar',
+                'f.kode_folio',
+                'f.subtotal as folio_subtotal',
+                'f.tax_amount as folio_tax_amount',
+                'f.service_charge_amount as folio_service_charge',
+                'f.grand_total as folio_grand_total'
             );
 
         if (oPayload.kode_cabang) {
+            assertBranchScope(req, oPayload.kode_cabang);
             query.where('r.kode_cabang', oPayload.kode_cabang);
+        } else {
+            applyBranchFilter(query, req, 'r.kode_cabang');
         }
 
         if (oPayload.status) {
@@ -85,6 +106,28 @@ router.post("/", async (req, res) => {
         query.orderBy('r.check_in_date', 'asc');
 
         const data = await query;
+
+        const folioCodes = [...new Set(data.map(d => d.kode_folio).filter(Boolean))];
+        if (folioCodes.length > 0) {
+            const charges = await db('trx_folio_charge')
+                .whereIn('kode_folio', folioCodes)
+                .where('is_active', 1)
+                .select('kode_folio', 'charge_type', 'description', 'qty', 'unit_price', 'amount');
+
+            const chargesByFolio = {};
+            charges.forEach(c => {
+                if (!chargesByFolio[c.kode_folio]) chargesByFolio[c.kode_folio] = [];
+                chargesByFolio[c.kode_folio].push(c);
+            });
+
+            data.forEach(d => {
+                d.charges = chargesByFolio[d.kode_folio] || [];
+            });
+        } else {
+            data.forEach(d => {
+                d.charges = [];
+            });
+        }
 
         return res.status(200).json({
             status: status.SUKSES,

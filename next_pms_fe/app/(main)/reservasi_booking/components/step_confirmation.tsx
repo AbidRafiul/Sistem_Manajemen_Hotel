@@ -205,6 +205,15 @@ const StepConfirmation: React.FC<StepConfirmationProps> = ({ state, setState, fo
                         onClick={() => setShowInvoice(true)} 
                     />
                     <Button 
+                        label="Kedatangan (Front Office Desk)" 
+                        icon="pi pi-desktop" 
+                        outlined 
+                        className="p-button-info font-semibold shadow-1"
+                        tooltip="Buka langsung tab Kedatangan di menu Front Office Desk"
+                        tooltipOptions={{ position: 'top' }}
+                        onClick={() => router.push(`/front_office?tab=arrivals&search=${encodeURIComponent(sub.kode_reservasi)}`)} 
+                    />
+                    <Button 
                         label="Dashboard Reservasi" 
                         icon="pi pi-th-large" 
                         outlined 

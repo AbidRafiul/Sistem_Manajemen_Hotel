@@ -27,7 +27,8 @@ const schema = Joi.object({
     deposit_amount: Joi.number().min(0).optional().allow(null),
     bank_name: Joi.string().max(50).optional().allow(null, ""),
     card_type: Joi.string().max(20).optional().allow(null, ""),
-    reference_no: Joi.string().max(100).optional().allow(null, "")
+    reference_no: Joi.string().max(100).optional().allow(null, ""),
+    guest_count: Joi.number().min(1).optional().allow(null)
 });
 
 router.post("/", async (req, res) => {
@@ -94,60 +95,56 @@ router.post("/", async (req, res) => {
             }
 
             // 3. Proses Check-in (Helper)
-            // Ini akan assign kamar secara otomatis, buat folio, charge kamar, dll.
+            // Ini akan assign kamar secara otomatis/manual, buat folio, charge kamar, dll.
             const checkinData = await processCheckIn({
                 kode_reservasi_room: oPayload.kode_reservasi_room,
                 trx: trx,
                 userId: userId,
+                kode_kamar_manual: resRoom.kode_kamar || oPayload.kode_kamar || null,
                 kode_cashier_shift: shiftCode,
                 guest_count: oPayload.guest_count || null
             });
 
-            // 4. Proses Deposit (jika ada deposit_amount > 0 dari payload atau trx_reservation)
-            let depositAmount = (oPayload.deposit_amount !== undefined && oPayload.deposit_amount !== null)
+            // 4. Proses Deposit Tambahan saat Check-in (Hanya jika kasir menerima uang deposit baru > 0)
+            const additionalDeposit = (oPayload.deposit_amount !== undefined && oPayload.deposit_amount !== null)
                 ? parseFloat(oPayload.deposit_amount)
-                : parseFloat(resRoom.deposit_amount || 0);
+                : 0;
 
-            if (depositAmount > 0) {
-                // Update trx_reservation deposit_amount jika berbeda
-                if (depositAmount !== parseFloat(resRoom.deposit_amount || 0)) {
-                    await trx("trx_reservation")
-                        .where("kode_reservasi", resRoom.kode_reservation)
-                        .update({
-                            deposit_amount: depositAmount,
-                            updated_by: userId,
-                            updated_at: formatDateSystem()
-                        });
+            if (additionalDeposit > 0) {
+                if (!shiftCode || !oPayload.payment_method) {
+                    throw new Error("Penerimaan deposit kasir membutuhkan shift kasir aktif dan metode pembayaran.");
                 }
 
-                const existingPayment = await trx("trx_payment")
-                    .where("kode_folio", checkinData.kode_folio)
-                    .first();
+                // Akumulasi deposit di reservasi (deposit awal + uang jaminan kasir baru)
+                const currentDeposit = parseFloat(resRoom.deposit_amount || 0);
+                const totalDepositAccumulated = currentDeposit + additionalDeposit;
 
-                if (!existingPayment) {
-                    if (!shiftCode || !oPayload.payment_method) {
-                        throw new Error("Penerimaan deposit membutuhkan shift kasir aktif dan metode pembayaran.");
-                    }
-
-                    const noPayment = await generateSequence("FMT-PAYMENT", trx);
-                    if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
-
-                    const tNow = formatDateSystem();
-                    await trx("trx_payment").insert({
-                        kode_payment: noPayment,
-                        kode_folio: checkinData.kode_folio,
-                        payment_method: oPayload.payment_method,
-                        bank_name: oPayload.bank_name || null,
-                        card_type: oPayload.card_type || null,
-                        reference_no: oPayload.reference_no || null,
-                        amount: depositAmount,
-                        kode_cashier_shift: shiftCode,
-                        received_by: userId,
-                        paid_at: tNow,
-                        created_by: userId,
-                        created_at: tNow
+                await trx("trx_reservation")
+                    .where("kode_reservasi", resRoom.kode_reservation)
+                    .update({
+                        deposit_amount: totalDepositAccumulated,
+                        updated_by: userId,
+                        updated_at: formatDateSystem()
                     });
-                }
+
+                const noPayment = await generateSequence("FMT-PAYMENT", trx);
+                if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
+
+                const tNow = formatDateSystem();
+                await trx("trx_payment").insert({
+                    kode_payment: noPayment,
+                    kode_folio: checkinData.kode_folio,
+                    payment_method: oPayload.payment_method,
+                    bank_name: oPayload.bank_name || null,
+                    card_type: oPayload.card_type || null,
+                    reference_no: oPayload.reference_no || null,
+                    amount: additionalDeposit,
+                    kode_cashier_shift: shiftCode,
+                    received_by: userId,
+                    paid_at: tNow,
+                    created_by: userId,
+                    created_at: tNow
+                });
             }
 
             return checkinData;
