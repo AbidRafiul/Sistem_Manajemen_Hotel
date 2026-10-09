@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useMemo } from 'react';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
@@ -14,7 +14,7 @@ import { Dialog } from 'primereact/dialog';
 import { Tag } from 'primereact/tag';
 import { Divider } from 'primereact/divider';
 import { TabView, TabPanel } from 'primereact/tabview';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
@@ -27,9 +27,10 @@ import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelecto
 // import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 
-const CheckoutPage = () => {
+const CheckoutContent = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session } = useSession();
 
     const [loading, setLoading] = useState(false);
@@ -105,9 +106,15 @@ const CheckoutPage = () => {
     useEffect(() => {
         fetchShift();
         if (session?.user?.active_kode_cabang) {
-            searchRooms();
+            const initialSearch = searchParams?.get('search') || searchParams?.get('keyword') || '';
+            if (initialSearch) {
+                setSearchKeyword(initialSearch);
+                searchRooms(initialSearch);
+            } else {
+                searchRooms();
+            }
         }
-    }, [session?.user?.active_kode_cabang]);
+    }, [session?.user?.active_kode_cabang, searchParams]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
@@ -1012,6 +1019,14 @@ const CheckoutPage = () => {
                 autoPrint={true}
             />
         </div>
+    );
+};
+
+const CheckoutPage = () => {
+    return (
+        <Suspense fallback={<div className="p-4 text-center">Memuat modul checkout...</div>}>
+            <CheckoutContent />
+        </Suspense>
     );
 };
 

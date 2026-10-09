@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
@@ -10,7 +10,7 @@ import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { Dropdown } from 'primereact/dropdown';
 import { Tag } from 'primereact/tag';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
 import { apiInhouseList } from './components/endpoints';
@@ -21,9 +21,10 @@ import { showError } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 // import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
 
-const TamuMenginapPage = () => {
+const TamuMenginapContent = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session } = useSession();
 
     const [loading, setLoading] = useState(false);
@@ -39,6 +40,14 @@ const TamuMenginapPage = () => {
     const [showFolioDialog, setShowFolioDialog] = useState(false);
     const [showFasilitasDialog, setShowFasilitasDialog] = useState(false);
     const [showExtendDialog, setShowExtendDialog] = useState(false);
+
+    useEffect(() => {
+        if (!searchParams) return;
+        const searchVal = searchParams.get('search') || searchParams.get('keyword');
+        if (searchVal) {
+            setSearchKeyword(searchVal);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (session?.user?.active_kode_cabang) {
@@ -126,7 +135,9 @@ const TamuMenginapPage = () => {
                                 label="Menu Checkout"
                                 icon="pi pi-sign-out"
                                 className="p-button-sm p-button-danger"
-                                onClick={() => router.push('/checkout')}
+                                tooltip="Buka tab Checkout di Front Office Desk"
+                                tooltipOptions={{ position: 'top' }}
+                                onClick={() => router.push('/front_office?tab=checkout')}
                             />
                         </div>
                     </div>
@@ -384,10 +395,10 @@ const TamuMenginapPage = () => {
                                     />
                                     <Button
                                         icon="pi pi-sign-out"
-                                        tooltip="Proses Checkout"
+                                        tooltip="Proses Checkout (Buka di FO Desk)"
                                         tooltipOptions={{ position: 'top' }}
                                         className="p-button-rounded p-button-text p-button-danger"
-                                        onClick={() => router.push('/checkout')}
+                                        onClick={() => router.push(`/front_office?tab=checkout${row.nomor_kamar ? `&search=${encodeURIComponent(row.nomor_kamar)}` : ''}`)}
                                     />
                                 </div>
                             )}
@@ -431,6 +442,14 @@ const TamuMenginapPage = () => {
                 toast={toast}
             />
         </div>
+    );
+};
+
+const TamuMenginapPage = () => {
+    return (
+        <Suspense fallback={<div className="p-4 text-center">Memuat data tamu menginap...</div>}>
+            <TamuMenginapContent />
+        </Suspense>
     );
 };
 
