@@ -28,6 +28,7 @@ import Reservasi from "./reservasi/index.js";
 import Kasir from "./kasir/index.js";
 import Housekeeping from "./housekeeping/index.js";
 import NightAudit from "./night_audit/index.js";
+import Dashboard from "./dashboard/index.js";
 
 import {
   contextMiddleware,
@@ -99,6 +100,13 @@ router.use(
   "/night_audit",
   [validateAccessToken, contextMiddleware],
   NightAudit
+);
+
+// Dashboard Eksekutif / Manajemen Hotel
+router.use(
+  "/dashboard",
+  [validateAccessToken, contextMiddleware],
+  Dashboard
 );
 
 export default router;

@@ -247,6 +247,9 @@ router.post("/", async (req, res) => {
           .where("rr.kode_reservasi_room", roomItem.kode_reservasi_room)
           .select("r.guest_count")
           .first();
+
+        const paxCheckout = parseInt(oPayload.guest_count || resData?.guest_count || 1, 10);
+
         // Cek apakah ada tugas inspeksi terkait kamar ini
         const inspectTask = await trx("trx_housekeeping_task")
           .where("kode_kamar", roomItem.kode_kamar)

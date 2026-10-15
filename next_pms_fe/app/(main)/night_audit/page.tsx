@@ -44,13 +44,65 @@ export default function NightAuditPage() {
   const toast = useRef<Toast>(null);
   const { data: session } = useSession();
   const userRole = (session?.user as any)?.role || 'staff';
-  const isManagerOrAdmin = ['superadmin', 'master', 'admin', 'auditor', 'branch_manager'].includes(
-    userRole
-  );
+  const roleLower = (userRole || '').toLowerCase().trim();
+
+  // Klasifikasi RBAC hierarki enterprise sesuai arsitektur sistem
+  const isCorporate = [
+    'superadmin',
+    'master',
+    'admin',
+    'corporate_manager',
+    'director',
+    'owner',
+    'holding_admin',
+    'auditor_holding'
+  ].includes(roleLower);
+
+  const isRegional = [
+    'regional_manager',
+    'area_auditor',
+    'kepala_wilayah',
+    'regional_director'
+  ].includes(roleLower);
+
+  const isCluster =
+    !isCorporate &&
+    !isRegional &&
+    Boolean(session?.user?.can_switch_branch && (session?.user?.allowed_branches?.length ?? 0) > 1);
+
+  const canSwitchBranch = isCorporate || isRegional || isCluster;
+
+  // Wewenang role eksekusi Night Audit (sesuai backend start.js)
+  const authorizedAuditRoles = [
+    'superadmin',
+    'master',
+    'corporate_manager',
+    'regional_manager',
+    'general_manager',
+    'hotel_manager',
+    'duty_manager',
+    'night_auditor',
+    'finance_manager',
+    'accounting',
+    'front_office_manager',
+    'admin',
+    'branch_manager'
+  ];
+  const canExecuteAudit = authorizedAuditRoles.includes(roleLower);
+  const canReopenAudit = [
+    'superadmin',
+    'master',
+    'admin',
+    'corporate_manager',
+    'general_manager',
+    'branch_manager'
+  ].includes(roleLower);
 
   // Branch & System State
   const [cabangList, setCabangList] = useState<any[]>([]);
-  const [selectedCabang, setSelectedCabang] = useState<string>('CAB0001');
+  const [selectedCabang, setSelectedCabang] = useState<string>(
+    session?.user?.active_kode_cabang || session?.user?.default_kode_cabang || ''
+  );
   const [auditStatus, setAuditStatus] = useState<NightAuditStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState<boolean>(true);
 
@@ -88,86 +140,119 @@ export default function NightAuditPage() {
   const [reopenReason, setReopenReason] = useState<string>('');
   const [reopenLoading, setReopenLoading] = useState<boolean>(false);
 
-  // RBAC Hierarki Resolusi
-  const roleLower = (session?.user?.role || '').toLowerCase().trim();
-  const isCorporate = [
-    'superadmin',
-    'master',
-    'corporate_manager',
-    'director',
-    'owner',
-    'holding_admin',
-    'auditor_holding'
-  ].includes(roleLower);
+  // Sinkronisasi dengan active branch session (misal saat beralih cabang via Topbar)
+  useEffect(() => {
+    if (session?.user?.active_kode_cabang) {
+      setSelectedCabang(session.user.active_kode_cabang);
+    }
+  }, [session?.user?.active_kode_cabang]);
 
-  const isRegional = [
-    'regional_manager',
-    'area_auditor',
-    'kepala_wilayah',
-    'regional_director'
-  ].includes(roleLower);
-
-  const canSwitchBranch =
-    isCorporate ||
-    isRegional ||
-    Boolean(session?.user?.can_switch_branch && (session?.user?.allowed_branches?.length ?? 0) > 1);
-
-  // 1. Fetch Cabang List Berdasarkan Hak Akses RBAC
+  // 1. Fetch Cabang List Berdasarkan Hak Akses RBAC & Session
   const fetchCabangList = useCallback(async () => {
     try {
-      const res = await postData(apiCabangDropdown, {});
-      const rawList = res?.data?.data;
       let finalBranches: any[] = [];
 
-      if (Array.isArray(rawList) && rawList.length > 0) {
-        finalBranches = rawList.map((c: any) => ({
-          label: c.nama_hotel ? `${c.kode_cabang} - ${c.nama_hotel}` : c.label || c.kode_cabang,
-          value: c.kode_cabang,
-          kode_cabang: c.kode_cabang,
-          nama_hotel: c.nama_hotel || c.name || '',
-          nama_wilayah: c.nama_wilayah || ''
-        }));
-      } else if (session?.user?.allowed_branches && session.user.allowed_branches.length > 0) {
+      // A. Jika user berhak corporate, ambil seluruh cabang dari API
+      if (isCorporate) {
+        const res = await postData(apiCabangDropdown, {});
+        const rawList = res?.data?.data;
+        if (Array.isArray(rawList) && rawList.length > 0) {
+          finalBranches = rawList.map((c: any) => ({
+            label: c.nama_hotel ? `${c.kode_cabang} - ${c.nama_hotel}` : c.label || c.kode_cabang,
+            value: c.kode_cabang,
+            kode_cabang: c.kode_cabang,
+            nama_hotel: c.nama_hotel || c.name || '',
+            nama_wilayah: c.nama_wilayah || ''
+          }));
+        }
+      }
+
+      // B. Jika non-corporate atau API kosong, utamakan session allowed_branches
+      if (finalBranches.length === 0 && session?.user?.allowed_branches && session.user.allowed_branches.length > 0) {
         finalBranches = session.user.allowed_branches.map((b: any) => ({
           label: `${b.kode_cabang} - ${b.nama_hotel || b.kode_cabang}`,
           value: b.kode_cabang,
           kode_cabang: b.kode_cabang,
-          nama_hotel: b.nama_hotel,
+          nama_hotel: b.nama_hotel || '',
           nama_wilayah: b.nama_wilayah || ''
         }));
-      } else {
+      }
+
+      // C. Fallback jika cabang masih belum terisi
+      if (finalBranches.length === 0) {
         finalBranches = [
-          { label: 'CAB0001 - Grand Marstech Hotel & Resort Magetan', value: 'CAB0001', kode_cabang: 'CAB0001' },
-          { label: 'CAB0002 - Grand Marstech Resort & Spa Batu', value: 'CAB0002', kode_cabang: 'CAB0002' }
+          {
+            label: 'CAB0001 - Grand Marstech Hotel & Resort Magetan',
+            value: 'CAB0001',
+            kode_cabang: 'CAB0001',
+            nama_hotel: 'Grand Marstech Hotel & Resort Magetan'
+          },
+          {
+            label: 'CAB0002 - Grand Marstech Resort & Spa Batu',
+            value: 'CAB0002',
+            kode_cabang: 'CAB0002',
+            nama_hotel: 'Grand Marstech Resort & Spa Batu'
+          }
         ];
+      }
+
+      // Filter jika Regional (hanya cabang di wilayah user)
+      if (isRegional && session?.user?.wilayah_name) {
+        const regionalFiltered = finalBranches.filter(
+          (b) => !b.nama_wilayah || b.nama_wilayah.toLowerCase() === session.user.wilayah_name?.toLowerCase()
+        );
+        if (regionalFiltered.length > 0) {
+          finalBranches = regionalFiltered;
+        }
+      }
+
+      // Filter jika Cluster (hanya allowed_kode_cabang user)
+      if (isCluster && session?.user?.allowed_kode_cabang && session.user.allowed_kode_cabang.length > 0) {
+        const clusterFiltered = finalBranches.filter((b) =>
+          session.user.allowed_kode_cabang?.includes(b.kode_cabang)
+        );
+        if (clusterFiltered.length > 0) {
+          finalBranches = clusterFiltered;
+        }
+      }
+
+      // Jika user Unit Terkunci (tidak bisa switch branch), batasi hanya pada cabang aktif session
+      if (!canSwitchBranch) {
+        const unitKode = session?.user?.active_kode_cabang || session?.user?.default_kode_cabang;
+        if (unitKode) {
+          const unitFiltered = finalBranches.filter((b) => b.kode_cabang === unitKode);
+          if (unitFiltered.length > 0) {
+            finalBranches = unitFiltered;
+          }
+        }
       }
 
       setCabangList(finalBranches);
 
-      // Prioritas pemilihan cabang aktif: active_kode_cabang dari session -> default -> cabang pertama
-      const sessionActive = session?.user?.active_kode_cabang || session?.user?.default_kode_cabang;
-      if (sessionActive && finalBranches.some((b) => b.kode_cabang === sessionActive)) {
-        setSelectedCabang(sessionActive);
-      } else if (!selectedCabang && finalBranches.length > 0) {
-        setSelectedCabang(finalBranches[0].kode_cabang);
-      }
+      // Inisialisasi selectedCabang dengan aman tanpa menimpa pilihan manual user
+      setSelectedCabang((prev) => {
+        if (prev && finalBranches.some((b) => b.kode_cabang === prev)) {
+          return prev;
+        }
+        const sessionActive = session?.user?.active_kode_cabang || session?.user?.default_kode_cabang;
+        if (sessionActive && finalBranches.some((b) => b.kode_cabang === sessionActive)) {
+          return sessionActive;
+        }
+        return finalBranches[0]?.kode_cabang || '';
+      });
     } catch {
       if (session?.user?.allowed_branches && session.user.allowed_branches.length > 0) {
         const mapped = session.user.allowed_branches.map((b: any) => ({
           label: `${b.kode_cabang} - ${b.nama_hotel || b.kode_cabang}`,
           value: b.kode_cabang,
-          kode_cabang: b.kode_cabang
+          kode_cabang: b.kode_cabang,
+          nama_hotel: b.nama_hotel || ''
         }));
         setCabangList(mapped);
-        setSelectedCabang(session.user.active_kode_cabang || mapped[0].kode_cabang);
-      } else {
-        setCabangList([
-          { label: 'CAB0001 - Grand Marstech Hotel & Resort Magetan', value: 'CAB0001', kode_cabang: 'CAB0001' },
-          { label: 'CAB0002 - Grand Marstech Resort & Spa Batu', value: 'CAB0002', kode_cabang: 'CAB0002' }
-        ]);
+        setSelectedCabang((prev) => prev || session?.user?.active_kode_cabang || mapped[0].kode_cabang);
       }
     }
-  }, [selectedCabang, session]);
+  }, [session, isCorporate, isRegional, isCluster, canSwitchBranch]);
 
   // 2. Fetch Night Audit Status & History Runs
   const fetchStatusAndRuns = useCallback(async () => {
@@ -446,6 +531,10 @@ export default function NightAuditPage() {
     }
   };
 
+  const currentBranchObj = cabangList.find((b) => b.kode_cabang === selectedCabang);
+  const currentBranchLabel =
+    currentBranchObj?.nama_hotel || session?.user?.active_branch_name || selectedCabang || 'Cabang Aktif';
+
   return (
     <div className="grid">
       <Toast ref={toast} />
@@ -473,31 +562,46 @@ export default function NightAuditPage() {
               </span>
               <div>
                 {isCorporate ? (
-                  <Tag
-                    icon="pi pi-building"
-                    severity="info"
-                    value="Holding (Semua Cabang)"
-                    rounded
-                  />
+                  <span title="Akses Tingkat Holding: Memiliki wewenang audit ke seluruh properti hotel">
+                    <Tag
+                      icon="pi pi-building"
+                      severity="info"
+                      value="Holding (Semua Cabang)"
+                      rounded
+                    />
+                  </span>
                 ) : isRegional ? (
-                  <Tag
-                    icon="pi pi-map-marker"
-                    severity="warning"
-                    value={`Regional (${session?.user?.wilayah_name || 'Wilayah Aktif'})`}
-                    rounded
-                  />
+                  <span title={`Akses Tingkat Regional: Wewenang audit seluruh cabang di wilayah ${session?.user?.wilayah_name || ''}`}>
+                    <Tag
+                      icon="pi pi-map-marker"
+                      severity="warning"
+                      value={`Regional (${session?.user?.wilayah_name || 'Wilayah Aktif'})`}
+                      rounded
+                    />
+                  </span>
+                ) : isCluster ? (
+                  <span title="Akses Tingkat Cluster: Wewenang audit multi-cabang penugasan">
+                    <Tag
+                      icon="pi pi-sitemap"
+                      severity="success"
+                      value={`Cluster (${session?.user?.allowed_branches?.length || cabangList.length} Cabang)`}
+                      rounded
+                    />
+                  </span>
                 ) : (
-                  <Tag
-                    icon="pi pi-lock"
-                    severity="secondary"
-                    value={`Unit Terkunci (${session?.user?.active_kode_cabang || selectedCabang})`}
-                    rounded
-                  />
+                  <span title="Akses Terkunci: Wewenang dibatasi khusus untuk properti hotel penugasan ini">
+                    <Tag
+                      icon="pi pi-lock"
+                      severity="secondary"
+                      value={`Unit Terkunci (${session?.user?.active_kode_cabang || selectedCabang})`}
+                      rounded
+                    />
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Dropdown Pemilih Cabang */}
+            {/* Pemilih Cabang: Dropdown jika canSwitchBranch, Label Statis jika Unit Terkunci */}
             <div className="w-full sm:w-18rem md:w-20rem">
               <div className="flex justify-content-between align-items-center mb-1">
                 <span className="text-xs text-500 font-semibold">CABANG / PROPERTI</span>
@@ -508,22 +612,32 @@ export default function NightAuditPage() {
                   </span>
                 )}
               </div>
-              <Dropdown
-                value={selectedCabang}
-                options={Array.isArray(cabangList) ? cabangList : []}
-                optionLabel="label"
-                optionValue="kode_cabang"
-                onChange={(e) => setSelectedCabang(e.value)}
-                placeholder="Pilih Cabang"
-                className="w-full"
-                disabled={!canSwitchBranch || auditStatus?.is_running}
-                tooltip={
-                  !canSwitchBranch
-                    ? 'Hak akses Anda dikunci khusus untuk cabang penugasan ini (RBAC Unit Scope).'
-                    : 'Pilih properti hotel untuk meninjau status dan menjalankan Night Audit.'
-                }
-                tooltipOptions={{ position: 'bottom' }}
-              />
+              {canSwitchBranch ? (
+                <Dropdown
+                  value={selectedCabang}
+                  options={Array.isArray(cabangList) ? cabangList : []}
+                  optionLabel="label"
+                  optionValue="kode_cabang"
+                  onChange={(e) => {
+                    if (e.value) setSelectedCabang(e.value);
+                  }}
+                  placeholder="Pilih Cabang"
+                  className="w-full"
+                  disabled={auditStatus?.is_running}
+                  tooltip="Pilih properti hotel untuk meninjau status dan menjalankan Night Audit."
+                  tooltipOptions={{ position: 'bottom' }}
+                />
+              ) : (
+                <div
+                  className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border"
+                  style={{ minHeight: '38px' }}
+                >
+                  <i className="pi pi-building text-primary font-bold" />
+                  <span className="text-sm font-bold text-900 truncate">
+                    {session?.user?.active_kode_cabang || selectedCabang || '-'} - {session?.user?.active_branch_name || currentBranchLabel}
+                  </span>
+                </div>
+              )}
             </div>
             <Button
               icon="pi pi-refresh"
@@ -600,13 +714,26 @@ export default function NightAuditPage() {
                 className="p-button-outlined p-button-primary font-semibold"
                 onClick={handleRunPreCheck}
                 loading={preCheckLoading}
+                disabled={!canExecuteAudit || auditStatus?.is_running}
+                tooltip={
+                  !canExecuteAudit
+                    ? `Role '${userRole}' tidak memiliki wewenang eksekusi Night Audit.`
+                    : 'Pemeriksaan kesiapan transaksi & checkout sebelum audit'
+                }
+                tooltipOptions={{ position: 'bottom' }}
               />
               <Button
                 label="Jalankan Night Audit"
                 icon="pi pi-play"
                 className="p-button-primary font-bold shadow-2"
                 onClick={handleRunPreCheck}
-                disabled={auditStatus?.is_running}
+                disabled={!canExecuteAudit || auditStatus?.is_running}
+                tooltip={
+                  !canExecuteAudit
+                    ? `Role '${userRole}' tidak memiliki wewenang eksekusi Night Audit.`
+                    : 'Eksekusi posting biaya kamar & rollover tanggal bisnis'
+                }
+                tooltipOptions={{ position: 'bottom' }}
               />
             </div>
           </div>
@@ -711,7 +838,7 @@ export default function NightAuditPage() {
                       onClick={() => handleRetryFailed(r.kode_night_audit)}
                     />
                   )}
-                  {isManagerOrAdmin && r.status === 'completed' && (
+                  {canReopenAudit && r.status === 'completed' && (
                     <Button
                       icon="pi pi-undo"
                       className="p-button-rounded p-button-text p-button-danger p-button-sm"
