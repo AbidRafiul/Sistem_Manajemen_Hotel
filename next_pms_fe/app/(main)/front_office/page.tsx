@@ -1,3 +1,15 @@
+/**
+ * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
+ * @project Standard
+ * @file page.tsx
+ * @description Front Office Desk - Pusat Kendali Terpadu Resepsionis PMS
+ * @author Fadil <risqullah.s.fadhilah@gmail.com>
+ * @created 2026-09-22
+ * @contributors - Fadil
+ * @lastModified Fadil (2026-10-15)
+ * @version 1.1.0
+ */
+
 'use client';
 
 import React, { Suspense, useState, useRef, useEffect } from 'react';
@@ -8,6 +20,18 @@ import { Tag } from 'primereact/tag';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import postData from '@/lib/axios/postData';
+import { AppMenuItem } from '@/types';
+import {
+    apiCashierShiftCurrent,
+    apiNavUserData,
+    apiHousekeepingBoard,
+    apiKasirShift
+} from './components/endpoints';
+import {
+    NavTabItem,
+    TabColorTheme,
+    CashierShiftCurrent
+} from './components/interfaces';
 
 // Dynamic Lazy-loading of existing reservation modules (Zero duplication, 100% consistent)
 const WalkInModule = dynamic(() => import('@/app/(main)/reservasi_baru/page'), {
@@ -60,15 +84,6 @@ const CheckoutModule = dynamic(() => import('@/app/(main)/checkout/page'), {
     ssr: false
 });
 
-interface NavTabItem {
-    key: string;
-    route: string;
-    label: string;
-    icon: string;
-    badgeIndex: number;
-    component: React.ComponentType<any>;
-}
-
 // Route mapping configuration to existing components
 const ROUTE_CONFIG: Record<string, { key: string; defaultLabel: string; defaultIcon: string; badgeIndex: number; component: React.ComponentType<any> }> = {
     '/reservasi_baru': {
@@ -119,19 +134,7 @@ const FALLBACK_TABS: NavTabItem[] = Object.values(ROUTE_CONFIG).map((cfg) => ({
 })).sort((a, b) => a.badgeIndex - b.badgeIndex);
 
 // Palet warna standar Sakai PMS untuk masing-masing alur resepsionis (1 s/d 5)
-const TAB_COLOR_CONFIG: Record<string, {
-    inactiveBg: string;
-    inactiveBorder: string;
-    inactiveText: string;
-    inactiveIcon: string;
-    inactiveBadgeBg: string;
-    inactiveBadgeText: string;
-    inactiveBadgeBorder: string;
-    hoverBg: string;
-    activeBg: string;
-    activeBorder: string;
-    activeBadgeText: string;
-}> = {
+const TAB_COLOR_CONFIG: Record<string, TabColorTheme> = {
     walkin: {
         inactiveBg: 'bg-green-50',
         inactiveBorder: 'border-green-200',
@@ -206,14 +209,14 @@ const FrontOfficeMainContent = () => {
 
     const [activeTab, setActiveTab] = useState<number>(0);
     const [navTabs, setNavTabs] = useState<NavTabItem[]>(FALLBACK_TABS);
-    const [shiftAktif, setShiftAktif] = useState<any>(null);
+    const [shiftAktif, setShiftAktif] = useState<CashierShiftCurrent | null>(null);
     const [shiftLoading, setShiftLoading] = useState<boolean>(false);
 
     // Fetch active cashier shift
     const fetchCurrentShift = async () => {
         setShiftLoading(true);
         try {
-            const res = await postData('/kasir/shift-current', {});
+            const res = await postData(apiCashierShiftCurrent, {});
             setShiftAktif(res?.data?.data || null);
         } catch {
             setShiftAktif(null);
@@ -253,19 +256,20 @@ const FrontOfficeMainContent = () => {
             if (!userCode) return;
 
             try {
-                const res = await postData('/setup/nav/user-data', { user_code: userCode });
-                const menuList = res?.data?.data || [];
+                const res = await postData(apiNavUserData, { user_code: userCode });
+                const menuList: AppMenuItem[] = res?.data?.data || [];
 
                 // Cari grup menu Reservasi dari database
-                const reservasiMenu = menuList.find((m: any) =>
+                const reservasiMenu = menuList.find((m: AppMenuItem) =>
                     m.label?.toLowerCase() === 'reservasi' ||
-                    (Array.isArray(m.items) && m.items.some((i: any) => ROUTE_CONFIG[i.to]))
+                    (Array.isArray(m.items) && m.items.some((i: AppMenuItem) => i.to && ROUTE_CONFIG[i.to]))
                 );
 
                 if (reservasiMenu?.items && Array.isArray(reservasiMenu.items)) {
                     const authorizedTabs: NavTabItem[] = [];
 
-                    reservasiMenu.items.forEach((item: any) => {
+                    reservasiMenu.items.forEach((item: AppMenuItem) => {
+                        if (!item.to) return;
                         const target = ROUTE_CONFIG[item.to];
                         if (target) {
                             authorizedTabs.push({
@@ -310,30 +314,46 @@ const FrontOfficeMainContent = () => {
                     </p>
                 </div>
 
-                {/* Status Ringkas Shift Kasir Aktif */}
-                <div className="flex align-items-center gap-2 surface-card p-2 px-3 border-round-xl border-1 surface-border shadow-1">
-                    <div className="flex align-items-center gap-2">
-                        <i className="pi pi-wallet text-xl text-primary" />
-                        <div className="text-left">
-                            <span className="text-500 text-xs block">Sesi Kasir:</span>
-                            <span className="font-semibold text-xs text-900">
-                                {shiftLoading ? 'Memeriksa...' : shiftAktif ? (shiftAktif.nama_counter || shiftAktif.kode_cashier_shift) : 'Belum Dibuka'}
-                            </span>
+                {/* Right side container with Housekeeping Button + Sesi Kasir Card */}
+                <div className="flex align-items-center gap-2 flex-wrap">
+                    {/* Tombol Navigasi Housekeeping */}
+                    <Button 
+                        label="Housekeeping" 
+                        icon="pi pi-home" 
+                        size="small"
+                        severity="secondary" 
+                        outlined 
+                        className="text-xs py-2 px-3 border-round-xl shadow-1 surface-card border-1 surface-border text-700 hover:text-primary font-semibold"
+                        onClick={() => router.push(apiHousekeepingBoard)}
+                        tooltip="Buka Room Status Board (Housekeeping)"
+                        tooltipOptions={{ position: 'bottom' }}
+                    />
+
+                    {/* Status Ringkas Shift Kasir Aktif */}
+                    <div className="flex align-items-center gap-2 surface-card p-2 px-3 border-round-xl border-1 surface-border shadow-1">
+                        <div className="flex align-items-center gap-2">
+                            <i className="pi pi-wallet text-xl text-primary" />
+                            <div className="text-left">
+                                <span className="text-500 text-xs block">Sesi Kasir:</span>
+                                <span className="font-semibold text-xs text-900">
+                                    {shiftLoading ? 'Memeriksa...' : shiftAktif ? (shiftAktif.nama_counter || shiftAktif.kode_cashier_shift) : 'Belum Dibuka'}
+                                </span>
+                            </div>
                         </div>
+                        {shiftAktif ? (
+                            <Tag severity="success" value="AKTIF" className="text-xs ml-2" />
+                        ) : (
+                            <Button 
+                                label="Buka Shift" 
+                                icon="pi pi-external-link" 
+                                size="small" 
+                                severity="warning" 
+                                outlined 
+                                className="text-xs py-1 px-2 ml-2"
+                                onClick={() => router.push(apiKasirShift)}
+                            />
+                        )}
                     </div>
-                    {shiftAktif ? (
-                        <Tag severity="success" value="AKTIF" className="text-xs ml-2" />
-                    ) : (
-                        <Button 
-                            label="Buka Shift" 
-                            icon="pi pi-external-link" 
-                            size="small" 
-                            severity="warning" 
-                            outlined 
-                            className="text-xs py-1 px-2 ml-2"
-                            onClick={() => router.push('/kasir_shift')}
-                        />
-                    )}
                 </div>
             </div>
 
