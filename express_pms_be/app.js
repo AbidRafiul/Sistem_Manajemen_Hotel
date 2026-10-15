@@ -53,11 +53,8 @@ app.use(
 );
 
 // app.use(logger("dev"));
-app.use(Logger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
-
-
 
 // useragentMiddleware,
 // Middleware global untuk semua api
@@ -69,6 +66,9 @@ app.use(
 
 app.use('/uploads', express.static('public/uploads'));
 app.use('/api/assets/uploads', express.static('public/uploads'));
+
+// Error handler logger (setelah routes)
+app.use(Logger);
 
 app.use((req, res, next) => {
   console.log(req.url)
