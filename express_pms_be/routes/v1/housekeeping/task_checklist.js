@@ -13,6 +13,7 @@ import { status } from "../components/tools/general.js";
 import DB from "../../../core/config/knex.js";
 import { ChangesLog, Logging } from "../components/tools/servertool.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
+import { assertBranchScope } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -44,6 +45,8 @@ router.post("/:id/checklist", async (req, res) => {
         datetime: formatDateSystem()
       });
     }
+
+    assertBranchScope(req, task.kode_cabang);
 
     const tNow = formatDateSystem();
     const updatedChecklist = oPayload.checklist.map((item) => ({
@@ -97,9 +100,10 @@ router.post("/:id/checklist", async (req, res) => {
       username: username
     });
 
-    return res.status(500).json({
+    const httpStatus = error.statusCode || error.status || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
-      message: "Terjadi kesalahan sistem saat memperbarui checklist tugas.",
+      message: error.statusCode || error.status ? error.message : "Terjadi kesalahan sistem saat memperbarui checklist tugas.",
       datetime: formatDateSystem(),
       data: null
     });

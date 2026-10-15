@@ -12,6 +12,7 @@ import { status } from "../components/tools/general.js";
 import DB from "../../../core/config/knex.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
 import { getHousekeepingStaffList } from "../components/tools/housekeeping_helper.js";
+import { assertBranchScope } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -19,7 +20,12 @@ const handleGetStaff = async (req, res) => {
   const { cabang } = req.body || {};
 
   try {
-    const result = await getHousekeepingStaffList(cabang, DB);
+    const targetCabang = cabang || req.headers["x-branch-code"] || req?.auth?.active_kode_cabang;
+    if (targetCabang) {
+      assertBranchScope(req, targetCabang);
+    }
+
+    const result = await getHousekeepingStaffList(targetCabang, DB);
 
     return res.status(200).json({
       status: status.SUKSES,
@@ -29,7 +35,8 @@ const handleGetStaff = async (req, res) => {
       recommended: result.recommended,
     });
   } catch (error) {
-    return res.status(500).json({
+    const httpStatus = error.statusCode || error.status || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal",
       datetime: formatDateSystem(),

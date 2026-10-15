@@ -15,6 +15,7 @@ import { ChangesLog, Logging } from "../components/tools/servertool.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
 import { generateSequence } from "../components/tools/generateCode.js";
 import { calculateFolioBilling } from "../components/tools/billing_helper.js";
+import { assertBranchScope } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -38,6 +39,8 @@ router.post("/:id/submit-inspection", async (req, res) => {
         datetime: formatDateSystem()
       });
     }
+
+    assertBranchScope(req, task.kode_cabang);
 
     if (task.status === "finished" || task.status === "supervisor_approved") {
       return res.status(400).json({
@@ -320,9 +323,10 @@ router.post("/:id/submit-inspection", async (req, res) => {
       username: username
     });
 
-    return res.status(500).json({
+    const httpStatus = error.statusCode || error.status || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
-      message: "Terjadi kesalahan sistem saat mengirimkan hasil inspeksi kamar.",
+      message: error.statusCode || error.status ? error.message : "Terjadi kesalahan sistem saat mengirimkan hasil inspeksi kamar.",
       datetime: formatDateSystem(),
       data: null
     });

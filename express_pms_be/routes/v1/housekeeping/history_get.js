@@ -11,6 +11,7 @@ import express from "express";
 import { status } from "../components/tools/general.js";
 import DB from "../../../core/config/knex.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
+import { applyBranchFilter } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -48,9 +49,8 @@ const handleGetHistory = async (req, res) => {
       .whereNull("t.deleted_at")
       .orderBy("t.id", "desc");
 
-    if (cabang) {
-      query.where("t.kode_cabang", cabang);
-    }
+    // Terapkan branch scope filter
+    applyBranchFilter(query, req, "t.kode_cabang", cabang);
     if (kode_kamar) {
       query.where("t.kode_kamar", kode_kamar);
     }
@@ -86,7 +86,8 @@ const handleGetHistory = async (req, res) => {
       data: mapped,
     });
   } catch (error) {
-    return res.status(500).json({
+    const httpStatus = error.statusCode || error.status || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal",
       datetime: formatDateSystem(),
