@@ -4,6 +4,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { IconField } from 'primereact/iconfield';
+import { InputIcon } from 'primereact/inputicon';
 import { Dropdown } from 'primereact/dropdown';
 import { RadioButton } from 'primereact/radiobutton';
 import { Tag } from 'primereact/tag';
@@ -12,6 +14,12 @@ import { apiFasilitasAdd, apiFasilitasData, apiShiftCurrent } from './endpoints'
 import { showError, showSuccess } from '@/lib/tools/generalTools';
 import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
 import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
+
+const formatUnitLabel = (unit?: string) => {
+    if (!unit) return '/ layanan';
+    const clean = unit.trim().replace(/^\/+/, '').trim();
+    return `/ ${clean}`;
+};
 
 interface DialogTambahFasilitasProps {
     visible: boolean;
@@ -51,7 +59,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'room',
         category: 'fasilitas',
         categoryLabel: 'Layanan Kamar',
-        icon: 'pi pi-building',
+        icon: 'pi pi-key',
         unit_label: '/ layanan'
     },
     {
@@ -62,7 +70,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'room',
         category: 'fasilitas',
         categoryLabel: 'Layanan Kamar',
-        icon: 'pi pi-building',
+        icon: 'pi pi-heart',
         unit_label: '/ layanan'
     },
     {
@@ -73,7 +81,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'room',
         category: 'amenity',
         categoryLabel: 'Perlengkapan Bayi',
-        icon: 'pi pi-building',
+        icon: 'pi pi-star',
         unit_label: '/ layanan'
     },
     {
@@ -106,7 +114,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'other',
         category: 'fasilitas',
         categoryLabel: 'Dekorasi & Event',
-        icon: 'pi pi-building',
+        icon: 'pi pi-gift',
         unit_label: '/ layanan'
     },
     {
@@ -117,7 +125,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'other',
         category: 'fasilitas',
         categoryLabel: 'Dekorasi & Event',
-        icon: 'pi pi-building',
+        icon: 'pi pi-heart-fill',
         unit_label: '/ layanan'
     },
     {
@@ -128,7 +136,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'other',
         category: 'fasilitas',
         categoryLabel: 'Rekreasi',
-        icon: 'pi pi-building',
+        icon: 'pi pi-compass',
         unit_label: '/ layanan'
     },
     {
@@ -172,7 +180,7 @@ const DEFAULT_PRESETS: ServicePreset[] = [
         charge_type: 'restaurant',
         category: 'fasilitas',
         categoryLabel: 'Restoran & F&B',
-        icon: 'pi pi-building',
+        icon: 'pi pi-bell',
         unit_label: '/ layanan'
     },
     {
@@ -267,6 +275,34 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                     const isAmenity =
                         (f.kategori || f.tipe || '').toLowerCase().includes('amenit') ||
                         (f.name || '').toLowerCase().includes('amenit');
+                    const lowerName = (f.name || '').toLowerCase();
+                    let icon = 'pi pi-building';
+                    if (lowerName.includes('mobil') || lowerName.includes('parkir') || lowerName.includes('shuttle') || lowerName.includes('antar') || lowerName.includes('transport')) {
+                        icon = 'pi pi-car';
+                    } else if (lowerName.includes('bed') || lowerName.includes('kasur') || lowerName.includes('bantal') || lowerName.includes('linen')) {
+                        icon = 'pi pi-box';
+                    } else if (lowerName.includes('makan') || lowerName.includes('breakfast') || lowerName.includes('kopi') || lowerName.includes('snack') || lowerName.includes('resto') || lowerName.includes('sarapan')) {
+                        icon = 'pi pi-coffee';
+                    } else if (lowerName.includes('laundry') || lowerName.includes('cuci') || lowerName.includes('setrika')) {
+                        icon = 'pi pi-sync';
+                    } else if (lowerName.includes('meeting') || lowerName.includes('ruang') || lowerName.includes('rapat') || lowerName.includes('bisnis')) {
+                        icon = 'pi pi-briefcase';
+                    } else if (lowerName.includes('check') || lowerName.includes('jam') || lowerName.includes('waktu')) {
+                        icon = 'pi pi-clock';
+                    } else if (lowerName.includes('gift') || lowerName.includes('ulang tahun') || lowerName.includes('birthday') || lowerName.includes('surprise')) {
+                        icon = 'pi pi-gift';
+                    } else if (lowerName.includes('romantis') || lowerName.includes('honeymoon') || lowerName.includes('cinta')) {
+                        icon = 'pi pi-heart-fill';
+                    } else if (lowerName.includes('sepeda') || lowerName.includes('wisata') || lowerName.includes('tour')) {
+                        icon = 'pi pi-compass';
+                    } else if (lowerName.includes('bell') || lowerName.includes('room service') || lowerName.includes('layanan')) {
+                        icon = 'pi pi-bell';
+                    } else if (lowerName.includes('pet') || lowerName.includes('hewan')) {
+                        icon = 'pi pi-heart';
+                    } else if (isAmenity) {
+                        icon = 'pi pi-sparkles';
+                    }
+
                     return {
                         id: f.kode_fasilitas || f.name,
                         kode_fasilitas: f.kode_fasilitas || `FAS-0${21 + idx}`,
@@ -274,8 +310,8 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                         harga: parseFloat(f.harga || 0) || 50000,
                         charge_type: 'other',
                         category: isAmenity ? ('amenity' as const) : ('fasilitas' as const),
-                        categoryLabel: f.kategori || 'Fasilitas Hotel',
-                        icon: 'pi pi-building',
+                        categoryLabel: f.kategori || (isAmenity ? 'Amenity Kamar' : 'Fasilitas Hotel'),
+                        icon,
                         unit_label: '/ layanan'
                     };
                 });
@@ -417,25 +453,29 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
             visible={visible}
             onHide={onHide}
             header={
-                <div className="flex align-items-center gap-2.5">
-                    <i className="pi pi-plus-circle text-primary text-xl"></i>
-                    <div>
-                        <span className="font-bold text-lg text-900 block line-height-2">
+                <div className="flex align-items-center gap-3">
+                    <div className="w-3rem h-3rem border-round-xl bg-primary-50 text-primary border-1 border-primary-200 shadow-1 flex align-items-center justify-content-center flex-shrink-0">
+                        <i className="pi pi-plus-circle text-2xl" style={{ display: 'inline-flex' }}></i>
+                    </div>
+                    <div className="flex flex-column justify-content-center">
+                        <span className="font-bold text-lg md:text-xl text-900 line-height-2">
                             Tambah Fasilitas / Layanan Kamar
                         </span>
-                        <span className="text-xs text-500 font-normal">
+                        <span className="text-xs text-500 font-normal mt-1">
                             Pilihan add-ons &amp; fasilitas tambahan untuk dibebankan ke kamar tamu
                         </span>
                     </div>
                 </div>
             }
             style={{ width: '95vw', maxWidth: '1080px' }}
-            contentStyle={{ overflowX: 'hidden', padding: '1.25rem 1.5rem' }}
+            contentStyle={{ overflowX: 'hidden', overflowY: 'auto', maxHeight: '82vh', padding: '1.25rem 1.5rem' }}
             modal
             footer={
-                <div className="flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top-1 surface-border">
-                    <div className="flex align-items-center gap-2">
-                        <span className="text-xs text-color-secondary uppercase font-bold">Total Biaya:</span>
+                <div className="flex justify-content-between align-items-center flex-wrap gap-3 pt-3 border-top-1 surface-border">
+                    <div className="flex align-items-baseline gap-2 flex-wrap">
+                        <span className="text-xs text-color-secondary font-bold tracking-wider uppercase">
+                            Total Biaya:
+                        </span>
                         <span className="font-bold text-xl text-primary font-mono">
                             Rp {grandTotal.toLocaleString('id-ID')}
                         </span>
@@ -443,12 +483,12 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                             ({totalUnits} unit layanan dipilih)
                         </span>
                     </div>
-                    <div className="flex justify-content-end gap-2">
+                    <div className="flex align-items-center gap-2">
                         <Button
                             type="button"
                             label="Batal"
                             icon="pi pi-times"
-                            className="p-button-outlined p-button-secondary text-sm font-semibold px-3"
+                            className="p-button-outlined p-button-secondary text-sm font-semibold px-3.5"
                             style={{ height: '40px' }}
                             onClick={onHide}
                             disabled={submitting}
@@ -473,107 +513,129 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
         >
             <div className="flex flex-column gap-3">
                 {/* 1. Context Banner: Tamu & Kamar */}
-                <div className="surface-card border-round-xl border-1 surface-border p-3">
+                <div className="surface-card border-round-xl border-1 surface-border p-3 shadow-sm">
                     <div className="grid align-items-center">
                         <div className="col-12 sm:col-7">
-                            <span className="text-xs text-color-secondary uppercase font-bold block">Tamu &amp; Kamar</span>
-                            <div className="font-bold text-base text-900 mt-1 flex align-items-center gap-2 flex-wrap">
-                                <span className="bg-primary-50 text-primary border-round px-2 py-0.5 font-bold text-sm">
+                            <span className="text-xs text-color-secondary uppercase font-bold tracking-wider block mb-1">
+                                Tamu &amp; Kamar
+                            </span>
+                            <div className="font-bold text-base text-900 flex align-items-center gap-2 flex-wrap">
+                                <span className="bg-primary-50 text-primary border-round-md px-2.5 py-1 font-bold text-sm border-1 border-primary-100">
                                     Kamar {roomData?.nomor_kamar || '-'}
                                 </span>
-                                <span>{roomData?.guest_name || 'Tamu In-House'}</span>
+                                <span className="text-900 font-semibold">{roomData?.guest_name || 'Tamu In-House'}</span>
                             </div>
-                            <span className="text-xs text-700 block mt-1">
-                                <i className="pi pi-tag mr-1 text-color-secondary"></i>
-                                Nomor Folio: <strong className="text-primary font-mono">{roomData?.kode_folio || roomData?.kode_reservation || '-'}</strong>
-                            </span>
+                            <div className="text-xs text-700 flex align-items-center gap-1.5 mt-2">
+                                <i className="pi pi-tag text-color-secondary text-xs" style={{ display: 'inline-flex', verticalAlign: 'middle' }}></i>
+                                <span>Nomor Folio:</span>
+                                <strong className="text-primary font-mono font-bold tracking-wide">
+                                    {roomData?.kode_folio || roomData?.kode_reservation || '-'}
+                                </strong>
+                            </div>
                         </div>
-                        <div className="col-12 sm:col-5 text-left sm:text-right mt-2 sm:mt-0">
-                            <span className="text-xs text-color-secondary uppercase font-bold block">Status Tagihan</span>
-                            <div className="mt-1">
+                        <div className="col-12 sm:col-5 text-left sm:text-right mt-2 sm:mt-0 flex flex-column sm:align-items-end">
+                            <span className="text-xs text-color-secondary uppercase font-bold tracking-wider block mb-1">
+                                Status Tagihan
+                            </span>
+                            <div>
                                 <Tag
                                     severity={roomData?.billing_status === 'settled' ? 'success' : 'warning'}
                                     value={roomData?.billing_status === 'settled' ? 'Lunas' : `Saldo: Rp ${(roomData?.balance || 0).toLocaleString('id-ID')}`}
-                                    className="text-xs font-bold px-2.5 py-1"
+                                    className="text-xs font-bold px-3 py-1.5 border-round-lg shadow-sm"
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. Subheader & Filter Row (Sesuai Referensi Foto) */}
+                {/* 2. Subheader & Filter Row */}
                 <div className="flex align-items-center justify-content-between flex-wrap gap-2 pt-1">
-                    <div className="flex align-items-center gap-2">
-                        <span className="font-bold text-900 text-base flex align-items-center gap-2">
-                            <i className="pi pi-shopping-bag text-primary text-lg"></i>
-                            Pilihan Add-ons &amp; Fasilitas
-                        </span>
-                        <span className="text-xs text-color-secondary hidden md:inline">
-                            (Biaya masuk ke folio tamu)
-                        </span>
+                    <div className="flex align-items-center gap-2.5">
+                        <div className="w-2rem h-2rem border-round-lg bg-primary-50 text-primary flex align-items-center justify-content-center flex-shrink-0 border-1 border-primary-100">
+                            <i className="pi pi-shopping-bag text-sm" style={{ display: 'inline-flex' }}></i>
+                        </div>
+                        <div className="flex align-items-baseline gap-2">
+                            <span className="font-bold text-900 text-base">
+                                Pilihan Add-ons &amp; Fasilitas
+                            </span>
+                            <span className="text-xs text-500 font-normal hidden sm:inline">
+                                (Biaya masuk ke folio kamar tamu)
+                            </span>
+                        </div>
                     </div>
 
                     {/* Category Filter Buttons */}
                     <div className="flex align-items-center gap-2">
                         <Button
                             type="button"
+                            icon="pi pi-th-large"
                             label={`Semua (${availableServices.length})`}
-                            className={`p-button-sm px-3 py-1.5 text-xs border-round-lg font-semibold ${
+                            className={`p-button-sm px-3 py-2 text-xs border-round-lg font-semibold transition-all ${
                                 filterCategory === 'all'
                                     ? 'p-button-primary shadow-1'
                                     : 'p-button-outlined p-button-secondary surface-0'
                             }`}
+                            style={{ height: '34px' }}
                             onClick={() => setFilterCategory('all')}
                         />
                         <Button
                             type="button"
                             icon="pi pi-building"
                             label={`Fasilitas (${countFasilitas})`}
-                            className={`p-button-sm px-3 py-1.5 text-xs border-round-lg font-semibold ${
+                            className={`p-button-sm px-3 py-2 text-xs border-round-lg font-semibold transition-all ${
                                 filterCategory === 'fasilitas'
                                     ? 'p-button-primary shadow-1'
                                     : 'p-button-outlined p-button-secondary surface-0'
                             }`}
+                            style={{ height: '34px' }}
                             onClick={() => setFilterCategory('fasilitas')}
                         />
                         <Button
                             type="button"
                             icon="pi pi-sparkles"
                             label={`Amenity (${countAmenity})`}
-                            className={`p-button-sm px-3 py-1.5 text-xs border-round-lg font-semibold ${
+                            className={`p-button-sm px-3 py-2 text-xs border-round-lg font-semibold transition-all ${
                                 filterCategory === 'amenity'
                                     ? 'p-button-primary shadow-1'
                                     : 'p-button-outlined p-button-secondary surface-0'
                             }`}
+                            style={{ height: '34px' }}
                             onClick={() => setFilterCategory('amenity')}
                         />
                     </div>
                 </div>
 
                 {/* Search Bar Input */}
-                <div className="relative">
-                    <span className="p-input-icon-left w-full">
-                        <i className="pi pi-search text-400" />
+                <div className="relative w-full">
+                    <IconField iconPosition="left" className="w-full">
+                        <InputIcon className="pi pi-search text-400" />
                         <InputText
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Cari nama fasilitas, kode, atau kategori add-on..."
-                            className="w-full text-sm p-inputtext-sm border-round-lg"
-                            style={{ height: '38px', paddingLeft: '2.5rem' }}
+                            className="w-full text-sm border-round-lg pr-6"
+                            style={{ height: '40px' }}
                         />
-                    </span>
+                    </IconField>
                     {searchQuery && (
                         <Button
+                            type="button"
                             icon="pi pi-times"
                             className="p-button-rounded p-button-text p-button-secondary p-button-sm absolute"
-                            style={{ right: '6px', top: '6px', width: '26px', height: '26px' }}
+                            style={{ right: '8px', top: '50%', transform: 'translateY(-50%)', width: '26px', height: '26px' }}
                             onClick={() => setSearchQuery('')}
                         />
                     )}
                 </div>
 
-                {/* 3. Grid Kartu Fasilitas 3 Kolom (Sesuai Persis dengan Foto Referensi) */}
-                <div className="overflow-y-auto pr-1" style={{ maxHeight: '390px' }}>
+                {/* 3. Grid Kartu Fasilitas 3 Kolom */}
+                <div
+                    className="overflow-y-auto pr-1"
+                    style={{
+                        maxHeight: '400px',
+                        scrollbarWidth: 'thin'
+                    }}
+                >
                     {filteredItems.length === 0 ? (
                         <div className="p-4 border-round-xl surface-100 text-color-secondary text-center flex flex-column align-items-center justify-content-center gap-2">
                             <i className="pi pi-box text-color-secondary text-2xl"></i>
@@ -594,87 +656,97 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                                         <div
                                             className={`surface-card border-round-xl border-1 p-3 flex flex-column justify-content-between transition-all transition-duration-150 h-full ${
                                                 isSelected
-                                                    ? 'border-primary shadow-2 bg-blue-50'
+                                                    ? 'border-primary shadow-2 bg-primary-50'
                                                     : 'surface-border hover:border-300 hover:shadow-1'
                                             }`}
                                         >
                                             <div>
-                                                {/* Header: Icon, Category Badge, Code, Title, Price */}
-                                                <div className="flex align-items-start gap-3 mb-2">
+                                                {/* Card Header: Category Badge & Code */}
+                                                <div className="flex align-items-center justify-content-between gap-2 mb-2.5">
+                                                    <Tag
+                                                        severity={item.category === 'amenity' ? 'warning' : 'info'}
+                                                        value={item.category === 'amenity' ? 'Amenity' : 'Fasilitas'}
+                                                        className="text-xs px-2.5 py-0.5 border-round font-semibold"
+                                                    />
+                                                    <span className="text-xs text-color-secondary font-mono font-medium">
+                                                        {item.kode_fasilitas}
+                                                    </span>
+                                                </div>
+
+                                                {/* Card Body: Icon + Title & Category */}
+                                                <div className="flex align-items-start gap-2.5 mb-2.5">
                                                     <div
-                                                        className="flex align-items-center justify-content-center border-circle flex-shrink-0"
+                                                        className="flex align-items-center justify-content-center border-round-xl flex-shrink-0 mt-0.5"
                                                         style={{
-                                                            width: '40px',
-                                                            height: '40px',
-                                                            background: isSelected ? 'var(--blue-100)' : 'var(--surface-100)',
+                                                            width: '38px',
+                                                            height: '38px',
+                                                            background: isSelected ? 'var(--primary-100, #dcfce7)' : 'var(--surface-100)',
                                                             color: isSelected ? 'var(--primary-color)' : 'var(--text-color-secondary)',
                                                             transition: 'background 0.15s, color 0.15s'
                                                         }}
                                                     >
-                                                        <i className={item.icon} style={{ fontSize: '1.2rem' }}></i>
+                                                        <i className={item.icon} style={{ fontSize: '1.15rem', display: 'inline-flex' }}></i>
                                                     </div>
-                                                    <div className="flex-1 overflow-hidden">
-                                                        <div className="flex align-items-center justify-content-between gap-1 mb-1">
-                                                            <Tag
-                                                                severity={item.category === 'amenity' ? 'warning' : 'info'}
-                                                                value={item.category === 'amenity' ? 'Amenity' : 'Fasilitas'}
-                                                                className="text-xs px-2 py-0"
-                                                            />
-                                                            <span className="text-xs text-color-secondary font-mono">
-                                                                {item.kode_fasilitas}
-                                                            </span>
-                                                        </div>
+                                                    <div className="flex-1 min-w-0">
                                                         <div
-                                                            className="font-bold text-sm text-overflow-ellipsis overflow-hidden white-space-nowrap"
+                                                            className="font-bold text-sm text-900 line-height-2"
                                                             title={item.nama}
-                                                            style={{ color: isSelected ? 'var(--primary-900)' : 'var(--text-900)' }}
+                                                            style={{
+                                                                display: '-webkit-box',
+                                                                WebkitLineClamp: 2,
+                                                                WebkitBoxOrient: 'vertical',
+                                                                overflow: 'hidden',
+                                                                minHeight: '2.5rem'
+                                                            }}
                                                         >
                                                             {item.nama}
                                                         </div>
-                                                        <div className="text-xs text-primary font-bold mt-1">
-                                                            Rp {item.harga.toLocaleString('id-ID')}{item.unit_label || ' / layanan'}
+                                                        <div className="text-xs text-500 mt-1 text-overflow-ellipsis overflow-hidden white-space-nowrap">
+                                                            {item.categoryLabel || (item.category === 'amenity' ? 'Amenity Tambahan' : 'Layanan Hotel')}
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {/* Description */}
-                                                <div className="text-xs text-color-secondary mb-3 line-height-2">
-                                                    Layanan fasilitas hotel cabang ({item.kode_fasilitas})
+                                                {/* Card Pricing */}
+                                                <div className="flex align-items-baseline gap-1.5 mb-2">
+                                                    <span className="font-bold text-base text-primary font-mono">
+                                                        Rp {item.harga.toLocaleString('id-ID')}
+                                                    </span>
+                                                    <span className="text-xs text-color-secondary font-normal">
+                                                        {formatUnitLabel(item.unit_label)}
+                                                    </span>
                                                 </div>
                                             </div>
 
                                             {/* Controls & Subtotal Footer */}
-                                            <div className="flex align-items-center justify-content-between pt-2 border-top-1 surface-border">
+                                            <div className="flex align-items-center justify-content-between pt-2.5 border-top-1 surface-border mt-2">
                                                 <div className="text-xs">
                                                     {isSelected && subtotal > 0 ? (
-                                                        <span className="text-green-700 font-bold">
-                                                            Subtotal: Rp {subtotal.toLocaleString('id-ID')}
-                                                        </span>
+                                                        <div className="flex flex-column">
+                                                            <span className="text-color-secondary font-medium" style={{ fontSize: '10px' }}>
+                                                                SUBTOTAL
+                                                            </span>
+                                                            <span className="text-primary font-bold font-mono text-sm">
+                                                                Rp {subtotal.toLocaleString('id-ID')}
+                                                            </span>
+                                                        </div>
                                                     ) : (
-                                                        <span className="text-color-secondary">Pilih jumlah</span>
+                                                        <span className="text-color-secondary font-medium">Pilih jumlah</span>
                                                     )}
                                                 </div>
 
-                                                {/* Stepper Button Sesuai Referensi Foto */}
-                                                <div
-                                                    className="flex align-items-center gap-2"
-                                                    style={{
-                                                        border: '1px solid var(--surface-border)',
-                                                        borderRadius: '8px',
-                                                        padding: '2px 6px',
-                                                        background: 'var(--surface-0)'
-                                                    }}
-                                                >
+                                                {/* Stepper Button */}
+                                                <div className="flex align-items-center gap-1 surface-50 border-1 surface-border border-round-lg p-1">
                                                     <Button
                                                         type="button"
                                                         icon="pi pi-minus"
-                                                        className="p-button-text p-button-secondary p-button-sm p-0 flex align-items-center justify-content-center"
-                                                        style={{ width: '26px', height: '26px' }}
+                                                        className="p-button-text p-button-secondary p-button-sm p-button-icon-only flex align-items-center justify-content-center"
+                                                        style={{ width: '26px', height: '26px', minWidth: '26px' }}
                                                         onClick={() => updateFacilityQty(item, qty - 1)}
                                                         disabled={qty <= 0}
                                                     />
                                                     <span
-                                                        className="font-bold text-center text-900 text-sm"
+                                                        className="font-bold text-center text-900 text-sm font-mono"
                                                         style={{ minWidth: '24px' }}
                                                     >
                                                         {qty}
@@ -682,8 +754,8 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                                                     <Button
                                                         type="button"
                                                         icon="pi pi-plus"
-                                                        className="p-button-text p-button-primary p-button-sm p-0 flex align-items-center justify-content-center"
-                                                        style={{ width: '26px', height: '26px' }}
+                                                        className="p-button-text p-button-primary p-button-sm p-button-icon-only flex align-items-center justify-content-center"
+                                                        style={{ width: '26px', height: '26px', minWidth: '26px' }}
                                                         onClick={() => updateFacilityQty(item, qty + 1)}
                                                     />
                                                 </div>
@@ -697,13 +769,17 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                 </div>
 
                 {/* 4. Opsi Pembayaran / Penagihan (Konsisten dengan Dialog Extend Stay) */}
-                <div className="surface-card border-round-xl border-1 surface-border p-3">
-                    <label className="text-xs font-bold text-color-secondary uppercase block mb-2">
+                <div className="surface-card border-round-xl border-1 surface-border p-3.5 shadow-sm">
+                    <label className="text-xs font-bold text-color-secondary uppercase tracking-wider block mb-2.5">
                         Opsi Penagihan Biaya:
                     </label>
                     <div className="flex flex-column gap-2">
                         <div
-                            className="flex align-items-center gap-2.5 cursor-pointer p-1.5 border-round-lg hover:surface-50"
+                            className={`flex align-items-center gap-3 cursor-pointer p-2.5 border-round-lg border-1 transition-colors ${
+                                !isPaidNow
+                                    ? 'bg-primary-50 border-primary-200'
+                                    : 'surface-0 border-transparent hover:surface-50'
+                            }`}
                             onClick={() => setIsPaidNow(false)}
                         >
                             <RadioButton
@@ -712,7 +788,7 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                                 checked={!isPaidNow}
                                 onChange={() => setIsPaidNow(false)}
                             />
-                            <label htmlFor="fasilitasChargeToRoom" className="cursor-pointer text-sm font-semibold text-900 flex-1">
+                            <label htmlFor="fasilitasChargeToRoom" className="cursor-pointer text-sm font-semibold text-900 flex-1 m-0">
                                 Bebankan ke Tagihan Kamar (Charge to Room) —{' '}
                                 <span className="text-color-secondary font-normal text-xs">
                                     Masuk ke folio tamu, dilunasi saat checkout
@@ -721,7 +797,11 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                         </div>
 
                         <div
-                            className="flex align-items-center gap-2.5 cursor-pointer p-1.5 border-round-lg hover:surface-50"
+                            className={`flex align-items-center gap-3 cursor-pointer p-2.5 border-round-lg border-1 transition-colors ${
+                                isPaidNow
+                                    ? 'bg-primary-50 border-primary-200'
+                                    : 'surface-0 border-transparent hover:surface-50'
+                            }`}
                             onClick={() => setIsPaidNow(true)}
                         >
                             <RadioButton
@@ -730,7 +810,7 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                                 checked={isPaidNow}
                                 onChange={() => setIsPaidNow(true)}
                             />
-                            <label htmlFor="fasilitasPayNow" className="cursor-pointer text-sm font-semibold text-900 flex-1">
+                            <label htmlFor="fasilitasPayNow" className="cursor-pointer text-sm font-semibold text-900 flex-1 m-0">
                                 Bayar Lunas Sekarang (Pay on the Spot) —{' '}
                                 <span className="text-green-600 font-normal text-xs">
                                     Lunas saat serah terima layanan
@@ -759,8 +839,8 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                                 compact={true}
                             />
 
-                            <div className="mt-2 pt-2 border-top-1 surface-border text-xs text-700 flex align-items-center gap-1.5">
-                                <i className="pi pi-clock text-primary"></i>
+                            <div className="mt-2.5 pt-2 border-top-1 surface-border text-xs text-700 flex align-items-center gap-2">
+                                <i className="pi pi-clock text-primary" style={{ display: 'inline-flex' }}></i>
                                 <span>
                                     Shift Kasir Penerima:{' '}
                                     {shiftAktif ? (
@@ -768,7 +848,7 @@ export const DialogTambahFasilitas: React.FC<DialogTambahFasilitasProps> = ({
                                             {shiftAktif.kode_cashier_shift} ({shiftAktif.nama_shift || 'Shift Aktif'})
                                         </strong>
                                     ) : (
-                                        <strong className="text-red-500">Belum Ada Shift Kasir Terbuka!</strong>
+                                        <strong className="text-red-500 font-semibold">Belum Ada Shift Kasir Terbuka!</strong>
                                     )}
                                 </span>
                             </div>

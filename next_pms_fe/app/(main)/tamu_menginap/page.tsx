@@ -101,40 +101,34 @@ const TamuMenginapContent = () => {
                 {/* <FrontOfficeNav /> */}
                 {/* Header Title Card */}
                 <div className="surface-card p-4 border-round-xl shadow-1 border-1 surface-border mb-3">
-                    <div className="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center gap-3">
-                        <div>
+                    <div className="flex flex-column lg:flex-row justify-content-between align-items-start lg:align-items-center gap-3">
+                        <div className="flex-1 min-w-0">
                             <div className="flex align-items-center gap-2">
-                                <i className="pi pi-users text-primary text-2xl"></i>
-                                <span className="text-2xl font-bold text-900">Tamu Menginap & Manajemen Folio</span>
+                                <i className="pi pi-users text-primary text-2xl flex-shrink-0"></i>
+                                <span className="text-xl md:text-2xl font-bold text-900 line-height-2">Tamu Menginap &amp; Manajemen Folio</span>
                             </div>
-                            <span className="text-sm text-color-secondary mt-1 block">
+                            <span className="text-sm text-color-secondary mt-1 block line-height-2">
                                 Pantau kamar terisi, lakukan penambahan fasilitas/layanan, perpanjang masa tinggal (extend), dan audit saldo tagihan secara langsung.
                             </span>
                         </div>
-                        <div className="flex align-items-center gap-2 flex-wrap">
-                            {/* <div className="flex align-items-center gap-2 bg-white px-3 py-2 border-round-lg border-1 surface-border">
-                                <i className="pi pi-building text-primary font-bold"></i>
-                                <span className="text-sm font-bold text-900">
-                                    {session?.user?.active_kode_cabang || selectedCabang || '-'} - {session?.user?.active_branch_name || 'Cabang Aktif'}
-                                </span>
-                            </div> */}
+                        <div className="w-full lg:w-auto flex flex-column sm:flex-row align-items-stretch sm:align-items-center justify-content-start sm:justify-content-end gap-2 flex-shrink-0">
                             <Button
                                 label="Segarkan Data"
                                 icon="pi pi-refresh"
-                                className="p-button-outlined p-button-sm"
+                                className="p-button-outlined p-button-sm white-space-nowrap justify-content-center"
                                 onClick={() => loadInhouseData(searchKeyword, selectedCabang)}
                                 loading={loading}
                             />
                             <Button
                                 label="Dashboard Reservasi"
                                 icon="pi pi-th-large"
-                                className="p-button-outlined p-button-sm"
+                                className="p-button-outlined p-button-sm white-space-nowrap justify-content-center"
                                 onClick={() => router.push('/reservasi_dashboard')}
                             />
                             <Button
                                 label="Menu Checkout"
                                 icon="pi pi-sign-out"
-                                className="p-button-sm p-button-danger"
+                                className="p-button-sm p-button-danger white-space-nowrap justify-content-center"
                                 tooltip="Buka tab Checkout di Front Office Desk"
                                 tooltipOptions={{ position: 'top' }}
                                 onClick={() => router.push('/front_office?tab=checkout')}

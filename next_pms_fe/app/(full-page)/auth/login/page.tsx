@@ -9,7 +9,6 @@ import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
-import Image from 'next/image';
 import axios from 'axios';
 import { LoginFormik, LoginState } from './component/interfaces';
 
@@ -174,7 +173,7 @@ const LoginPage = () => {
             transition: 'all 0.3s ease'
           }}
         >
-          {/* Panel Kiri (SaaS Store Value Propositions Showcase - Swapped Left) */}
+          {/* Panel Kiri: Hotel Property Management System (PMS) Showcase */}
           <div className="hidden md:flex w-8 p-4">
             <div
               className="w-full h-full border-round-2xl flex flex-column justify-content-between p-5 relative overflow-hidden"
@@ -199,143 +198,154 @@ const LoginPage = () => {
                 style={{ width: '180px', height: '180px', top: '40%', left: '20%', pointerEvents: 'none' }}
               ></div>
 
-              {/* Teks Header Hero */}
+              {/* Teks Header Hero PMS */}
               <div className="text-center z-1 mt-2">
-                <span className="inline-block bg-white-alpha-80 text-green-700 text-xs font-bold px-3 py-1 border-round-20 mb-2 uppercase tracking-wider border-1 border-white-alpha-30 shadow-1">
-                  MICROVA STORE
+                <span className="inline-flex align-items-center gap-2 bg-white-alpha-90 text-green-700 text-xs font-bold px-3 py-1 border-round-20 mb-2 uppercase tracking-wider border-1 border-white-alpha-40 shadow-1">
+                  <i className="pi pi-building text-xs"></i>
+                  HOTEL MANAGEMENT SYSTEM
                 </span>
                 <h2 className="text-2xl font-bold text-900 m-0 line-height-2">
-                  Eksplorasi Layanan <span className="text-green-600">SaaS Terbaik</span>
+                  Sistem Manajemen Hotel <span className="text-green-600">Cerdas & Terpadu</span>
                 </h2>
               </div>
 
-              {/* Tampilan Ilustrasi Glassmorphism Katalog SaaS Store */}
+              {/* Tampilan Ilustrasi Glassmorphism Operasional Hotel PMS */}
               <div className="flex-grow-1 flex align-items-center justify-content-center my-3 z-1 overflow-hidden">
                 <div
                   className="relative w-full flex align-items-center justify-content-center"
                   style={{
-                    maxWidth: '340px',
-                    height: isShortScreen ? '220px' : '280px',
+                    maxWidth: '350px',
+                    height: isShortScreen ? '230px' : '280px',
                     transition: 'all 0.3s'
                   }}
                 >
-                  {/* Kartu Dasar Utama (Frosted Acrylic Glass Catalog) */}
+                  {/* Kartu Dasar Utama: Live Room Occupancy & Operational Hub */}
                   <div
-                    className="absolute p-4 flex flex-column shadow-1 gap-3 anim-main-card border-1"
+                    className="absolute p-3 flex flex-column shadow-2 gap-2 anim-main-card border-1"
                     style={{
-                      width: '310px',
-                      height: '220px',
+                      width: '320px',
+                      height: '225px',
                       borderRadius: '20px',
-                      background: 'rgba(255, 255, 255, 0.75)',
-                      borderColor: 'rgba(255, 255, 255, 0.6)',
+                      background: 'rgba(255, 255, 255, 0.82)',
+                      borderColor: 'rgba(255, 255, 255, 0.7)',
                       backdropFilter: 'blur(16px)',
                       WebkitBackdropFilter: 'blur(16px)',
-                      // boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.5) inset'
                     }}
                   >
-                    {/* Header Store Catalog */}
+                    {/* Header Card: Okupansi Real-time */}
                     <div className="flex align-items-center justify-content-between border-bottom-1 border-100 pb-2">
                       <div className="flex align-items-center gap-2">
-                        <div className="bg-green-600 border-circle flex align-items-center justify-content-center" style={{ width: '22px', height: '22px' }}>
-                          <i className="pi pi-shopping-bag text-white text-xs"></i>
+                        <div className="bg-green-600 border-circle flex align-items-center justify-content-center" style={{ width: '24px', height: '24px' }}>
+                          <i className="pi pi-chart-pie text-white text-xs"></i>
                         </div>
-                        <span className="text-800 font-bold text-xs">Katalog Aplikasi</span>
+                        <span className="text-800 font-bold text-xs">Okupansi Kamar Hari Ini</span>
                       </div>
-                      <span className="text-500 font-semibold cursor-pointer hover:text-green-600" style={{ fontSize: '0.65rem' }}>Lihat Semua</span>
+                      <span className="bg-green-100 text-green-700 font-bold border-round-xl px-2 py-1 flex align-items-center gap-1" style={{ fontSize: '0.62rem' }}>
+                        <span className="w-2 h-2 bg-green-500 border-circle inline-block pulse-dot"></span> 88% Terisi
+                      </span>
                     </div>
 
-                    {/* Daftar Produk Layanan */}
-                    <div className="flex flex-column gap-2">
-                      {/* Produk 1 */}
-                      <div className="flex align-items-center justify-content-between p-2 bg-white-alpha-60 border-round-xl border-1 border-white-alpha-30 shadow-1">
-                        <div className="flex align-items-center gap-3">
+                    {/* Mini Progress Bar Okupansi */}
+                    <div className="w-full bg-200 border-round-lg overflow-hidden" style={{ height: '6px' }}>
+                      <div className="bg-green-600 h-full border-round-lg" style={{ width: '88%' }}></div>
+                    </div>
+                    <div className="flex justify-content-between text-500 font-medium" style={{ fontSize: '0.6rem' }}>
+                      <span>142 Kamar Terisi</span>
+                      <span>18 Kamar Tersedia</span>
+                    </div>
+
+                    {/* Operational Highlights */}
+                    <div className="flex flex-column gap-2 mt-1">
+                      {/* Highlight 1: Front Desk */}
+                      <div className="flex align-items-center justify-content-between p-2 bg-white-alpha-70 border-round-xl border-1 border-white-alpha-40 shadow-1">
+                        <div className="flex align-items-center gap-2">
                           <div className="bg-green-100 text-green-700 border-round-lg flex align-items-center justify-content-center shadow-1" style={{ width: '28px', height: '28px' }}>
-                            <i className="pi pi-chart-line text-sm"></i>
+                            <i className="pi pi-id-card text-xs"></i>
                           </div>
                           <div className="flex flex-column text-left">
-                            <span className="text-900 font-bold text-xs">Akuntansi</span>
-                            <span className="text-500 font-medium" style={{ fontSize: '0.55rem' }}>Sistem Keuangan</span>
+                            <span className="text-900 font-bold text-xs">Front Desk Check-In</span>
+                            <span className="text-500 font-medium" style={{ fontSize: '0.58rem' }}>18 Tamu Hari Ini • VIP Ready</span>
                           </div>
                         </div>
-                        <span className="bg-green-100 text-green-700 font-bold border-round-xl px-3 py-1 flex align-items-center gap-1" style={{ fontSize: '0.6rem' }}>
-                          <span className="w-2 h-2 bg-green-500 border-circle inline-block pulse-dot"></span> Aktif
+                        <span className="bg-green-50 text-green-700 font-bold border-round-lg px-2 py-1" style={{ fontSize: '0.6rem' }}>
+                          Aktif
                         </span>
                       </div>
 
-                      {/* Produk 2 */}
-                      <div className="flex align-items-center justify-content-between p-2 bg-white-alpha-60 border-round-xl border-1 border-white-alpha-30 shadow-1">
-                        <div className="flex align-items-center gap-3">
-                          <div className="bg-blue-100 text-blue-700 border-round-lg flex align-items-center justify-content-center shadow-1" style={{ width: '28px', height: '28px' }}>
-                            <i className="pi pi-shop text-sm"></i>
+                      {/* Highlight 2: Housekeeping */}
+                      <div className="flex align-items-center justify-content-between p-2 bg-white-alpha-70 border-round-xl border-1 border-white-alpha-40 shadow-1">
+                        <div className="flex align-items-center gap-2">
+                          <div className="bg-teal-100 text-teal-700 border-round-lg flex align-items-center justify-content-center shadow-1" style={{ width: '28px', height: '28px' }}>
+                            <i className="pi pi-check-circle text-xs"></i>
                           </div>
                           <div className="flex flex-column text-left">
-                            <span className="text-900 font-bold text-xs">Kasir POS</span>
-                            <span className="text-500 font-medium" style={{ fontSize: '0.55rem' }}>Kasir Retail</span>
+                            <span className="text-900 font-bold text-xs">Housekeeping Status</span>
+                            <span className="text-500 font-medium" style={{ fontSize: '0.58rem' }}>94% Kamar Bersih & Terinspeksi</span>
                           </div>
                         </div>
-                        <span className="bg-green-100 text-green-700 font-bold border-round-xl px-3 py-1 flex align-items-center gap-1" style={{ fontSize: '0.6rem' }}>
-                          <span className="w-2 h-2 bg-green-500 border-circle inline-block pulse-dot"></span> Aktif
+                        <span className="bg-teal-50 text-teal-700 font-bold border-round-lg px-2 py-1" style={{ fontSize: '0.6rem' }}>
+                          Siap Huni
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Widget Melayang 1 (Cloud Support) */}
+                  {/* Widget Melayang 1: Front Desk Express (Kiri Bawah) */}
                   <div
-                    className="absolute shadow-3 p-2 flex align-items-center gap-3 anim-widget-three border-1"
+                    className="absolute shadow-3 p-2 flex align-items-center gap-2 anim-widget-three border-1"
                     style={{
                       width: '155px',
-                      bottom: '-10px',
-                      left: '-40px',
+                      bottom: '-12px',
+                      left: '-35px',
                       borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.85)',
-                      borderColor: 'rgba(255, 255, 255, 0.7)',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderColor: 'rgba(255, 255, 255, 0.8)',
                       backdropFilter: 'blur(12px)',
                       WebkitBackdropFilter: 'blur(12px)',
                     }}
                   >
                     <div className="bg-green-50 text-green-600 border-circle flex align-items-center justify-content-center shadow-1" style={{ width: '28px', height: '28px', flexShrink: 0 }}>
-                      <i className="pi pi-cloud text-xs"></i>
+                      <i className="pi pi-bell text-xs"></i>
                     </div>
                     <div className="flex flex-column text-left">
-                      <span className="text-400 font-bold" style={{ fontSize: '0.5rem' }}>CLOUD STORAGE</span>
-                      <span className="text-800 font-bold text-xs">Online System</span>
+                      <span className="text-400 font-bold" style={{ fontSize: '0.5rem' }}>FRONT DESK</span>
+                      <span className="text-800 font-bold text-xs">Express Check-In</span>
                     </div>
                   </div>
 
-                  {/* Widget Melayang 2 (Ticketing System) */}
+                  {/* Widget Melayang 2: Shift Kasir & Audit (Kanan Bawah) */}
                   <div
-                    className="absolute shadow-3 p-2 flex align-items-center gap-3 anim-widget-one border-1"
+                    className="absolute shadow-3 p-2 flex align-items-center gap-2 anim-widget-one border-1"
                     style={{
                       width: '155px',
                       bottom: '5px',
-                      right: '-10px',
+                      right: '-15px',
                       borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.85)',
-                      borderColor: 'rgba(255, 255, 255, 0.7)',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderColor: 'rgba(255, 255, 255, 0.8)',
                       backdropFilter: 'blur(12px)',
                       WebkitBackdropFilter: 'blur(12px)',
                     }}
                   >
-                    <div className="bg-green-50 text-green-600 border-circle flex align-items-center justify-content-center shadow-1" style={{ width: '28px', height: '28px', flexShrink: 0 }}>
-                      <i className="pi pi-bolt text-xs"></i>
+                    <div className="bg-teal-50 text-teal-600 border-circle flex align-items-center justify-content-center shadow-1" style={{ width: '28px', height: '28px', flexShrink: 0 }}>
+                      <i className="pi pi-wallet text-xs"></i>
                     </div>
                     <div className="flex flex-column text-left">
-                      <span className="text-400 font-bold" style={{ fontSize: '0.5rem' }}>TICKETING</span>
-                      <span className="text-800 font-bold text-xs">Support 24/7</span>
+                      <span className="text-400 font-bold" style={{ fontSize: '0.5rem' }}>KASIR SHIFT</span>
+                      <span className="text-800 font-bold text-xs">Audit Terintegrasi</span>
                     </div>
                   </div>
 
-                  {/* Widget Melayang 3 (Security) */}
+                  {/* Widget Melayang 3: Security & Enterprise PMS (Kanan Atas) */}
                   <div
-                    className="absolute shadow-3 p-2 flex align-items-center gap-3 anim-widget-two border-1"
+                    className="absolute shadow-3 p-2 flex align-items-center gap-2 anim-widget-two border-1"
                     style={{
                       width: '145px',
                       top: '-15px',
-                      right: '-15px',
+                      right: '-18px',
                       borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.85)',
-                      borderColor: 'rgba(255, 255, 255, 0.7)',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderColor: 'rgba(255, 255, 255, 0.8)',
                       backdropFilter: 'blur(12px)',
                       WebkitBackdropFilter: 'blur(12px)',
                     }}
@@ -343,36 +353,48 @@ const LoginPage = () => {
                     <div className="bg-blue-50 text-blue-600 border-circle flex align-items-center justify-content-center shadow-1" style={{ width: '26px', height: '26px', flexShrink: 0 }}>
                       <i className="pi pi-shield text-xs"></i>
                     </div>
-                    <span className="text-700 font-bold text-xs">Terverifikasi</span>
+                    <div className="flex flex-column text-left">
+                      <span className="text-400 font-bold" style={{ fontSize: '0.5rem' }}>ENTERPRISE PMS</span>
+                      <span className="text-700 font-bold text-xs">Terverifikasi</span>
+                    </div>
                   </div>
 
                 </div>
               </div>
 
-              {/* Tagline & Indikator Halaman */}
+              {/* Tagline & Modul Terpadu PMS */}
               <div className="text-center z-1 mb-1">
                 <p className="text-600 line-height-3 m-0 max-w-sm mx-auto text-xs">
-                  Satu akun untuk mengelola, berlangganan, dan memantau seluruh kebutuhan perangkat lunak bisnis Anda langsung dalam satu hub store terpadu.
+                  Satu portal terpadu untuk mengelola reservasi kamar, operasional front office, ketersediaan housekeeping, hingga audit shift kasir secara real-time dan akurat.
                 </p>
 
-                {/* Indikator Slider */}
-                <div className="flex justify-content-center gap-1 mt-3">
-                  <div className="bg-green-600 border-round-xl" style={{ width: '20px', height: '4px' }}></div>
-                  <div className="bg-300 border-round-xl" style={{ width: '6px', height: '4px' }}></div>
-                  <div className="bg-300 border-round-xl" style={{ width: '6px', height: '4px' }}></div>
+                {/* Indikator Modul Hotel */}
+                <div className="flex justify-content-center align-items-center gap-2 mt-3 flex-wrap">
+                  <span className="bg-white-alpha-80 text-700 font-semibold px-2 py-1 border-round-xl border-1 border-200" style={{ fontSize: '0.62rem' }}>
+                    <i className="pi pi-id-card text-green-600 mr-1" style={{ fontSize: '0.6rem' }}></i> Front Office
+                  </span>
+                  <span className="bg-white-alpha-80 text-700 font-semibold px-2 py-1 border-round-xl border-1 border-200" style={{ fontSize: '0.62rem' }}>
+                    <i className="pi pi-check text-green-600 mr-1" style={{ fontSize: '0.6rem' }}></i> Housekeeping
+                  </span>
+                  <span className="bg-white-alpha-80 text-700 font-semibold px-2 py-1 border-round-xl border-1 border-200" style={{ fontSize: '0.62rem' }}>
+                    <i className="pi pi-wallet text-green-600 mr-1" style={{ fontSize: '0.6rem' }}></i> Kasir Shift
+                  </span>
+                  <span className="bg-white-alpha-80 text-700 font-semibold px-2 py-1 border-round-xl border-1 border-200" style={{ fontSize: '0.62rem' }}>
+                    <i className="pi pi-tag text-green-600 mr-1" style={{ fontSize: '0.6rem' }}></i> Rate Plan
+                  </span>
                 </div>
               </div>
 
             </div>
           </div>
 
-          {/* Panel Kanan (Form Login) */}
+          {/* Panel Kanan: Form Login Hotel PMS */}
           <div className={`w-full md:w-6 flex flex-column justify-content-center align-items-center relative ${layout.leftPanelPadding}`}>
 
             {/* Form Body */}
             <div className="w-full" style={{ maxWidth: '380px' }}>
               <div className={`flex flex-column align-items-center relative w-full py-2 ${layout.headerMargin}`}>
-                {/* Background Grid */}
+                {/* Background Grid Subtle */}
                 <div className="absolute w-full" style={{ height: '80px', top: '0', zIndex: 0, pointerEvents: 'none' }}>
                   <div
                     className="absolute"
@@ -402,27 +424,34 @@ const LoginPage = () => {
                   />
                 </div>
 
-                {/* Wadah Logo Utama */}
+                {/* Wadah Logo Utama Hotel PMS */}
                 <div
-                  className="flex align-items-center justify-content-center mb-2 z-1"
+                  className="flex align-items-center justify-content-center mb-2 z-1 border-round-2xl surface-0 shadow-2 border-1 border-200 overflow-hidden"
                   style={{
-                    width: isShortScreen ? '46px' : '54px',
-                    height: isShortScreen ? '46px' : '54px',
-                    position: 'relative'
+                    width: isShortScreen ? '54px' : '64px',
+                    height: isShortScreen ? '54px' : '64px',
+                    padding: '6px'
                   }}
                 >
-                  <Image
-                    src="/layout/images/logo.png"
-                    alt="Microva Logo"
-                    width={isShortScreen ? 46 : 54}
-                    height={isShortScreen ? 46 : 54}
-                    className="object-contain"
-                    priority
+                  <img
+                    src="/layout/images/hotel-pms-logo.png"
+                    alt="Logo Sistem Manajemen Hotel PMS"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes('/images/hotel-pms-logo.png')) {
+                        target.src = '/images/hotel-pms-logo.png';
+                      }
+                    }}
                   />
                 </div>
 
-                <h2 className={`${isShortScreen ? 'text-xl' : 'text-2xl'} font-bold text-900 m-0 mb-1 z-1`}>Selamat Datang</h2>
-                <p className="text-500 m-0 text-center text-xs z-1">Silakan masuk ke akun Anda</p>
+                <h2 className={`${isShortScreen ? 'text-xl' : 'text-2xl'} font-bold text-900 m-0 mb-1 z-1 text-center`}>
+                  Portal Masuk PMS
+                </h2>
+                <p className="text-500 m-0 text-center text-xs z-1">
+                  Masuk ke sistem operasional & manajemen hotel
+                </p>
               </div>
 
               <form onSubmit={formik.handleSubmit}>
@@ -435,6 +464,7 @@ const LoginPage = () => {
                     <i className="pi pi-user text-400 z-2 absolute" style={{ left: '1rem', fontSize: '1rem' }} />
                     <InputText
                       id="username"
+                      name="username"
                       disabled={state.load || state.googleLoad}
                       className={`w-full border-round-lg text-sm surface-border ${formik.errors.username && formik.touched.username ? 'p-invalid' : ''}`}
                       style={{ paddingLeft: '3rem', paddingBlock: isShortScreen ? '0.65rem' : '0.85rem' }}
@@ -442,6 +472,7 @@ const LoginPage = () => {
                       value={formik.values.username}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
+                      autoComplete="username"
                     />
                   </div>
                   {formik.errors.username && formik.touched.username && (
@@ -455,9 +486,10 @@ const LoginPage = () => {
                     Password
                   </label>
                   <div className="relative w-full flex align-items-center">
-                    <i className="pi pi-key text-400 z-2 absolute" style={{ left: '1rem', fontSize: '1rem' }} />
+                    <i className="pi pi-lock text-400 z-2 absolute" style={{ left: '1rem', fontSize: '1rem' }} />
                     <InputText
                       id="password"
+                      name="password"
                       disabled={state.load || state.googleLoad}
                       type={showPassword ? 'text' : 'password'}
                       className={`w-full border-round-lg text-sm surface-border ${formik.errors.password && formik.touched.password ? 'p-invalid' : ''}`}
@@ -466,11 +498,13 @@ const LoginPage = () => {
                       value={formik.values.password}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
+                      autoComplete="current-password"
                     />
                     <i
                       className={`pi ${showPassword ? 'pi-eye-slash' : 'pi-eye'} text-500 cursor-pointer z-2 absolute`}
                       style={{ right: '1rem' }}
                       onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                     />
                   </div>
                   {formik.errors.password && formik.touched.password && (
@@ -503,40 +537,17 @@ const LoginPage = () => {
                     loading={state.load}
                     disabled={state.googleLoad}
                     type="submit"
-                    label="Masuk"
-                    className="w-full text-sm border-round-lg bg-green-600 border-none hover:bg-green-700 transition-colors"
-                    style={{ paddingBlock: isShortScreen ? '0.65rem' : '0.85rem' }}
+                    label="Masuk ke Sistem"
+                    icon={!state.load ? 'pi pi-sign-in' : undefined}
+                    className="w-full text-sm border-round-lg bg-green-600 border-none hover:bg-green-700 transition-colors shadow-2 hover:shadow-3 font-semibold"
+                    style={{ paddingBlock: isShortScreen ? '0.7rem' : '0.85rem' }}
                   />
 
-                  {/* <div className="flex align-items-center my-1">
-                    <div className="border-top-1 border-200 w-full"></div>
-                    <span className="px-2 text-400 text-xs font-semibold">ATAU</span>
-                    <div className="border-top-1 border-200 w-full"></div>
-                  </div> */}
-
-                  {/* <Button
-                    loading={state.googleLoad}
-                    disabled={state.load}
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    className="w-full text-sm border-round-lg bg-white text-700 border-300 hover:bg-gray-50 transition-all flex justify-content-center align-items-center gap-2"
-                    style={{ paddingBlock: isShortScreen ? '0.65rem' : '0.85rem' }}
-                  >
-                    <i className="pi pi-google text-red-500 text-base"></i>
-                    <span>Lanjutkan dengan Google</span>
-                  </Button> */}
-
-                  {/* <div className="text-center mt-2">
-                    <span className="text-500 text-xs">Belum memiliki akun? </span>
-                    <button
-                      type="button"
-                      disabled={state.load || state.googleLoad}
-                      onClick={() => router.push("/auth/register")}
-                      className="bg-transparent border-none text-green-600 font-bold text-xs cursor-pointer p-0 hover:underline inline-flex align-items-center gap-1 transition-all"
-                    >
-                      Daftar Sekarang <i className="pi pi-arrow-right text-100" style={{ fontSize: '0.65rem' }}></i>
-                    </button>
-                  </div> */}
+                  {/* Security Assurance Footer */}
+                  <div className="flex align-items-center justify-content-center gap-2 mt-3 pt-3 border-top-1 border-100 text-500 text-xs">
+                    <i className="pi pi-shield text-green-600" style={{ fontSize: '0.8rem' }}></i>
+                    <span>Sistem Manajemen Hotel Terenkripsi & Terintegrasi</span>
+                  </div>
                 </div>
               </form>
             </div>
