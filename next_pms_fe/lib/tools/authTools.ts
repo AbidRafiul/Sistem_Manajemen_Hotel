@@ -20,9 +20,38 @@ import { JWT } from 'next-auth/jwt';
 import { refreshToken } from '@/lib/tools/serverTools'; // Pastikan path import ini benar
 
 const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+const tokenSecret = process.env.TOKEN_SECRET;
+const isProduction = process.env.NODE_ENV === 'production';
 
+// T1 Hardening: Validasi kekuatan secret NextAuth dan TOKEN_SECRET di frontend
 if (!secret) {
-    console.warn("⚠️ PERINGATAN: AUTH_SECRET belum didefinisikan di environment variables (.env). NextAuth v5 sangat merekomendasikan penggunaan AUTH_SECRET.");
+    if (isProduction) {
+        throw new Error("FATAL: AUTH_SECRET / NEXTAUTH_SECRET belum didefinisikan pada environment production!");
+    } else {
+        console.warn("⚠️ PERINGATAN: AUTH_SECRET / NEXTAUTH_SECRET belum didefinisikan di environment variables (.env).");
+    }
+} else if (secret.length < 32) {
+    if (isProduction) {
+        throw new Error(`FATAL: AUTH_SECRET / NEXTAUTH_SECRET terlalu pendek (${secret.length} karakter). Minimal 32 karakter dibutuhkan di production.`);
+    } else {
+        console.warn(`⚠️ PERINGATAN: AUTH_SECRET / NEXTAUTH_SECRET terlalu pendek (${secret.length} karakter). Minimal 32 karakter dibutuhkan di production.`);
+    }
+}
+
+if (secret && (secret === process.env.USER_SECRET || secret === process.env.USER_KEY)) {
+    if (isProduction) {
+        throw new Error("FATAL: NEXTAUTH_SECRET tidak boleh bernilai sama dengan secret backend (USER_SECRET / USER_KEY)!");
+    } else {
+        console.warn("⚠️ PERINGATAN: NEXTAUTH_SECRET terdeteksi sama dengan secret backend (USER_SECRET / USER_KEY). Gunakan secret yang berbeda!");
+    }
+}
+
+if (tokenSecret && (tokenSecret === process.env.USER_SECRET || tokenSecret === process.env.USER_KEY)) {
+    if (isProduction) {
+        throw new Error("FATAL: TOKEN_SECRET tidak boleh bernilai sama dengan secret backend (USER_SECRET / USER_KEY)!");
+    } else {
+        console.warn("⚠️ PERINGATAN: TOKEN_SECRET terdeteksi sama dengan secret backend (USER_SECRET / USER_KEY). Gunakan secret yang berbeda!");
+    }
 }
 
 const authOptions: NextAuthConfig = {
