@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/tools/authTools";
 import { formatDateISO, formatDateSystem } from "@/lib/tools/dateTools";
 import axios from "axios";
+import { getBackendApiUrl } from "@/lib/tools/apiUrl";
 
 export const POST = async (req: NextRequest) => {
     try {
@@ -33,8 +34,9 @@ export const POST = async (req: NextRequest) => {
             "Authorization": `Bearer ${session.access_token}`,
         };
 
+        const baseApi = getBackendApiUrl();
         const result = await axios.post(
-            `${process.env.API_URL}/auth/switch-branch`,
+            `${baseApi}/auth/switch-branch`,
             body,
             { headers }
         );

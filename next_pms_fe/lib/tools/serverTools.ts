@@ -28,6 +28,7 @@ import NextAuth from 'next-auth';
 import { auth } from "./authTools";
 import { cookies } from "next/headers";
 import { formatDateISO } from "./dateTools";
+import { getBackendApiUrl } from "./apiUrl";
 
 let isLoggingOut = false;
 
@@ -74,8 +75,9 @@ const routeMiddleware = async (searchUrl: string) => {
 
     if (session.user.user_code) {
         try {
+            const baseApi = getBackendApiUrl();
             const resp = await axios.post(
-                `${process.env.API_URL}/setup/nav/user-data`,
+                `${baseApi}/setup/nav/user-data`,
                 { user_code: session?.user?.user_code },
                 {
                     headers: {
@@ -122,8 +124,9 @@ const refreshToken = async (userCode: string, refreshToken: string, rememberMe: 
 
     const encryptedBody = credentialPayload;
 
+    const baseApi = getBackendApiUrl();
     const refreshResponse = await axios.post(
-        `${process.env.API_URL}/auth/refresh-token`,
+        `${baseApi}/auth/refresh-token`,
         encryptedBody,
         {
             headers: {
