@@ -1,0 +1,39 @@
+-- ==============================================================================
+-- USULAN SKRIP: Penyelarasan Collation Database ke utf8mb4_unicode_ci
+-- Proyek       : Sistem Manajemen Hotel (PMS) - PT Marstech Global
+-- Sifat Berkas : PROPOSAL & DRAFT ONLY (JANGAN DIJALANKAN TANPA PERSETUJUAN DBA/LEAD)
+-- Standar Wajib: Template Standard Marstech Global mensyaratkan utf8mb4_unicode_ci
+-- ==============================================================================
+--
+-- ⚠️ PERINGATAN RISIKO TEKNIS & DAMPAK (IMPACT ASSESSMENT):
+-- 1. DAMPAK INDEKS & UKURAN PENYIMPANAN:
+--    Mengubah karakter set/collation pada tabel dengan indeks teks VARCHAR(255)
+--    dapat menyebabkan perubahan ukuran key length prefix indeks di InnoDB.
+-- 2. LOCKING TABEL (DOWNTIME):
+--    Operasi `CONVERT TO CHARACTER SET` memerlukan penulisan ulang seluruh baris tabel
+--    (table rewrite). Pada tabel transaksi berukuran besar (misal: `trx_room_status_log`),
+--    hal ini akan mengunci tabel (metadata lock) dan berpotensi menyebabkan downtime.
+-- 3. PERILAKU SORTING & SEARCHING:
+--    `utf8mb4_unicode_ci` memperlakukan perbandingan karakter sesuai aturan Unicode 4.0,
+--    sedangkan `utf8mb4_0900_ai_ci` menggunakan aturan Unicode 9.0 (accent-insensitive).
+--    Perbedaan sorting order dapat mempengaruhi hasil query `ORDER BY`.
+-- 4. INTEGRITAS FOREIGN KEY:
+--    Kolom yang berelasi dalam FOREIGN KEY constraint WAJIB memiliki collation yang
+--    sama persis, atau query JOIN antar tabel akan menghasilkan MySQL Error 1267:
+--    "Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT)".
+--
+-- ==============================================================================
+
+-- 1. Penyelarasan Default Collation Database
+-- ALTER DATABASE `hotel_pms` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 2. Daftar Tabel yang Berpotensi Memerlukan Penyelarasan (Contoh Proposal):
+-- ALTER TABLE `trx_room_status_log` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_housekeeping_task` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_night_audit` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_night_audit_log` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_night_audit_room_charge` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_checkout_inspection` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_checkout_inspection_detail` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_shift_kasir` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ALTER TABLE `trx_shift_kasir_summary` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
