@@ -32,22 +32,25 @@ import navMstDelete from "./navigation/mst_navigation_delete.js";
 
 import configCreate from './config/config_create.js'
 import configData from './config/config_data.js'
+import { authorize } from "../../../middleware/authorize.js";
 
 // master
 // user
 router.use("/user-login/user-data", user);
-router.use("/user-login/user-create", userCreate);
-router.use("/user-login/user-update", userUpdate);
-router.use("/user-login/user-delete", userDelete);
-//config
+router.use("/user-login/user-create", [authorize("admin", "corporate_manager", "regional_manager")], userCreate);
+router.use("/user-login/user-update", [authorize("admin", "corporate_manager", "regional_manager")], userUpdate);
+router.use("/user-login/user-delete", [authorize("admin")], userDelete);
+
+// config
 router.use("/config-data", configData);
-router.use("/config-create", configCreate);
-//navigation
+router.use("/config-create", [authorize("admin")], configCreate);
+
+// navigation
 router.use("/nav/base-data", navBase);
 router.use("/nav/user-data", navUser);
 router.use("/nav/mst-list", navMstList);
-router.use("/nav/mst-create", navMstCreate);
-router.use("/nav/mst-update", navMstUpdate);
-router.use("/nav/mst-delete", navMstDelete);
+router.use("/nav/mst-create", [authorize("superadmin")], navMstCreate);
+router.use("/nav/mst-update", [authorize("superadmin")], navMstUpdate);
+router.use("/nav/mst-delete", [authorize("superadmin")], navMstDelete);
 
 export default router;

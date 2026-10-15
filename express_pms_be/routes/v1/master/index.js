@@ -10,6 +10,7 @@
  */
 
 import express from "express";
+import { authorize } from "../../../middleware/authorize.js";
 const router = express.Router();
 
 // Imports
@@ -131,9 +132,9 @@ router.use("/wilayah/wilayah-delete", wilayahDelete);
 
 // Master Cabang
 router.use("/cabang/cabang-data", cabangData);
-router.use("/cabang/cabang-create", cabangCreate);
-router.use("/cabang/cabang-update", cabangUpdate);
-router.use("/cabang/cabang-delete", cabangDelete);
+router.use("/cabang/cabang-create", [authorize("corporate_manager")], cabangCreate);
+router.use("/cabang/cabang-update", [authorize("corporate_manager")], cabangUpdate);
+router.use("/cabang/cabang-delete", [authorize("corporate_manager")], cabangDelete);
 
 // Master Bed Type
 router.use("/bed-type/bed-type-data", bedTypeData);
@@ -149,9 +150,9 @@ router.use("/amenity/amenity-delete", amenityDelete);
 
 // Master Pajak
 router.use("/pajak/pajak-data", pajakData);
-router.use("/pajak/pajak-create", pajakCreate);
-router.use("/pajak/pajak-update", pajakUpdate);
-router.use("/pajak/pajak-delete", pajakDelete);
+router.use("/pajak/pajak-create", [authorize("admin", "corporate_manager")], pajakCreate);
+router.use("/pajak/pajak-update", [authorize("admin", "corporate_manager")], pajakUpdate);
+router.use("/pajak/pajak-delete", [authorize("admin", "corporate_manager")], pajakDelete);
 
 // Master Fasilitas
 router.use("/fasilitas/fasilitas-data", fasilitasData);
@@ -185,9 +186,9 @@ router.use("/tipe-kamar-foto/tipe-kamar-foto-set-cover", tipeKamarFotoSetCover);
 
 // Master Rate Plan
 router.use("/rate-plan/rate-plan-data", ratePlanData);
-router.use("/rate-plan/rate-plan-create", ratePlanCreate);
-router.use("/rate-plan/rate-plan-update", ratePlanUpdate);
-router.use("/rate-plan/rate-plan-delete", ratePlanDelete);
+router.use("/rate-plan/rate-plan-create", [authorize("admin", "corporate_manager", "regional_manager", "branch_manager")], ratePlanCreate);
+router.use("/rate-plan/rate-plan-update", [authorize("admin", "corporate_manager", "regional_manager", "branch_manager")], ratePlanUpdate);
+router.use("/rate-plan/rate-plan-delete", [authorize("admin", "corporate_manager", "regional_manager", "branch_manager")], ratePlanDelete);
 
 // Master Rate Plan Price (Harga Kamar)
 router.use("/rate-plan-price/rate-plan-price-data", ratePlanPriceData);
@@ -210,9 +211,9 @@ router.use("/lantai/lantai-delete", lantaiDelete);
 
 // Master Kamar
 router.use("/kamar/kamar-data", kamarData);
-router.use("/kamar/kamar-create", kamarCreate);
-router.use("/kamar/kamar-update", kamarUpdate);
-router.use("/kamar/kamar-delete", kamarDelete);
+router.use("/kamar/kamar-create", [authorize("admin", "corporate_manager", "regional_manager", "branch_manager")], kamarCreate);
+router.use("/kamar/kamar-update", [authorize("admin", "corporate_manager", "regional_manager", "branch_manager")], kamarUpdate);
+router.use("/kamar/kamar-delete", [authorize("admin", "corporate_manager", "regional_manager", "branch_manager")], kamarDelete);
 
 // Master Room Type Fasilitas
 router.use("/room-type-fasilitas/room-type-fasilitas-assign", roomTypeFasilitasAssign);
