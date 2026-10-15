@@ -31,8 +31,17 @@ Thumbs.db
 .idea/
 .agents/
 run_dev.sh
-.env
 test_scenario.js
-package-lock.json
 test_direct.js
 test_checkout.js
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
