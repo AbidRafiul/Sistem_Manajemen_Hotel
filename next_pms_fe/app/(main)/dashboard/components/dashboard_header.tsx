@@ -38,11 +38,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   const formattedDate = businessDate
     ? new Date(businessDate).toLocaleDateString('id-ID', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
     : '-';
 
   return (
@@ -76,11 +76,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
           {/* Business Date Pill */}
           <div
-            className={`flex align-items-center gap-2 px-3 py-2 border-round-lg border-1 ${
-              hasAuditAlert
-                ? 'bg-red-50 border-red-200 text-red-700'
-                : 'bg-green-50 border-green-200 text-green-800'
-            }`}
+            className={`flex align-items-center gap-2 px-3 py-2 border-round-lg border-1 ${hasAuditAlert
+              ? 'bg-red-50 border-red-200 text-red-700'
+              : 'bg-green-50 border-green-200 text-green-800'
+              }`}
           >
             <i className={`pi ${hasAuditAlert ? 'pi-exclamation-triangle' : 'pi-calendar'} font-bold`}></i>
             <div className="flex flex-column">

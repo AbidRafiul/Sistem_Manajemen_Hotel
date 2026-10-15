@@ -47,7 +47,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ data, loading }) => {
     return (
       <div className="surface-card p-4 border-round-xl border-1 surface-border shadow-1 mb-4">
         <div className="flex align-items-center gap-3">
-          <div className="w-3rem h-3rem border-round-circle bg-green-100 flex align-items-center justify-center flex-shrink-0">
+          <div className="w-1rem h-2rem border-round-circle flex align-items-center justify-center flex-shrink-0">
             <i className="pi pi-check-circle text-green-700 text-xl"></i>
           </div>
           <div>
