@@ -28,7 +28,9 @@ import Logger from "./middleware/logger.js";
 
 const app = express();
 
-const allowedOrigins = process.env.ORIGIN.split(",").map((origin) => origin.trim());
+const allowedOrigins = (process.env.ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim());
 
 app.use(
   cors({

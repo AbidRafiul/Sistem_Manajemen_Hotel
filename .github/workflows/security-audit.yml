@@ -73,9 +73,16 @@ jobs:
         env:
           NODE_ENV: test
           APP_DEBUG: "true"
+          ORIGIN: "http://localhost:3000"
           USER_KEY: "unit_test_dummy_user_key_32_characters_minimum"
           USER_PAS_KEY: "unit_test_dummy_user_pas_key"
           USER_SECRET: "unit_test_dummy_user_secret_32_characters_min"
+          DB_HOST: "127.0.0.1"
+          DB_PORT: "3306"
+          DB_DBMS: "mysql2"
+          DB_DATABASE: "hotel_pms"
+          DB_USERNAME: "root"
+          DB_PASSWORD: ""
 
   # ----------------------------------------------------------------------------
   # Job 3: Frontend Security & Linting Checks
