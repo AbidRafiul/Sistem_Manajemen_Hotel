@@ -55,6 +55,7 @@ if (tokenSecret && (tokenSecret === process.env.USER_SECRET || tokenSecret === p
 }
 
 const authOptions: NextAuthConfig = {
+    trustHost: true,
     secret: secret,
     providers: [
         CredentialsProvider({
