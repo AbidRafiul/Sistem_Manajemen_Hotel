@@ -22,7 +22,6 @@ import Me from "./auth/me.js";
 import SwitchBranch from "./auth/switch_branch.js";
 import Setup from "./setup/index.js";
 import Master from "./master/index.js";
-import Contoh from "./contoh/index.js";
 import Function from "./components/index.js";
 import Reservasi from "./reservasi/index.js";
 import Kasir from "./kasir/index.js";
@@ -54,12 +53,6 @@ router.use(
   "/master",
   [validateAccessToken, contextMiddleware],
   Master
-);
-// Setup
-router.use(
-  "/contoh",
-  [validateAccessToken, contextMiddleware],
-  Contoh
 );
 
 // Function
