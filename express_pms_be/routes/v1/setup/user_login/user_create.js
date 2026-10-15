@@ -33,7 +33,6 @@ import {
   hmac,
 } from "../../components/tools/encrypt_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
-import { hashPassword } from "../../components/tools/password_tools.js";
 
 const router = express.Router();
 
@@ -169,7 +168,9 @@ router.post("/", async (req, res) => {
       };
 
       if (oPayload.password) {
-        oData["password"] = await hashPassword(oPayload.password);
+        const cPassword = process.env.USER_KEY + cUserCode + oPayload.password;
+        const secret = process.env.USER_SECRET;
+        oData["password"] = hmac(cPassword, secret, "sha512");
       }
 
       // Insert data mst_user

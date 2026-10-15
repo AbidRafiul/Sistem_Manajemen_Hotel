@@ -28,7 +28,6 @@ import { jwtVerify, SignJWT } from "jose";
 import { formatDateSystem } from "../components/tools/date_tools.js";
 import { hashEquals, hmac } from "../components/tools/encrypt_tools.js";
 import { getUserScopeDetails } from "../components/tools/scope_helper.js";
-import { verifyPassword, hashPassword, dummyVerifyPassword } from "../components/tools/password_tools.js";
 
 const router = express.Router();
 
@@ -99,104 +98,86 @@ router.post("/", async (req, res) => {
       )
       .first();
 
-    if (!oUser) {
-      await dummyVerifyPassword(oPayload.password);
-      return res.status(400).json({
-        status: status.GAGAL,
-        message: "Username atau password salah",
-        datetime: formatDateSystem(),
-      });
-    }
+    if (oUser) {
+      const secret = process.env.USER_SECRET;
+      const cPassword =
+        process.env.USER_KEY + oUser.user_code + oPayload.password;
 
-    const { isMatch, needsRehash } = await verifyPassword(
-      oPayload.password,
-      oUser.password,
-      oUser.user_code
-    );
-
-    if (!isMatch) {
-      return res.status(400).json({
-        status: status.GAGAL,
-        message: "Username atau password salah",
-        datetime: formatDateSystem(),
-      });
-    }
-
-    if (oUser.status != "1") {
-      return res.status(400).json({
-        status: status.GAGAL,
-        message: "User belum aktif",
-        datetime: formatDateSystem(),
-      });
-    }
-
-    // Lazy migration jika hash masih format lama (HMAC-SHA512)
-    if (needsRehash) {
-      try {
-        const newBcryptHash = await hashPassword(oPayload.password);
-        await DB("mst_user")
-          .where("id", oUser.id)
-          .update({
-            password: newBcryptHash,
-            updated_at: formatDateSystem(),
-          });
-      } catch (errRehash) {
-        console.warn("Lazy password rehash failed:", errRehash.message);
+      if (!hashEquals(hmac(cPassword, secret, "sha512"), oUser.password)) {
+        return res.status(400).json({
+          status: status.GAGAL,
+          message: "Password salah",
+          datetime: formatDateSystem(),
+        });
       }
-    }
 
-    // Validasi konfigurasi role user di mst_navigation
-    const oNavigation = await DB("mst_navigation")
-      .select("menu")
-      .whereRaw("LOWER(role) = LOWER(?)", [oUser.role])
-      .first();
+      if (oUser.status != "1") {
+        return res.status(400).json({
+          status: status.GAGAL,
+          message: "User belum aktif",
+          datetime: formatDateSystem(),
+        });
+      }
 
-    if (!oNavigation || !oNavigation?.menu) {
-      return res.status(400).json({
-        status: status.GAGAL,
-        message: `Role ${oUser.role} belum memiliki konfigurasi navigasi di database`,
+      // Validasi konfigurasi role user di mst_navigation
+      const oNavigation = await DB("mst_navigation")
+        .select("menu")
+        .whereRaw("LOWER(role) = LOWER(?)", [oUser.role])
+        .first();
+
+      if (!oNavigation || !oNavigation?.menu) {
+        return res.status(400).json({
+          status: status.GAGAL,
+          message: `Role ${oUser.role} belum memiliki konfigurasi navigasi di database`,
+          datetime: formatDateSystem(),
+        });
+      }
+
+      // Hitung enterprise hierarchy & scope user
+      const branchContext = await getUserScopeDetails(oUser.id);
+
+      const credential = {
+        id: oUser.id,
+        user_code: oUser.user_code,
+        username: oUser.username,
+        fullname: oUser.fullname,
+        role: oUser.role,
+        company_id: branchContext.company_id,
+        company_name: branchContext.company_name,
+        company_code: branchContext.company_code,
+        default_branch_id: branchContext.default_branch_id,
+        default_kode_cabang: branchContext.default_kode_cabang,
+        default_branch_name: branchContext.default_branch_name,
+        active_branch_id: branchContext.active_branch_id,
+        active_kode_cabang: branchContext.active_kode_cabang,
+        active_branch_name: branchContext.active_branch_name,
+        allowed_branches: branchContext.allowed_branches,
+        allowed_kode_cabang: branchContext.allowed_kode_cabang,
+        can_switch_branch: branchContext.can_switch_branch,
+      };
+
+      const oToken = await generateUserTokens(
+        oUser,
+        oPayload.remember_me == '1' ? true : false,
+        branchContext
+      );
+
+      return res.status(200).json({
+        status: status.SUKSES,
+        message: "Login Berhasil",
         datetime: formatDateSystem(),
+        data: {
+          access_token: oToken.access_token,
+          refresh_token: oToken.refresh_token,
+          user_info: credential
+        },
       });
     }
 
-    // Hitung enterprise hierarchy & scope user
-    const branchContext = await getUserScopeDetails(oUser.id);
-
-    const credential = {
-      id: oUser.id,
-      user_code: oUser.user_code,
-      username: oUser.username,
-      fullname: oUser.fullname,
-      role: oUser.role,
-      company_id: branchContext.company_id,
-      company_name: branchContext.company_name,
-      company_code: branchContext.company_code,
-      default_branch_id: branchContext.default_branch_id,
-      default_kode_cabang: branchContext.default_kode_cabang,
-      default_branch_name: branchContext.default_branch_name,
-      active_branch_id: branchContext.active_branch_id,
-      active_kode_cabang: branchContext.active_kode_cabang,
-      active_branch_name: branchContext.active_branch_name,
-      allowed_branches: branchContext.allowed_branches,
-      allowed_kode_cabang: branchContext.allowed_kode_cabang,
-      can_switch_branch: branchContext.can_switch_branch,
-    };
-
-    const oToken = await generateUserTokens(
-      oUser,
-      oPayload.remember_me == '1' ? true : false,
-      branchContext
-    );
-
-    return res.status(200).json({
-      status: status.SUKSES,
-      message: "Login Berhasil",
+    return res.status(400).json({
+      status: status.GAGAL,
+      message: "Username tidak ditemukan",
       datetime: formatDateSystem(),
-      data: {
-        access_token: oToken.access_token,
-        refresh_token: oToken.refresh_token,
-        user_info: credential
-      },
     });
   } catch (error) {
     console.error("Login Error:", error);

@@ -23,7 +23,6 @@ import { Logging, ChangesLog, validatePayload } from "../../components/tools/ser
 import { jwtVerify } from "jose";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { decryptXCredential, hmac } from "../../components/tools/encrypt_tools.js";
-import { hashPassword } from "../../components/tools/password_tools.js";
 
 const router = express.Router();
 
@@ -176,7 +175,10 @@ router.post("/", async (req, res) => {
 
     // Logika enkripsi password jika dikirimkan oleh client
     if (oPayload.password) {
-      oData["password"] = await hashPassword(oPayload.password);
+      const cPassword = process.env.USER_KEY + oPayload.user_code + oPayload.password;
+      const dCreatedAt = oDataBefore.created_at || oDataBefore.CreatedAt;
+      const secret = process.env.USER_SECRET;
+      oData["password"] = hmac(cPassword, secret, "sha512");
     }
 
     // Eksekusi perubahan di dalam Transaksi Database
