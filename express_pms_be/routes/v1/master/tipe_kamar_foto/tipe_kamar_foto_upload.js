@@ -20,9 +20,20 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 
 const router = express.Router();
 
+const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+
 const upload = multer({
     dest: "temp/",
     limits: { fileSize: 2 * 1024 * 1024 }, // Maksimal 2MB per file
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (ALLOWED_MIME_TYPES.has(file.mimetype) && ALLOWED_EXTENSIONS.has(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Format file tidak didukung (Gunakan PNG, JPG, JPEG, atau WEBP)"));
+        }
+    },
 });
 
 router.post("/", upload.any(), async (req, res) => {

@@ -10,11 +10,6 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 
 const router = express.Router();
 
-const upload = multer({
-    dest: "temp/",
-    limits: { fileSize: 15 * 1024 * 1024 }, // 15MB per file
-});
-
 const mimeToExt = {
     "image/jpeg": ".jpg",
     "image/jpg": ".jpg",
@@ -23,6 +18,18 @@ const mimeToExt = {
     "image/webp": ".webp",
     "image/svg+xml": ".svg"
 };
+
+const upload = multer({
+    dest: "temp/",
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
+    fileFilter: (req, file, cb) => {
+        if (mimeToExt[file.mimetype]) {
+            cb(null, true);
+        } else {
+            cb(new Error("Format file logo tidak didukung (Gunakan JPG, PNG, GIF, WEBP, atau SVG)"));
+        }
+    },
+});
 
 router.post("/", upload.any(), async (req, res) => {
     const oPayload = req.body;
