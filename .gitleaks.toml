@@ -1,0 +1,28 @@
+# ==============================================================================
+# Gitleaks Configuration
+# Project: Sistem Manajemen Hotel (PT Marstech Global)
+# ==============================================================================
+
+title = "Sistem Manajemen Hotel - Gitleaks Security Scan Profile"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for test fixtures, example files, documentation, and lockfiles"
+paths = [
+  '''^\.env\.example$''',
+  '''^express_pms_be/\.env\.example$''',
+  '''^next_pms_fe/\.env\.example$''',
+  '''package-lock\.json$''',
+  '''^docs/''',
+  '''^express_pms_be/tests/''',
+  '''^essential\.sql$''',
+  '''^01_schema_migration\.sql$''',
+  '''^02_data_seeder\.sql$'''
+]
+
+regexes = [
+  '''random_secure_.*''',
+  '''unit_test_dummy_.*'''
+]
