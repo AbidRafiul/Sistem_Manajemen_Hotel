@@ -9,15 +9,15 @@ export const viewport: Viewport = {
     initialScale: 1,
 };
 
-// 2. Metadata Microva Store
+// 2. Metadata Sistem Manajemen Hotel PMS
 export const metadata: Metadata = {
     title: {
-        default: 'Microva Store - Platform SaaS & Manajemen Aplikasi',
-        template: '%s | Microva Store', // Otomatis format judul di sub-halaman (contoh: "Dashboard | Microva Store")
+        default: 'Sistem Manajemen Hotel - Enterprise PMS Portal',
+        template: '%s | Hotel PMS Portal',
     },
-    description: 'Solusi lengkap manajemen aplikasi SaaS Microva Store. Kelola layanan, transaksi, dan operasional Anda dengan lebih cepat, aman, dan efisien.',
-    keywords: ['Microva Store', 'SaaS', 'Store Platform', 'Dashboard SaaS', 'Aplikasi SaaS'],
-    authors: [{ name: 'Microva Team' }],
+    description: 'Sistem Manajemen Hotel (Property Management System) terpadu untuk Front Desk, Housekeeping, Reservasi, dan Kasir Shift.',
+    keywords: ['Hotel PMS', 'Sistem Manajemen Hotel', 'Front Desk', 'Housekeeping', 'Hotel Management System'],
+    authors: [{ name: 'Hotel Management Team' }],
     manifest: '/manifest.json',
 
     // Atur robot sesuai kebutuhan (gunakan 'index: true' jika halaman ini ingin di-index Google)

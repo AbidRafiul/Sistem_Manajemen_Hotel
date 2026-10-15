@@ -57,6 +57,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     // Memproses semua rute halaman kecuali aset statis dan route API internal Next.js
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|assets|images).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|assets|images|layout|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
