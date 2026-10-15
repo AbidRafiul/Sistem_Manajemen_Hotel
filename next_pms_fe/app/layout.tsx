@@ -19,12 +19,24 @@ export const viewport: Viewport = {
     initialScale: 1,
 };
 
-// 2. Metadata Microva Store
+const getMetadataBase = (): URL => {
+    const rawUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (rawUrl) {
+        try {
+            return new URL(rawUrl);
+        } catch {
+            // Fallback gracefully jika URL tidak valid (misal masih berisi placeholder template)
+        }
+    }
+    return new URL('http://localhost:3000');
+};
+
+// 2. Metadata PMS Hotel
 export const metadata: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+    metadataBase: getMetadataBase(),
     title: {
-        default: 'Microva Store - Platform SaaS & Manajemen Aplikasi',
-        template: '%s | Microva Store', // Otomatis format judul di sub-halaman (contoh: "Dashboard | Microva Store")
+        default: 'Sistem Manajemen Hotel (PMS)',
+        template: '%s | Sistem Manajemen Hotel',
     },
     description: 'Solusi lengkap manajemen aplikasi SaaS Microva Store. Kelola layanan, transaksi, dan operasional Anda dengan lebih cepat, aman, dan efisien.',
     keywords: ['Microva Store', 'SaaS', 'Store Platform', 'Dashboard SaaS', 'Aplikasi SaaS'],
