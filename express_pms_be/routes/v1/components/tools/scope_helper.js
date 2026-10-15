@@ -260,8 +260,8 @@ export const getUserScopeDetails = async (userId) => {
 export const assertBranchScope = (req, targetBranch) => {
   if (!targetBranch) return;
 
-  // Mode debugging
-  if (process.env.APP_DEBUG === "true" && req?.headers?.["x-uniqueid"]) {
+  // Mode debugging - HANYA jika flag DEV_AUTH_BYPASS aktif dan environment development
+  if (process.env.NODE_ENV === "development" && process.env.DEV_AUTH_BYPASS === "true" && req?.headers?.["x-uniqueid"]) {
     return;
   }
 

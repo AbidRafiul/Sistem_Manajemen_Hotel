@@ -27,7 +27,8 @@ describe("Night Audit Full Cycle Tests", () => {
   let originalBusinessDate = "";
 
   beforeAll(async () => {
-    process.env.APP_DEBUG = "true";
+    process.env.NODE_ENV = "development";
+    process.env.DEV_AUTH_BYPASS = "true";
     const bDate = await getCurrentBusinessDate(testBranch);
     originalBusinessDate = bDate.current_business_date;
   });
@@ -112,6 +113,10 @@ describe("Night Audit Full Cycle Tests", () => {
       .first();
 
     if (assignedKamar) {
+      await DB("mst_kamar")
+        .where("kode_kamar", assignedKamar.kode_kamar)
+        .update({ housekeeping_status: "clean" });
+
       await DB.transaction(async (trx) => {
         await trx("trx_reservation").insert({
           kode_cabang: testBranch,
