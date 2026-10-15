@@ -44,4 +44,9 @@ test_checkout.js
 **/.env
 **/.env.*
 !**/.env.example
-
+# ========================
+# Database Dumps (Sensitive)
+# ========================
+*.dump.sql
+*_dump.sql
+hotel_pms_production_full_dump.sql
