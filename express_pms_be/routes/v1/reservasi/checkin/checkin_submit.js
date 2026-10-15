@@ -28,8 +28,8 @@ const schema = Joi.object({
     bank_name: Joi.string().max(50).optional().allow(null, ""),
     card_type: Joi.string().max(20).optional().allow(null, ""),
     reference_no: Joi.string().max(100).optional().allow(null, ""),
-    guest_count: Joi.number().min(1).optional().allow(null)
-});
+    guest_count: Joi.number().integer().min(1).optional().allow(null)
+}).unknown(true);
 
 router.post("/", async (req, res) => {
     const db = DB;

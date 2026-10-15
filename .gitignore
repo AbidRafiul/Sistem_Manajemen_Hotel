@@ -31,8 +31,35 @@ Thumbs.db
 .idea/
 .agents/
 run_dev.sh
-.env
 test_scenario.js
-package-lock.json
 test_direct.js
 test_checkout.js
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+# ========================
+# Database Dumps (Sensitive)
+# ========================
+*.dump.sql
+*_dump.sql
+hotel_pms_production_full_dump.sql
+
+# ========================
+# Root Dummy Lockfile
+# ========================
+/package-lock.json
+
+# ========================
+# Backend Temp & Test Uploads
+# ========================
+express_pms_be/temp/*
+!express_pms_be/temp/.gitkeep
+express_pms_be/public/uploads/tipe_kamar/foto_*_[0-9]*.jpg
+express_pms_be/public/uploads/temp/

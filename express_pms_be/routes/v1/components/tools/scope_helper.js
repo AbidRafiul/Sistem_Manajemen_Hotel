@@ -260,8 +260,8 @@ export const getUserScopeDetails = async (userId) => {
 export const assertBranchScope = (req, targetBranch) => {
   if (!targetBranch) return;
 
-  // Mode debugging
-  if (process.env.APP_DEBUG === "true" && req?.headers?.["x-uniqueid"]) {
+  // Mode debugging - HANYA jika bukan production dan APP_DEBUG=true (kompatibilitas Postman standar)
+  if (process.env.NODE_ENV !== "production" && process.env.APP_DEBUG === "true" && req?.headers?.["x-uniqueid"]) {
     return;
   }
 
@@ -301,6 +301,11 @@ export const resolveEffectiveBranch = (req, requestedBranch = null) => {
         namaHotel: branchObj.nama_hotel,
       };
     }
+    return {
+      branchId: null,
+      kodeCabang: branchCandidate,
+      namaHotel: "",
+    };
   }
 
   // Fallback ke active kode cabang

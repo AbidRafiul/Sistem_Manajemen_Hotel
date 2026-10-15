@@ -17,6 +17,7 @@ import { apiInhouseList } from './components/endpoints';
 import { DialogFolioDetail } from './components/dialog_folio_detail';
 import { DialogTambahFasilitas } from './components/dialog_tambah_fasilitas';
 import { DialogExtendStay } from './components/dialog_extend_stay';
+import { DialogRequestHousekeeping } from './components/dialog_request_housekeeping';
 import { showError } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 // import FrontOfficeNav from '@/app/components/navigation/FrontOfficeNav';
@@ -40,6 +41,7 @@ const TamuMenginapContent = () => {
     const [showFolioDialog, setShowFolioDialog] = useState(false);
     const [showFasilitasDialog, setShowFasilitasDialog] = useState(false);
     const [showExtendDialog, setShowExtendDialog] = useState(false);
+    const [showHousekeepingDialog, setShowHousekeepingDialog] = useState(false);
 
     useEffect(() => {
         if (!searchParams) return;
@@ -232,15 +234,48 @@ const TamuMenginapContent = () => {
                             header="Kamar"
                             body={(row) => {
                                 const count = row.room_count || row.rooms?.length || 1;
+                                const hkStatus = row.housekeeping_status || 'clean';
+                                const taskStatus = row.task_status;
+
+                                let hkSeverity: 'success' | 'warning' | 'info' | 'danger' | undefined = 'success';
+                                let hkLabel = 'Clean';
+
+                                if (taskStatus === 'assigned') {
+                                    hkSeverity = 'warning';
+                                    hkLabel = 'Tugas Diminta';
+                                } else if (taskStatus === 'in_progress') {
+                                    hkSeverity = 'info';
+                                    hkLabel = 'Sedang Dibersihkan';
+                                } else if (taskStatus === 'finished') {
+                                    hkSeverity = 'warning';
+                                    hkLabel = 'Perlu Inspeksi';
+                                } else if (hkStatus === 'dirty') {
+                                    hkSeverity = 'danger';
+                                    hkLabel = 'Kotor (Dirty)';
+                                }
+
                                 return (
                                     <div>
-                                        <div className="flex align-items-center gap-2 mb-1">
+                                        <div className="flex align-items-center gap-2 mb-1 flex-wrap">
                                             <span className="font-bold text-base text-900">
                                                 Kamar {row.nomor_kamar || row.kode_kamar}
                                             </span>
                                             {count > 1 && (
                                                 <Tag severity="info" value={`${count} Kamar`} className="text-xs" />
                                             )}
+                                            <span
+                                                title={
+                                                    row.task_pic_name
+                                                        ? `PIC: ${row.task_pic_name} (${row.kode_housekeeping_task})`
+                                                        : `Status Kebersihan: ${hkStatus.toUpperCase()}`
+                                                }
+                                            >
+                                                <Tag
+                                                    severity={hkSeverity}
+                                                    value={hkLabel}
+                                                    className="text-xs"
+                                                />
+                                            </span>
                                         </div>
                                         <span className="text-xs text-color-secondary block">
                                             {row.nama_tipe_kamar || 'Tipe Kamar'}
@@ -248,7 +283,7 @@ const TamuMenginapContent = () => {
                                     </div>
                                 );
                             }}
-                            style={{ minWidth: '160px' }}
+                            style={{ minWidth: '180px' }}
                         />
 
                         {/* Kolom Tamu */}
@@ -368,6 +403,16 @@ const TamuMenginapContent = () => {
                                         }}
                                     />
                                     <Button
+                                        icon="pi pi-sparkles"
+                                        tooltip="Minta Pembersihan Kamar (Housekeeping)"
+                                        tooltipOptions={{ position: 'top' }}
+                                        className="p-button-rounded p-button-text p-button-help"
+                                        onClick={() => {
+                                            setSelectedRow(row);
+                                            setShowHousekeepingDialog(true);
+                                        }}
+                                    />
+                                    <Button
                                         icon="pi pi-plus"
                                         tooltip="Tambah Fasilitas/Layanan"
                                         tooltipOptions={{ position: 'top' }}
@@ -396,7 +441,7 @@ const TamuMenginapContent = () => {
                                     />
                                 </div>
                             )}
-                            style={{ minWidth: '160px' }}
+                            style={{ minWidth: '190px' }}
                         />
                     </DataTable>
                 </div>
@@ -429,6 +474,18 @@ const TamuMenginapContent = () => {
                 visible={showExtendDialog}
                 onHide={() => {
                     setShowExtendDialog(false);
+                    setSelectedRow(null);
+                }}
+                onSuccess={() => loadInhouseData(searchKeyword, selectedCabang)}
+                roomData={selectedRow}
+                toast={toast}
+            />
+
+            {/* Dialog 4: Permintaan Pembersihan Housekeeping (Stayover / MUR) */}
+            <DialogRequestHousekeeping
+                visible={showHousekeepingDialog}
+                onHide={() => {
+                    setShowHousekeepingDialog(false);
                     setSelectedRow(null);
                 }}
                 onSuccess={() => loadInhouseData(searchKeyword, selectedCabang)}

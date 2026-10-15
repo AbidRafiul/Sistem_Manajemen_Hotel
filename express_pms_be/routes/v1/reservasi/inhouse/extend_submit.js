@@ -208,37 +208,9 @@ router.post("/", async (req, res) => {
           updated_at: tNow
         });
 
-      // Insert trx_folio_charge untuk malam tambahan
-      const noFolioCharge = await generateSequence("FMT-FOLIOCHARGE", trx);
-      if (!noFolioCharge) throw new Error("Gagal membuat nomor charge folio");
-
-      await trx("trx_folio_charge").insert({
-        kode_folio_charge: noFolioCharge,
-        kode_folio: folio.kode_folio,
-        charge_type: "room",
-        description: `Perpanjangan Kamar (${additionalNights} malam) s.d. ${newCheckoutStr} - Kamar ${resRoom.nomor_kamar}`,
-        qty: additionalNights,
-        unit_price: ratePerNight,
-        amount: totalAdditionalCharge,
-        ref_source_type: "trx_reservation_room",
-        kode_ref_source: resRoom.kode_reservasi_room,
-        posted_by: userId,
-        posted_at: tNow,
-        created_by: userId,
-        created_at: tNow,
-        is_active: 1
-      });
-
-      // Update total tagihan trx_folio
-      await trx("trx_folio")
-        .where("kode_folio", folio.kode_folio)
-        .update({
-          subtotal: trx.raw("subtotal + ?", [totalAdditionalCharge]),
-          grand_total: trx.raw("grand_total + ?", [totalAdditionalCharge]),
-          updated_by: userId,
-          updated_at: tNow
-        });
-
+      // Catatan: Sesuai aturan PMS & Night Audit, malam tambahan tidak lagi dibebankan sekaligus di muka.
+      // Malam perpanjangan akan diposting harian oleh Night Audit saat tanggal menginap terkait tiba.
+      // Jika tamu membayar di muka (is_paid_now = true), pembayaran dicatat sebagai deposit/payment pada folio.
       let paymentResult = null;
 
       // Jika is_paid_now === true, buat payment

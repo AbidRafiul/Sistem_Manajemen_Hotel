@@ -106,6 +106,63 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Ambil data tugas inspeksi checkout aktif terbaru per kamar
+    const roomCodes = rows.map((r) => r.kode_kamar).filter(Boolean);
+    let inspectionTaskMap = {};
+    if (roomCodes.length > 0) {
+      const latestTaskSub = DB("trx_housekeeping_task")
+        .select("kode_kamar", DB.raw("MAX(id) as max_task_id"))
+        .where("task_type", "inspection")
+        .whereIn("status", ["assigned", "in_progress", "finished"])
+        .where("is_active", 1)
+        .whereNull("deleted_at")
+        .whereIn("kode_kamar", roomCodes)
+        .groupBy("kode_kamar");
+
+      const inspectTasks = await DB("trx_housekeeping_task as t")
+        .join(latestTaskSub.as("lt"), "t.id", "lt.max_task_id")
+        .leftJoin("mst_user as u", "t.assigned_to", "u.id")
+        .select(
+          "t.id",
+          "t.kode_housekeeping_task",
+          "t.kode_kamar",
+          "t.task_type",
+          "t.status",
+          "t.priority",
+          "t.inspection_result",
+          "t.inspection_details",
+          "t.checklist",
+          "t.notes",
+          "t.created_at",
+          "t.finished_at",
+          "u.fullname as pic_name"
+        );
+
+      inspectTasks.forEach((it) => {
+        let parsedDetails = null;
+        if (it.inspection_details) {
+          try {
+            parsedDetails = typeof it.inspection_details === "string" ? JSON.parse(it.inspection_details) : it.inspection_details;
+          } catch {
+            parsedDetails = null;
+          }
+        }
+        let parsedChecklist = null;
+        if (it.checklist) {
+          try {
+            parsedChecklist = typeof it.checklist === "string" ? JSON.parse(it.checklist) : it.checklist;
+          } catch {
+            parsedChecklist = null;
+          }
+        }
+        inspectionTaskMap[it.kode_kamar] = {
+          ...it,
+          inspection_details: parsedDetails,
+          checklist: parsedChecklist
+        };
+      });
+    }
+
     // Group rows by folio / reservation
     const folioGroupMap = new Map();
 
@@ -137,7 +194,8 @@ router.post("/", async (req, res) => {
         kode_kamar: row.kode_kamar,
         nomor_kamar: row.nomor_kamar,
         nama_tipe: row.nama_tipe,
-        rate_per_night: parseFloat(row.rate_per_night || 0)
+        rate_per_night: parseFloat(row.rate_per_night || 0),
+        inspection_task: inspectionTaskMap[row.kode_kamar] || null
       });
     }
 
@@ -148,6 +206,19 @@ router.post("/", async (req, res) => {
       const isSettled = balance <= 0;
       const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
       const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe).filter(Boolean))];
+
+      // Tentukan status inspeksi untuk grup kamar
+      const groupTasks = group.rooms.map((r) => r.inspection_task).filter(Boolean);
+      const primaryTask = groupTasks.length > 0 ? groupTasks[0] : null;
+
+      let inspectionStatus = "not_requested";
+      if (primaryTask) {
+        if (primaryTask.status === "assigned" || primaryTask.status === "in_progress") {
+          inspectionStatus = "in_progress";
+        } else if (primaryTask.status === "finished") {
+          inspectionStatus = primaryTask.inspection_result === "with_charges" ? "with_charges" : "clear";
+        }
+      }
 
       return {
         ...group,
@@ -162,7 +233,10 @@ router.post("/", async (req, res) => {
         balance: balance,
         is_settled: isSettled,
         invoice_number: invoiceMap[group.kode_folio] || null,
-        billing_status: isSettled ? "settled" : "outstanding"
+        billing_status: isSettled ? "settled" : "outstanding",
+        inspection_status: inspectionStatus,
+        active_inspection_task: primaryTask,
+        inspection_tasks: groupTasks
       };
     });
 

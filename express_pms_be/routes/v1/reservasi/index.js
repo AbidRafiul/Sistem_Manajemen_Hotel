@@ -8,6 +8,7 @@
  * @version 1.0.0
  */
 import express from "express";
+import { authorize } from "../../../middleware/authorize.js";
 
 import guestSearch from "./guest/guest_search.js";
 import guestCreate from "./guest/guest_create.js";
@@ -16,6 +17,8 @@ import availability from "./kamar/availability.js";
 import walkInSubmit from "./walk_in/walk_in_submit.js";
 import checkoutSearch from "./checkout/checkout_search.js";
 import checkoutSubmit from "./checkout/checkout_submit.js";
+import inspectionRequest from "./checkout/inspection_request.js";
+import inspectionCancel from "./checkout/inspection_cancel.js";
 
 import availabilityRange from "./kamar/availability_range.js";
 import roomPackages from "./kamar/room_packages.js";
@@ -37,7 +40,9 @@ router.use("/guest/guest-list", guestList);
 router.use("/kamar/availability", availability);
 router.use("/walk-in/walk-in-submit", walkInSubmit);
 router.use("/checkout/checkout-search", checkoutSearch);
-router.use("/checkout/checkout-submit", checkoutSubmit);
+router.use("/checkout/checkout-submit", [authorize("admin", "branch_manager", "frontdesk", "receptionist", "kasir")], checkoutSubmit);
+router.use("/checkout/request-inspection", inspectionRequest);
+router.use("/checkout/cancel-inspection", inspectionCancel);
 
 router.use("/kamar/availability-range", availabilityRange);
 router.use("/kamar/room-packages", roomPackages);

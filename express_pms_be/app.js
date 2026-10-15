@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file app.js
  * @description File untuk menggabungkan semua routing setup dan middleware
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
@@ -53,11 +53,8 @@ app.use(
 );
 
 // app.use(logger("dev"));
-app.use(Logger);
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
-
-
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ limit: "2mb", extended: true }));
 
 // useragentMiddleware,
 // Middleware global untuk semua api
@@ -69,6 +66,9 @@ app.use(
 
 app.use('/uploads', express.static('public/uploads'));
 app.use('/api/assets/uploads', express.static('public/uploads'));
+
+// Error handler logger (setelah routes)
+app.use(Logger);
 
 app.use((req, res, next) => {
   console.log(req.url)

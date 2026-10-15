@@ -22,11 +22,12 @@ import Me from "./auth/me.js";
 import SwitchBranch from "./auth/switch_branch.js";
 import Setup from "./setup/index.js";
 import Master from "./master/index.js";
-import Contoh from "./contoh/index.js";
 import Function from "./components/index.js";
 import Reservasi from "./reservasi/index.js";
 import Kasir from "./kasir/index.js";
 import Housekeeping from "./housekeeping/index.js";
+import NightAudit from "./night_audit/index.js";
+import Dashboard from "./dashboard/index.js";
 
 import {
   contextMiddleware,
@@ -52,12 +53,6 @@ router.use(
   "/master",
   [validateAccessToken, contextMiddleware],
   Master
-);
-// Setup
-router.use(
-  "/contoh",
-  [validateAccessToken, contextMiddleware],
-  Contoh
 );
 
 // Function
@@ -86,6 +81,25 @@ router.use(
   "/housekeeping",
   [validateAccessToken, contextMiddleware],
   Housekeeping
+);
+
+// Night Audit
+router.use(
+  "/night-audit",
+  [validateAccessToken, contextMiddleware],
+  NightAudit
+);
+router.use(
+  "/night_audit",
+  [validateAccessToken, contextMiddleware],
+  NightAudit
+);
+
+// Dashboard Eksekutif / Manajemen Hotel
+router.use(
+  "/dashboard",
+  [validateAccessToken, contextMiddleware],
+  Dashboard
 );
 
 export default router;

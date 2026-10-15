@@ -146,16 +146,122 @@ export const encodePayload = async (req, json, endpoint, token) => {
   }
 };
 
+const SENSITIVE_KEYS = new Set([
+  "password",
+  "pass",
+  "secret",
+  "token",
+  "access_token",
+  "refresh_token",
+  "authorization",
+  "x-credential",
+  "x-signature",
+  "credit_card",
+  "card_number",
+  "cardnumber",
+  "cvv",
+  "cvc",
+  "pin",
+  "cpass",
+  "cpassword",
+  "secretkey",
+  "private_key",
+  "privatekey",
+]);
+
+/**
+ * Menyaring data sensitif (password, token, secret, kartu kredit, pin)
+ * agar tidak bocor ke log database, console, atau audit trail.
+ *
+ * @param {any} data
+ * @returns {any}
+ */
+export const redactSensitive = (data) => {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  // Jika string, periksa apakah JSON string atau pola sensitif seperti Bearer
+  if (typeof data === "string") {
+    const trimmed = data.trim();
+    if (
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith("[") && trimmed.endsWith("]"))
+    ) {
+      try {
+        const parsed = JSON.parse(data);
+        return JSON.stringify(redactSensitive(parsed));
+      } catch {
+        // Bukan JSON valid, lanjutkan ke regex pattern
+      }
+    }
+
+    return data
+      .replace(/(Bearer\s+)[A-Za-z0-9\-._~+/]+=*/gi, "$1[REDACTED]")
+      .replace(
+        /((?:password|secret|token|pin|cvv)\s*[=:]\s*)[^\s&,;]+/gi,
+        "$1[REDACTED]",
+      );
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => redactSensitive(item));
+  }
+
+  if (typeof data === "object") {
+    if (data instanceof Date || Buffer.isBuffer(data)) {
+      return data;
+    }
+
+    const redacted = {};
+    for (const [key, value] of Object.entries(data)) {
+      const lowerKey = key.toLowerCase();
+      const isSensitive =
+        SENSITIVE_KEYS.has(lowerKey) ||
+        lowerKey.includes("password") ||
+        lowerKey.includes("secret") ||
+        lowerKey.includes("token") ||
+        lowerKey.includes("cvv") ||
+        lowerKey.includes("pin");
+
+      if (isSensitive) {
+        redacted[key] = "[REDACTED]";
+      } else if (value && typeof value === "object") {
+        redacted[key] = redactSensitive(value);
+      } else if (typeof value === "string") {
+        redacted[key] = redactSensitive(value);
+      } else {
+        redacted[key] = value;
+      }
+    }
+    return redacted;
+  }
+
+  return data;
+};
+
 export const Logging = async (
   error = null,
-  { file = "", func = "", request = "", response = "", user = "" } = {},
+  options = {},
 ) => {
-  let fileName = file;
-  let functionName = func;
+  let fileName = "";
+  let functionName = "";
   let stack = "";
-  let message = response;
+  let message = "";
+  let request = "";
+  let user = "";
 
-  console.log(error);
+  // Dukungan untuk pemanggilan Logging(error, { ... }) maupun Logging({ ... })
+  if (error && !(error instanceof Error) && typeof error === "object") {
+    options = { ...error, ...options };
+    error = null;
+  }
+
+  fileName = options.file || options.fileName || options.Controller || "";
+  functionName = options.func || options.functionName || options.Function || options.Action || "";
+  request = options.request || options.Request || "";
+  message = options.response || options.Response || options.ErrorDetails || "";
+  user = options.user || options.User || options.username || "";
 
   if (error) {
     const stackLines = (error.stack || "").split("\n");
@@ -170,20 +276,43 @@ export const Logging = async (
       fileName = fileName || match[2] || match[1];
     }
 
-    stack = error.stack;
-    message = response || error.message;
+    stack = error.stack || "";
+    message = message || error.message || "";
   }
 
-  await DB("log").insert({
-    Tgl: formatDateSystem(),
-    Controller: fileName || "",
-    Function: functionName || "",
-    Request: request || "",
-    Response: message || "",
-    Stack: stack || "",
-    User: user || "",
-    DateTime: formatDateSystem(),
-  });
+  // Redaksi data sensitif dari request dan response sebelum disimpan ke DB
+  let sanitizedRequest = "";
+  if (typeof request === "object" && request !== null) {
+    sanitizedRequest = JSON.stringify(redactSensitive(request));
+  } else if (typeof request === "string") {
+    sanitizedRequest = redactSensitive(request);
+  } else {
+    sanitizedRequest = String(request || "");
+  }
+
+  let sanitizedResponse = "";
+  if (typeof message === "object" && message !== null) {
+    sanitizedResponse = JSON.stringify(redactSensitive(message));
+  } else if (typeof message === "string") {
+    sanitizedResponse = redactSensitive(message);
+  } else {
+    sanitizedResponse = String(message || "");
+  }
+
+  try {
+    await DB("log").insert({
+      Tgl: formatDateSystem(),
+      Controller: fileName || "",
+      Function: functionName || "",
+      Request: sanitizedRequest || "",
+      Response: sanitizedResponse || "",
+      Stack: stack || "",
+      User: user || "",
+      DateTime: formatDateSystem(),
+    });
+  } catch (dbErr) {
+    console.error("Gagal menyimpan ke tabel log:", dbErr.message);
+  }
 };
 
 export const validatePayload = async (
@@ -299,13 +428,16 @@ export const ChangesLog = async (
   try {
     const executeQuery = transaction || DB;
 
+    const sanitizedBefore = dataBefore ? redactSensitive(dataBefore) : null;
+    const sanitizedAfter = dataAfter ? redactSensitive(dataAfter) : null;
+
     await executeQuery("log_perubahan").insert({
       keterangan: description || "",
       nama_tabel: tableName,
       kode_referensi: referenceCode,
       aksi: action,
-      data_sebelum: dataBefore ? JSON.stringify(dataBefore) : null,
-      data_sesudah: dataAfter ? JSON.stringify(dataAfter) : null,
+      data_sebelum: sanitizedBefore ? JSON.stringify(sanitizedBefore) : null,
+      data_sesudah: sanitizedAfter ? JSON.stringify(sanitizedAfter) : null,
       tz: tz,
       created_by: user || "system",
       created_at: formatDateSystem(),

@@ -20,6 +20,10 @@ import cancelTask from "./task_cancel.js";
 import staffGet from "./staff_get.js";
 import historyGet from "./history_get.js";
 
+import createTask from "./task_create.js";
+import taskChecklist from "./task_checklist.js";
+import taskSubmitInspection from "./task_submit_inspection.js";
+
 const router = express.Router();
 
 // Route: Room Status Board
@@ -32,6 +36,9 @@ router.use("/staff", [], staffGet);
 router.use("/history", [], historyGet);
 
 // Route: Housekeeping Tasks
+router.use("/tasks", [], createTask);
+router.use("/tasks", [], taskChecklist);
+router.use("/tasks", [], taskSubmitInspection);
 router.use("/tasks", [], getTasks);
 router.use("/tasks", [], assignTask);
 router.use("/tasks", [], startTask);

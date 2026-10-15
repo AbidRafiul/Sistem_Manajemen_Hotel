@@ -6,11 +6,27 @@ import { DataTableStateEvent } from 'primereact/datatable';
 export interface RoomStatusData {
     kode_kamar: string;
     nomor_kamar: string;
+    nama_tipe_kamar?: string | null;
     occupancy_status: string;
     housekeeping_status: string;
     kode_housekeeping_task: string | null;
     task_type: string | null;
     task_status: string | null;
+    priority?: string | null;
+    notes?: string | null;
+    checklist?: Array<{
+        id: number | string;
+        task: string;
+        checked: boolean;
+        checked_at?: string | null;
+        checked_by?: string | null;
+    }> | null;
+    inspection_result?: 'pending' | 'clear' | 'with_charges' | null;
+    inspection_details?: any;
+    task_created_at?: string | null;
+    task_started_at?: string | null;
+    task_finished_at?: string | null;
+    request_source?: string | null;
     assigned_to_name: string | null;
     ready_to_sell?: boolean;
     cancel_reason?: string | null;
@@ -28,6 +44,8 @@ export interface State {
     actionDialogVisible: boolean;
     cancelDialogVisible: boolean;
     selectedRoom: RoomStatusData | null;
+    detailDialogVisible?: boolean;
+    inspectionDialogVisible?: boolean;
     historyDialogVisible?: boolean;
     historyRoom?: RoomStatusData | null;
 }

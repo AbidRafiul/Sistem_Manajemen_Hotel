@@ -100,17 +100,6 @@ export async function seed(knex) {
       items: [
         { label: "Room Status Board", icon: "pi pi-fw pi-th-large", to: "/housekeeping/room_status_board" }
       ]
-    },
-    {
-      label: "Contoh & Template",
-      icon: "pi pi-fw pi-bookmark",
-      items: [
-        { label: "Contoh Form Upload", icon: "pi pi-fw pi-upload", to: "/contoh_form_upload" },
-        { label: "Contoh Laporan", icon: "pi pi-fw pi-file", to: "/contoh_laporan" },
-        { label: "Contoh Popup", icon: "pi pi-fw pi-window-maximize", to: "/contoh_popup" },
-        { label: "Contoh Tabview", icon: "pi pi-fw pi-folder", to: "/contoh_tabview" },
-        { label: "Contoh Trx Cetak Nota", icon: "pi pi-fw pi-print", to: "/contoh_trx_cetak_nota" }
-      ]
     }
   ];
 

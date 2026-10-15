@@ -3,6 +3,7 @@ import DB from "../../../../core/config/knex.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { status } from "../../components/tools/general.js";
+import { applyBranchFilter } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post("/", async (req, res) => {
       .leftJoin("org_nodes as o", "b.org_node_id", "o.id")
       .whereNull("b.deleted_at")
       .modify((qb) => {
+        applyBranchFilter(qb, req, "b.kode_cabang", oPayload.kode_cabang);
         if (keyword)
           qb.where(function () {
             this.whereRaw("LOWER(b.nama_hotel) LIKE ?", [`%${keyword.toLowerCase()}%`]).orWhereRaw(

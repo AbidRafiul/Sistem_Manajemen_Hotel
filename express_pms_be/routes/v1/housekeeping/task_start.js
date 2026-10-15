@@ -14,6 +14,7 @@ import { status } from "../components/tools/general.js";
 import DB from "../../../core/config/knex.js";
 import { ChangesLog } from "../components/tools/servertool.js";
 import { formatDateSystem } from "../components/tools/date_tools.js";
+import { assertBranchScope } from "../components/tools/scope_helper.js";
 
 const router = express.Router();
 
@@ -35,6 +36,8 @@ const handleStart = async (req, res) => {
         datetime: formatDateSystem(),
       });
     }
+
+    assertBranchScope(req, existing.kode_cabang);
 
     if (existing.status !== 'assigned') {
         return res.status(400).json({
@@ -76,7 +79,8 @@ const handleStart = async (req, res) => {
       datetime: formatDateSystem(),
     });
   } catch (error) {
-    return res.status(500).json({
+    const httpStatus = error.statusCode || error.status || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: error.message || "Terjadi kesalahan internal",
       datetime: formatDateSystem(),

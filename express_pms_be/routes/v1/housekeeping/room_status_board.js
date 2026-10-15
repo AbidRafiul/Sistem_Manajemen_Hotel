@@ -32,15 +32,29 @@ router.post("/", async (req, res) => {
 
     const query = DB("mst_kamar as k")
       .select(
+        "k.kode_cabang",
         "k.kode_kamar",
         "k.nomor_kamar",
+        "k.kode_tipe_kamar",
+        "tk.nama_tipe as nama_tipe_kamar",
         "k.occupancy_status",
         "k.housekeeping_status",
         "t.kode_housekeeping_task",
         "t.task_type",
+        "t.priority",
+        "t.notes",
+        "t.request_source",
+        "t.kode_reservasi_room",
         "t.status as task_status",
+        "t.created_at as task_created_at",
+        "t.started_at as task_started_at",
+        "t.finished_at as task_finished_at",
+        "t.checklist",
+        "t.inspection_result",
+        "t.inspection_details",
         "u.fullname as assigned_to_name"
       )
+      .leftJoin("mst_tipe_kamar as tk", "k.kode_tipe_kamar", "tk.kode_tipe_kamar")
       .leftJoin(latestTaskSubquery, "k.kode_kamar", "latest_t.kode_kamar")
       .leftJoin("trx_housekeeping_task as t", "latest_t.max_task_id", "t.id")
       .leftJoin("mst_user as u", "t.assigned_to", "u.id")
@@ -51,7 +65,32 @@ router.post("/", async (req, res) => {
     // Terapkan isolasi branch scope
     applyBranchFilter(query, req, "k.kode_cabang", cabang);
 
-    const rooms = await query;
+    const rows = await query;
+    const rooms = rows.map((r) => {
+      let parsedChecklist = null;
+      if (r.checklist) {
+        try {
+          parsedChecklist = typeof r.checklist === "string" ? JSON.parse(r.checklist) : r.checklist;
+        } catch {
+          parsedChecklist = null;
+        }
+      }
+
+      let parsedDetails = null;
+      if (r.inspection_details) {
+        try {
+          parsedDetails = typeof r.inspection_details === "string" ? JSON.parse(r.inspection_details) : r.inspection_details;
+        } catch {
+          parsedDetails = null;
+        }
+      }
+
+      return {
+        ...r,
+        checklist: parsedChecklist,
+        inspection_details: parsedDetails
+      };
+    });
 
     return res.status(200).json({
       status: status.SUKSES,

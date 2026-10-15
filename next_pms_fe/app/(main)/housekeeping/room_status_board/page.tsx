@@ -11,6 +11,8 @@ import postData from '@/lib/axios/postData';
 import { FilterMatchMode } from 'primereact/api';
 import CancelDialog from './components/display/cancel_dialog';
 import HistoryDialog from './components/display/history_dialog';
+import DialogDetailTask from './components/display/dialog_detail_task';
+import DialogSubmitInspection from './components/display/dialog_submit_inspection';
 
 const RoomStatusBoard = () => {
     const toast = useRef<Toast>(null);
@@ -146,6 +148,20 @@ const RoomStatusBoard = () => {
                         onHide={() => setState((p) => ({ ...p, historyDialogVisible: false }))} 
                         kodeCabang={state.kode_cabang} 
                         selectedRoom={state.historyRoom} 
+                    />
+                    <DialogDetailTask
+                        visible={!!state.detailDialogVisible}
+                        onHide={() => setState((p) => ({ ...p, detailDialogVisible: false, selectedRoom: null }))}
+                        room={state.selectedRoom}
+                        toast={toast}
+                        onSuccess={getData}
+                    />
+                    <DialogSubmitInspection
+                        visible={!!state.inspectionDialogVisible}
+                        onHide={() => setState((p) => ({ ...p, inspectionDialogVisible: false, selectedRoom: null }))}
+                        room={state.selectedRoom}
+                        toast={toast}
+                        onSuccess={getData}
                     />
                 </div>
             </div>

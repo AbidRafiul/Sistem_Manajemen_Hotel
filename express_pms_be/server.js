@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file server.js
  * @description File untuk menjalankan server Express.js
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
@@ -16,12 +16,23 @@
 
 
 import app from "./app.js";
+import { startNightAuditScheduler } from "./routes/v1/components/tools/night_audit_scheduler.js";
+import validateEnvironment from "./core/config/env_check.js";
+
+// Validasi environment variable penting sebelum listen
+validateEnvironment();
 
 const port = process.env.PORT || process.env.APP_PORT || 8010;
 
 app
   .listen(port, () => {
     console.log(`Server running on port ${port}`);
+    // Start automated background scheduler for Night Audit
+    try {
+      startNightAuditScheduler();
+    } catch (schedErr) {
+      console.warn("Could not start night audit scheduler:", schedErr.message);
+    }
   })
   .on("error", (err) => {
     if (err.code === "EADDRINUSE") {
