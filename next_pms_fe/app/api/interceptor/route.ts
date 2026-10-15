@@ -20,6 +20,7 @@ import axios from 'axios';
 import { formatDateISO, formatDateSystem } from '@/lib/tools/dateTools';
 import { SignJWT } from 'jose';
 import { auth } from '@/lib/tools/authTools';
+import { getBackendApiUrl } from '@/lib/tools/apiUrl';
 
 interface CustomHeaders {
     'x-endpoint'?: string;
@@ -124,8 +125,9 @@ async function postCRUD(request: NextRequest, session: any) {
         delete requestHeaders['x-uniqueid'];
         delete requestHeaders['X-UniqueId'];
         delete requestHeaders['X-Level'];
+        const baseApi = getBackendApiUrl();
         const result = await axios.post(
-            `${process.env.API_URL}${endpoint}`,
+            `${baseApi}${endpoint}`,
             body,
             { headers: requestHeaders }
         );
