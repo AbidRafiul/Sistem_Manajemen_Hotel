@@ -58,13 +58,34 @@ export const POST = async (request: NextRequest) => {
     }
 };
 
+const FORBIDDEN_CLIENT_HEADERS = ['x-uniqueid', 'authorization', 'x-timestamp', 'x-branch-code'];
+const ALLOWED_CUSTOM_HEADERS = ['x-level', 'x-currency', 'x-language', 'x-pagination', 'accept-language'];
+
+function sanitizeCustomHeaders(rawHeader: Record<string, any>): Record<string, string> {
+    const clean: Record<string, string> = {};
+    for (const [key, val] of Object.entries(rawHeader)) {
+        const lowerKey = key.toLowerCase().trim();
+        if (FORBIDDEN_CLIENT_HEADERS.includes(lowerKey)) {
+            continue; // Tolak keras header terlarang dari client
+        }
+        if (ALLOWED_CUSTOM_HEADERS.includes(lowerKey) || lowerKey.startsWith('x-app-')) {
+            clean[key] = String(val);
+        }
+    }
+    return clean;
+}
+
 async function postCRUD(request: NextRequest, session: any) {
     try {
         const headers: CustomHeaders = {};
 
         request.headers.forEach((value, key) => {
-            if (key.toLowerCase().startsWith('x-')) {
-                headers[key.toLowerCase() as keyof CustomHeaders] = value;
+            const lowerKey = key.toLowerCase();
+            if (FORBIDDEN_CLIENT_HEADERS.includes(lowerKey)) {
+                return; // Tolak header terlarang dari client
+            }
+            if (lowerKey.startsWith('x-')) {
+                headers[lowerKey as keyof CustomHeaders] = value;
             }
         });
 
@@ -88,17 +109,20 @@ async function postCRUD(request: NextRequest, session: any) {
             }
         }
 
-        const activeBranch = (headers as any)['x-branch-code'] || (session?.user as any)?.active_kode_cabang || '';
+        const sanitizedCustomHeader = sanitizeCustomHeaders(customHeader);
+        const activeBranch = (session?.user as any)?.active_kode_cabang || '';
 
         let requestHeaders: Record<string, string> = {
             'Content-Type': 'application/json',
             'X-Timestamp': formatDateISO(new Date()) as string,
             'Authorization': `Bearer ${session.access_token}`,
             'X-Branch-Code': activeBranch,
-            ...customHeader,
+            ...sanitizedCustomHeader,
         };
 
-
+        // Pastikan header terlarang tidak pernah ter-override oleh customHeader
+        delete requestHeaders['x-uniqueid'];
+        delete requestHeaders['X-UniqueId'];
         delete requestHeaders['X-Level'];
         const result = await axios.post(
             `${process.env.API_URL}${endpoint}`,
