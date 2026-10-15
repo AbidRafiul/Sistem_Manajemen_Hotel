@@ -70,11 +70,8 @@ app.use(
 app.use('/uploads', express.static('public/uploads'));
 app.use('/api/assets/uploads', express.static('public/uploads'));
 
-app.get("/", (req, res) => {
-  return res.status(200).json(`Welcome to the server! ${new Date().toLocaleString()}`);
-});
-
 app.use((req, res, next) => {
+  console.log(req.url)
   return res.status(404).json({
     status: "404",
     message: "Endpoint tidak ditemukan",

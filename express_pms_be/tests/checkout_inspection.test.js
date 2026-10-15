@@ -9,8 +9,7 @@ describe("Checkout Room Inspection & Interactive Checklist Integration Tests", (
   let testTaskCode = "";
 
   beforeAll(async () => {
-    process.env.NODE_ENV = "development";
-    process.env.DEV_AUTH_BYPASS = "true";
+    process.env.APP_DEBUG = "true";
     // Cari kamar checked_in aktif untuk pengetesan
     const activeResRoom = await DB("trx_reservation_room as rr")
       .join("trx_folio as f", "rr.kode_reservation", "f.kode_reservation")

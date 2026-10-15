@@ -31,9 +31,9 @@ const als = new AsyncLocalStorage();
 export const validateTimestamp = async (req, res, next) => {
   try {
     const timestamp = req.headers["x-timestamp"];
-    // Bypass timestamp HANYA jika flag DEV_AUTH_BYPASS aktif dan environment development
-    if (process.env.NODE_ENV === "development" && process.env.DEV_AUTH_BYPASS === "true" && req.headers["x-uniqueid"]) {
-      return next();
+    if (process.env.APP_DEBUG && process.env.APP_DEBUG == 'true' && req.headers["x-uniqueid"]) {
+
+      return next()
     }
 
     if (!timestamp) {
@@ -100,25 +100,8 @@ export const validateAccessToken = async (req, res, next) => {
   const header = req.headers["authorization"];
   const token = header && header.split(" ")[1];
 
-  // Bypass otentikasi HANYA jika flag DEV_AUTH_BYPASS aktif dan environment development
-  if (process.env.NODE_ENV === "development" && process.env.DEV_AUTH_BYPASS === "true" && req.headers["x-uniqueid"]) {
-    req.auth = {
-      user_id: 1,
-      user_code: req.headers["x-uniqueid"],
-      role: "DEV",
-      username: "DEV",
-      company_id: 1,
-      default_branch_id: 1,
-      default_kode_cabang: "CAB0001",
-      active_branch_id: 1,
-      active_kode_cabang: req.headers["x-branch-code"] || "CAB0001",
-      active_branch_name: "Cabang Utama (Dev)",
-      allowed_branch_ids: [1, 2],
-      allowed_kode_cabang: ["CAB0001", "CAB0002"],
-      can_switch_branch: true,
-      permissions: ["*"],
-    };
-    return next();
+  if (process.env.APP_DEBUG === 'true' && req.headers["x-uniqueid"]) {
+    req.auth = { user_id: 1, user_code: req.headers["x-uniqueid"], role: "DEV", username: "DEV" }; return next();
   }
 
   if (!token || !header.startsWith("Bearer ")) {
