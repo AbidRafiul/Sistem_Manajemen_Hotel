@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file knexfile.js
  * @description File konfigurasi database untuk Knex.js
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

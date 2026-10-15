@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file logger.js
  * @description File middleware untuk logging error dan request ke database
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

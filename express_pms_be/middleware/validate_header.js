@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file validate_header.js
  * @description File middleware untuk memeriksa header pada setiap request
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

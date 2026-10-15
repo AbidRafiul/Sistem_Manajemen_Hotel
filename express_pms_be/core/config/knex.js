@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file knex.js
  * @description File untuk konfigurasi koneksi database menggunakan Knex.js dengan dukungan multi-tenant dan caching koneksi.
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

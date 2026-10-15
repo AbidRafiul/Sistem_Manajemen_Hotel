@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file mail.js
  * @description File untuk konfigurasi transporter email menggunakan Nodemailer
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>

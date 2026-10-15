@@ -1,7 +1,7 @@
 /**
  * @copyright (c) 2026 PT Marstech Global (info@marstech.co.id)
  * @project Standard
- * @file page.tsx
+ * @file allow_user_agent.js
  * @description File middleware untuk memeriksa User Agent pada setiap request
  * 
  * @author Fadil <risqullah.s.fadhilah@gmail.com>
