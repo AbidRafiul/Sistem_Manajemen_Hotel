@@ -2,9 +2,12 @@
 -- SKRIP MIGRASI DATABASE PRODUKSI & LOCAL:
 -- MODUL PEMESANAN RUANG EVENT (BANQUET EVENT ORDER / BEO) & MONITORING JADWAL
 -- 
--- Target Database : Railway MySQL 8.0+ / Local (pms_hotel)
+-- Target Database : Railway MySQL 8.0+ / Local (pms_hotel / hotel_pms)
 -- Sifat Eksekusi  : 100% IDEMPOTEN & AMAN (Dapat dijalankan berulang kali tanpa error)
 -- File            : database/queries/08_create_event_booking_and_monitoring_tables.sql
+-- 
+-- Alternatif Instan via Terminal:
+-- cd express_pms_be && node --env-file=.env scripts/run_event_migration.mjs
 -- ===================================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -49,105 +52,149 @@ ALTER TABLE `trx_reservasi_event` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8m
 -- 2.1 Kolom `nama_event` (Judul / Nama Acara)
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'nama_event');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `nama_event` VARCHAR(255) NOT NULL DEFAULT "Agenda Acara Hotel" AFTER `kode_reservasi_event`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.2 Kolom `layout_setup` (Tata letak: theater, classroom, u_shape, boardroom, banquet, standing, hollow_square, custom)
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'layout_setup');
 SET @stmt_sql := IF(@col_exists = 0, "ALTER TABLE `trx_reservasi_event` ADD COLUMN `layout_setup` ENUM('theater','classroom','u_shape','boardroom','banquet','standing','hollow_square','custom') NOT NULL DEFAULT 'theater' AFTER `jumlah_tamu`", 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.3 Kolom `tipe_sewa` (Skema tarif: per_jam, half_day, full_day, custom_package)
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'tipe_sewa');
 SET @stmt_sql := IF(@col_exists = 0, "ALTER TABLE `trx_reservasi_event` ADD COLUMN `tipe_sewa` ENUM('per_jam','half_day','full_day','custom_package') NOT NULL DEFAULT 'half_day' AFTER `layout_setup`", 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.4 Kolom `durasi_jam`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'durasi_jam');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `durasi_jam` DECIMAL(5,2) NULL DEFAULT 4.00 AFTER `tipe_sewa`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.5 Kolom `tarif_sewa` (Harga dasar ruangan)
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'tarif_sewa');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `tarif_sewa` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `durasi_jam`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.6 Kolom `biaya_tambahan` (Total rincian F&B & peralatan)
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'biaya_tambahan');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `biaya_tambahan` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `tarif_sewa`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.7 Kolom `diskon`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'diskon');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `diskon` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `biaya_tambahan`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.8 Kolom `pajak_persen` & `nominal_pajak`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'pajak_persen');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `pajak_persen` DECIMAL(5,2) NOT NULL DEFAULT 10.00 AFTER `diskon`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'nominal_pajak');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `nominal_pajak` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `pajak_persen`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.9 Kolom `service_charge_persen` & `nominal_service_charge`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'service_charge_persen');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `service_charge_persen` DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER `nominal_pajak`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'nominal_service_charge');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `nominal_service_charge` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `service_charge_persen`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.10 Kolom `total_biaya` (Grand total)
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'total_biaya');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `total_biaya` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `nominal_service_charge`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.11 Kolom `deposit_paid` & `sisa_tagihan`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'deposit_paid');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `deposit_paid` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `total_biaya`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'sisa_tagihan');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `sisa_tagihan` DECIMAL(18,2) NOT NULL DEFAULT 0.00 AFTER `deposit_paid`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.12 Kolom `status_pembayaran`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'status_pembayaran');
 SET @stmt_sql := IF(@col_exists = 0, "ALTER TABLE `trx_reservasi_event` ADD COLUMN `status_pembayaran` ENUM('unpaid','deposit','paid','refunded') NOT NULL DEFAULT 'unpaid' AFTER `sisa_tagihan`", 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.13 Kolom PIC Lapangan: `contact_person`, `contact_phone`, `contact_email`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'contact_person');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `contact_person` VARCHAR(150) NULL AFTER `status_pembayaran`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'contact_phone');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `contact_phone` VARCHAR(50) NULL AFTER `contact_person`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'contact_email');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `contact_email` VARCHAR(100) NULL AFTER `contact_phone`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.14 Kolom Buffer Waktu Operasional: `setup_buffer_minutes` & `teardown_buffer_minutes`
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'setup_buffer_minutes');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `setup_buffer_minutes` INT NOT NULL DEFAULT 30 AFTER `contact_email`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'teardown_buffer_minutes');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `teardown_buffer_minutes` INT NOT NULL DEFAULT 30 AFTER `setup_buffer_minutes`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 -- 2.15 Kolom Instruksi Catatan Khusus & Alasan Batal
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'catatan_khusus');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `catatan_khusus` TEXT NULL AFTER `teardown_buffer_minutes`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trx_reservasi_event' AND COLUMN_NAME = 'catatan_batal');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `trx_reservasi_event` ADD COLUMN `catatan_batal` TEXT NULL AFTER `catatan_khusus`', 'SELECT 1');
-PREPARE exec_stmt FROM @stmt_sql; EXECUTE exec_stmt; DEALLOCATE PREPARE exec_stmt;
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
 
 
 -- -----------------------------------------------------------------------------------
