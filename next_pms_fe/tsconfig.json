@@ -32,8 +32,7 @@
         "app/(full-page)/layout.tsx",
         "app/layout.tsx",
         "app/(full-page)/auth/error/page.tsx",
-        "app/(full-page)/auth/access/page.tsx",
-        "app/(full-page)/pages/notfound/page.tsx"
+        "app/(full-page)/auth/access/page.tsx"
     ],
     "exclude": ["node_modules"]
 }
