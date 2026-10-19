@@ -16,7 +16,7 @@ import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { findIdleHousekeeper } from "../../components/tools/housekeeping_helper.js";
-import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
+import { calculateFolioBilling, insertPaymentRecord } from "../../components/tools/billing_helper.js";
 import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
@@ -159,7 +159,7 @@ router.post("/", async (req, res) => {
           }
 
           const payCode = await generateSequence("FMT-PAYMENT", trx);
-          await trx("trx_payment").insert({
+          await insertPaymentRecord(trx, {
             kode_payment: payCode,
             kode_folio: folio.kode_folio,
             payment_method: pay.payment_method,

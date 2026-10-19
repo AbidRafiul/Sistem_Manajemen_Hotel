@@ -15,6 +15,7 @@ import DB from "../../../../core/config/knex.js";
 import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
+import { insertPaymentRecord } from "../../components/tools/billing_helper.js";
 
 const router = express.Router();
 
@@ -204,7 +205,7 @@ router.post("/", async (req, res) => {
         const noPayment = await generateSequence("FMT-PAYMENT", trx);
         if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
 
-        await trx("trx_payment").insert({
+        await insertPaymentRecord(trx, {
           kode_payment: noPayment,
           kode_folio: folio.kode_folio,
           payment_method: oPayload.payment_method,

@@ -230,3 +230,38 @@ export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode
     payments
   };
 };
+
+/**
+ * Menyimpan data pembayaran ke trx_payment secara defensif.
+ * Memeriksa apakah kolom bank_name dan card_type ada pada skema database.
+ * 
+ * @param {import("knex").Knex} trx - Instance Knex / Transaksi
+ * @param {Object} data - Payload pembayaran
+ * @returns {Promise<any>}
+ */
+export const insertPaymentRecord = async (trx, data) => {
+  const hasBankName = await trx.schema.hasColumn("trx_payment", "bank_name").catch(() => false);
+  const hasCardType = await trx.schema.hasColumn("trx_payment", "card_type").catch(() => false);
+
+  const payload = {
+    kode_payment: data.kode_payment,
+    kode_folio: data.kode_folio,
+    payment_method: data.payment_method || "cash",
+    amount: data.amount,
+    kode_cashier_shift: data.kode_cashier_shift || null,
+    reference_no: data.reference_no || null,
+    received_by: data.received_by || null,
+    paid_at: data.paid_at,
+    created_by: data.created_by || null,
+    created_at: data.created_at
+  };
+
+  if (hasBankName && data.bank_name !== undefined) {
+    payload.bank_name = data.bank_name;
+  }
+  if (hasCardType && data.card_type !== undefined) {
+    payload.card_type = data.card_type;
+  }
+
+  return trx("trx_payment").insert(payload);
+};

@@ -18,6 +18,7 @@ import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { processCheckIn } from "../../components/tools/checkin_helper.js";
 import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
 import { assertBranchScope } from "../../components/tools/scope_helper.js";
+import { insertPaymentRecord } from "../../components/tools/billing_helper.js";
 
 const router = express.Router();
 
@@ -328,7 +329,7 @@ router.post("/", async (req, res) => {
             const noPayment = await generateSequence("FMT-PAYMENT", trx);
             if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
 
-            await trx("trx_payment").insert({
+            await insertPaymentRecord(trx, {
                 kode_payment: noPayment,
                 kode_folio: lastFolioCode,
                 payment_method: oPayload.payment_method || 'cash',

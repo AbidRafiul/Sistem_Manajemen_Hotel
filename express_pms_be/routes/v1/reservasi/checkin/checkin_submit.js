@@ -15,6 +15,7 @@ import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { processCheckIn } from "../../components/tools/checkin_helper.js";
 import { assertBranchScope } from "../../components/tools/scope_helper.js";
+import { insertPaymentRecord } from "../../components/tools/billing_helper.js";
 
 import express from "express";
 
@@ -131,7 +132,7 @@ router.post("/", async (req, res) => {
                 if (!noPayment) throw new Error("Gagal membuat nomor transaksi deposit");
 
                 const tNow = formatDateSystem();
-                await trx("trx_payment").insert({
+                await insertPaymentRecord(trx, {
                     kode_payment: noPayment,
                     kode_folio: checkinData.kode_folio,
                     payment_method: oPayload.payment_method,
