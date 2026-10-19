@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { ReservasiBaruState, initValue, SelectedRoomItem } from './interfaces';
 import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
@@ -25,6 +26,7 @@ interface StepAvailabilityProps {
 
 const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, formik, toast }) => {
     const router = useRouter();
+    const { data: session } = useSession();
     const [galleryVisible, setGalleryVisible] = useState(false);
     const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
     const [galleryLoading, setGalleryLoading] = useState(false);
@@ -117,8 +119,11 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
     };
 
     const searchPackagesWithDates = async (cin: Date | null, cout: Date | null) => {
-        const { kode_cabang } = formik.values;
-        if (!kode_cabang || !cin || !cout) return;
+        const effectiveCabang = formik.values.kode_cabang || (session?.user as any)?.active_kode_cabang || (session?.user as any)?.default_kode_cabang || 'CAB0001';
+        if (!effectiveCabang || !cin || !cout) return;
+        if (!formik.values.kode_cabang && effectiveCabang) {
+            formik.setFieldValue('kode_cabang', effectiveCabang);
+        }
 
         setState(p => ({ ...p, packagesLoad: true, packagesOptions: [], rateInfo: null }));
         formik.setFieldValue('selected_rooms', []);
@@ -128,7 +133,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
 
         try {
             const res = await postData(apiRoomPackages, {
-                kode_cabang,
+                kode_cabang: effectiveCabang,
                 check_in_date: formatDateSystem(cin, "yyyy-MM-dd"),
                 check_out_date: formatDateSystem(cout, "yyyy-MM-dd")
             });
