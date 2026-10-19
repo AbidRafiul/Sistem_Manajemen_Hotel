@@ -134,11 +134,15 @@ const handleRunPostings = async (req, res) => {
   try {
     const idOrCode = req.params.id || req.body?.id || req.body?.kode_night_audit;
 
-    const run = await DB("trx_night_audit")
-      .where("kode_night_audit", idOrCode)
-      .orWhere("id", idOrCode)
-      .select("kode_night_audit", "kode_cabang")
-      .first();
+    const runQuery = DB("trx_night_audit");
+    if (idOrCode && !isNaN(Number(idOrCode))) {
+      runQuery.where(function () {
+        this.where("kode_night_audit", idOrCode).orWhere("id", Number(idOrCode));
+      });
+    } else {
+      runQuery.where("kode_night_audit", idOrCode);
+    }
+    const run = await runQuery.select("kode_night_audit", "kode_cabang").first();
 
     if (!run) {
       return res.status(404).json({
@@ -150,17 +154,47 @@ const handleRunPostings = async (req, res) => {
 
     assertBranchScope(req, run.kode_cabang);
 
-    const postings = await DB("trx_night_audit_item as nai")
-      .leftJoin("trx_reservation as r", "nai.kode_reservation", "r.kode_reservasi")
-      .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
-      .leftJoin("mst_kamar as mk", "nai.kode_kamar", "mk.kode_kamar")
-      .where("nai.kode_night_audit", run.kode_night_audit)
-      .select(
-        "nai.*",
-        "g.full_name as guest_name",
-        "mk.nomor_kamar"
-      )
-      .orderBy("nai.id", "asc");
+    // Ambil data item posting audit secara langsung untuk menghindari error 'Illegal mix of collations'
+    const items = await DB("trx_night_audit_item")
+      .where("kode_night_audit", run.kode_night_audit)
+      .orderBy("id", "asc");
+
+    let postings = items;
+    if (items.length > 0) {
+      const resCodes = items.map((i) => i.kode_reservation).filter(Boolean);
+      const roomCodes = items.map((i) => i.kode_kamar).filter(Boolean);
+
+      let guestMap = new Map();
+      if (resCodes.length > 0) {
+        try {
+          const resRows = await DB("trx_reservation as r")
+            .leftJoin("mst_guest as g", "r.kode_guest", "g.kode_tamu")
+            .whereIn("r.kode_reservasi", resCodes)
+            .select("r.kode_reservasi", "g.full_name as guest_name");
+          guestMap = new Map(resRows.map((r) => [r.kode_reservasi, r.guest_name]));
+        } catch {
+          guestMap = new Map();
+        }
+      }
+
+      let roomMap = new Map();
+      if (roomCodes.length > 0) {
+        try {
+          const roomRows = await DB("mst_kamar")
+            .whereIn("kode_kamar", roomCodes)
+            .select("kode_kamar", "nomor_kamar");
+          roomMap = new Map(roomRows.map((rm) => [rm.kode_kamar, rm.nomor_kamar]));
+        } catch {
+          roomMap = new Map();
+        }
+      }
+
+      postings = items.map((itm) => ({
+        ...itm,
+        guest_name: guestMap.get(itm.kode_reservation) || "-",
+        nomor_kamar: roomMap.get(itm.kode_kamar) || itm.kode_kamar || "-"
+      }));
+    }
 
     return res.status(200).json({
       status: status.SUKSES,
@@ -169,7 +203,8 @@ const handleRunPostings = async (req, res) => {
       data: postings
     });
   } catch (err) {
-    return res.status(500).json({
+    const httpStatus = err.status || err.statusCode || 500;
+    return res.status(httpStatus).json({
       status: status.GAGAL,
       message: err.message,
       datetime: formatDateSystem()
