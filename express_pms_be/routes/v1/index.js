@@ -28,6 +28,7 @@ import Kasir from "./kasir/index.js";
 import Housekeeping from "./housekeeping/index.js";
 import NightAudit from "./night_audit/index.js";
 import Dashboard from "./dashboard/index.js";
+import Event from "./event/index.js";
 
 import {
   contextMiddleware,
@@ -100,6 +101,13 @@ router.use(
   "/dashboard",
   [validateAccessToken, contextMiddleware],
   Dashboard
+);
+
+// Event & Banquet Order (BEO)
+router.use(
+  "/event",
+  [validateAccessToken, contextMiddleware],
+  Event
 );
 
 export default router;
