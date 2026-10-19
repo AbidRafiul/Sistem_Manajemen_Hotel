@@ -1,0 +1,13 @@
+export const apiEventList = '/event/list';
+export const apiEventDetail = '/event/detail';
+export const apiEventConflictCheck = '/event/conflict-check';
+export const apiEventCreate = '/event/create';
+export const apiEventUpdate = '/event/update';
+export const apiEventStatusUpdate = '/event/status-update';
+export const apiEventBeoData = '/event/beo-data';
+export const apiMasterRuangEvent = '/master/ruang-event/ruang-event-data';
+export const apiMasterGuest = '/master/guest/guest-data';
+export const apiMasterCorporate = '/master/corporate/corporate-data';
+export const apiMasterCabang = '/master/cabang/cabang-data';
+export const apiMasterHargaRuangEvent = '/master/harga-ruang-event/harga-ruang-event-data';
+export const apiMasterFasilitas = '/master/fasilitas/fasilitas-data';
