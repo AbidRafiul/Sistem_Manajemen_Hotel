@@ -381,11 +381,19 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                 )}
             </div>
             <div className="flex align-items-center gap-2">
-                <Button label="Batal" icon="pi pi-times" className="p-button-text p-button-secondary" onClick={onHide} disabled={submitting} />
+                <Button
+                    label="Batal"
+                    icon="pi pi-times"
+                    className="p-button-text p-button-secondary"
+                    style={{ width: 'auto' }}
+                    onClick={onHide}
+                    disabled={submitting}
+                />
                 <Button
                     label={isEdit ? 'Simpan Perubahan' : 'Buat Pemesanan (BEO)'}
                     icon="pi pi-check"
                     className="p-button-primary"
+                    style={{ width: 'auto' }}
                     onClick={handleSubmit}
                     loading={submitting}
                 />
@@ -416,26 +424,27 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                         <div className="grid formgrid p-fluid">
                             <div className="field col-12 md:col-7 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Nama / Judul Acara <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-bookmark text-primary text-xs"></i>
+                                    <span>Nama / Judul Acara</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
-                                <span className="p-input-icon-left w-full">
-                                    <i className="pi pi-pencil" />
-                                    <InputText
-                                        value={namaEvent}
-                                        onChange={(e) => setNamaEvent(e.target.value)}
-                                        placeholder="Contoh: Rapat Kerja Tahunan 2026, Wedding Reception, Seminar AI"
-                                        className={submitted && !namaEvent.trim() ? 'p-invalid' : ''}
-                                    />
-                                </span>
+                                <InputText
+                                    value={namaEvent}
+                                    onChange={(e) => setNamaEvent(e.target.value)}
+                                    placeholder="Contoh: Rapat Kerja Tahunan 2026, Wedding Reception, Seminar AI"
+                                    className={submitted && !namaEvent.trim() ? 'p-invalid' : ''}
+                                />
                                 {submitted && !namaEvent.trim() && (
                                     <small className="p-error block mt-1">Nama acara wajib diisi</small>
                                 )}
                             </div>
 
                             <div className="field col-12 md:col-5 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Pilihan Ruang Event <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-building text-primary text-xs"></i>
+                                    <span>Pilihan Ruang Event</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <Dropdown
                                     value={kodeRuangEvent}
@@ -457,7 +466,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-4 mb-2">
-                                <label className="font-semibold text-sm mb-1 block">Tata Letak (Layout Setup)</label>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-th-large text-primary text-xs"></i>
+                                    <span>Tata Letak (Layout Setup)</span>
+                                </label>
                                 <Dropdown
                                     value={layoutSetup}
                                     options={layoutOptions}
@@ -466,8 +478,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-4 mb-2">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Jumlah Tamu (Pax) <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-users text-primary text-xs"></i>
+                                    <span>Jumlah Tamu (Pax)</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <InputNumber
                                     value={jumlahTamu}
@@ -479,7 +493,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-4 mb-2">
-                                <label className="font-semibold text-sm mb-1 block">Skema Sewa Ruangan</label>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-tag text-primary text-xs"></i>
+                                    <span>Skema Sewa Ruangan</span>
+                                </label>
                                 <Dropdown
                                     value={tipeSewa}
                                     options={tipeSewaOptions}
@@ -497,8 +514,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                         <div className="grid formgrid p-fluid">
                             <div className="field col-12 md:col-3 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Tanggal Mulai <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-calendar text-primary text-xs"></i>
+                                    <span>Tanggal Mulai</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <Calendar
                                     value={tglMulai}
@@ -514,8 +533,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-3 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Jam Mulai Acara <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-clock text-primary text-xs"></i>
+                                    <span>Jam Mulai Acara</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <Dropdown
                                     value={jamMulai}
@@ -530,8 +551,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-3 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Tanggal Selesai <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-calendar text-primary text-xs"></i>
+                                    <span>Tanggal Selesai</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <Calendar
                                     value={tglSelesai}
@@ -546,8 +569,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-3 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Jam Selesai Acara <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-clock text-primary text-xs"></i>
+                                    <span>Jam Selesai Acara</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <Dropdown
                                     value={jamSelesai}
@@ -562,7 +587,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-3 mb-2">
-                                <label className="font-semibold text-sm mb-1 block">Buffer Setup (Persiapan)</label>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-hourglass text-primary text-xs"></i>
+                                    <span>Buffer Setup (Persiapan)</span>
+                                </label>
                                 <InputNumber
                                     value={setupBuffer}
                                     onValueChange={(e) => {
@@ -576,7 +604,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-3 mb-2">
-                                <label className="font-semibold text-sm mb-1 block">Buffer Teardown (Pembersihan)</label>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-hourglass text-primary text-xs"></i>
+                                    <span>Buffer Teardown (Pembersihan)</span>
+                                </label>
                                 <InputNumber
                                     value={teardownBuffer}
                                     onValueChange={(e) => {
@@ -590,12 +621,16 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-6 mb-2">
-                                <label className="font-semibold text-sm mb-1 block text-700">Verifikasi Bebas Bentrok</label>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-shield text-primary text-xs"></i>
+                                    <span>Verifikasi Bebas Bentrok</span>
+                                </label>
                                 <Button
                                     type="button"
                                     label="Cek Ketersediaan & Bentrok Jadwal"
                                     icon="pi pi-shield"
                                     className="p-button-outlined p-button-info"
+                                    style={{ width: '100%' }}
                                     onClick={handleCheckConflict}
                                     loading={checkingConflict}
                                 />
@@ -618,13 +653,14 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex justify-content-end mt-3">
+                    <div className="flex justify-content-end mt-3 pt-2">
                         <Button
                             type="button"
                             label="Lanjut: Penyelenggara & PIC →"
                             icon="pi pi-arrow-right"
                             iconPos="right"
                             className="p-button-sm p-button-outlined"
+                            style={{ width: 'auto' }}
                             onClick={() => setActiveIndex(1)}
                         />
                     </div>
@@ -641,14 +677,16 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                         <div className="grid formgrid p-fluid">
                             <div className="field col-12 md:col-6 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Tamu / Pemesan (Buku Tamu) <span className="text-red-500">*</span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-user text-primary text-xs"></i>
+                                    <span>Tamu / Pemesan (Buku Tamu)</span>
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <Dropdown
                                     value={kodeTamu}
                                     options={guestOptions}
                                     onChange={(e) => setKodeTamu(e.value)}
-                                    placeholder="Cari nama pemesan..."
+                                    placeholder="Pilih nama tamu / pemesan..."
                                     filter
                                     className={submitted && !kodeTamu ? 'p-invalid' : ''}
                                 />
@@ -658,8 +696,9 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             </div>
 
                             <div className="field col-12 md:col-6 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Mitra Corporate / Instansi (Opsional)
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-briefcase text-primary text-xs"></i>
+                                    <span>Mitra Corporate / Instansi (Opsional)</span>
                                 </label>
                                 <Dropdown
                                     value={kodeCorporate}
@@ -680,44 +719,45 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                         <div className="grid formgrid p-fluid">
                             <div className="field col-12 md:col-4 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">Nama PIC Lapangan</label>
-                                <span className="p-input-icon-left w-full">
-                                    <i className="pi pi-user" />
-                                    <InputText
-                                        value={contactPerson}
-                                        onChange={(e) => setContactPerson(e.target.value)}
-                                        placeholder="Nama penanggung jawab di lokasi"
-                                    />
-                                </span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-user text-primary text-xs"></i>
+                                    <span>Nama PIC Lapangan</span>
+                                </label>
+                                <InputText
+                                    value={contactPerson}
+                                    onChange={(e) => setContactPerson(e.target.value)}
+                                    placeholder="Contoh: Bpk. Hendra Pratama"
+                                />
                             </div>
 
                             <div className="field col-12 md:col-4 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">No. HP / WhatsApp PIC</label>
-                                <span className="p-input-icon-left w-full">
-                                    <i className="pi pi-whatsapp" />
-                                    <InputText
-                                        value={contactPhone}
-                                        onChange={(e) => setContactPhone(e.target.value)}
-                                        placeholder="0812xxxxxxxx"
-                                    />
-                                </span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-whatsapp text-green-600 text-xs"></i>
+                                    <span>No. HP / WhatsApp PIC</span>
+                                </label>
+                                <InputText
+                                    value={contactPhone}
+                                    onChange={(e) => setContactPhone(e.target.value)}
+                                    placeholder="Contoh: 081234567890"
+                                />
                             </div>
 
                             <div className="field col-12 md:col-4 mb-3">
-                                <label className="font-semibold text-sm mb-1 block">Email PIC / Koresponden</label>
-                                <span className="p-input-icon-left w-full">
-                                    <i className="pi pi-envelope" />
-                                    <InputText
-                                        value={contactEmail}
-                                        onChange={(e) => setContactEmail(e.target.value)}
-                                        placeholder="pic@instansi.com"
-                                    />
-                                </span>
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-envelope text-primary text-xs"></i>
+                                    <span>Email PIC / Koresponden</span>
+                                </label>
+                                <InputText
+                                    value={contactEmail}
+                                    onChange={(e) => setContactEmail(e.target.value)}
+                                    placeholder="Contoh: pic@instansi.com"
+                                />
                             </div>
 
                             <div className="field col-12 mb-1">
-                                <label className="font-semibold text-sm mb-1 block">
-                                    Instruksi Khusus BEO (Catatan Operasional Lintas Divisi)
+                                <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                    <i className="pi pi-comment text-primary text-xs"></i>
+                                    <span>Instruksi Khusus BEO (Catatan Operasional Lintas Divisi)</span>
                                 </label>
                                 <InputTextarea
                                     value={catatanKhusus}
@@ -729,12 +769,13 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex justify-content-between mt-3">
+                    <div className="flex justify-content-between align-items-center mt-3 pt-2">
                         <Button
                             type="button"
                             label="← Kembali ke Jadwal"
                             icon="pi pi-arrow-left"
                             className="p-button-sm p-button-text p-button-secondary"
+                            style={{ width: 'auto' }}
                             onClick={() => setActiveIndex(0)}
                         />
                         <Button
@@ -743,6 +784,7 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             icon="pi pi-arrow-right"
                             iconPos="right"
                             className="p-button-sm p-button-outlined"
+                            style={{ width: 'auto' }}
                             onClick={() => setActiveIndex(2)}
                         />
                     </div>
@@ -755,178 +797,253 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                     <div className="surface-card p-3 border-round border-1 border-200 mb-3 shadow-1">
                         <div className="flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                             <div>
-                                <span className="font-bold text-sm text-800 block">Rincian Paket F&B, Alat & Fasilitas BEO</span>
-                                <span className="text-xs text-500">Tambahkan kebutuhan catering, sound system, proyektor, atau perlengkapan lainnya.</span>
+                                <span className="font-bold text-base text-900 block flex align-items-center gap-2">
+                                    <i className="pi pi-box text-primary"></i>
+                                    <span>Katalog Paket F&B & Perlengkapan Acara</span>
+                                </span>
+                                <span className="text-xs text-500">Pilih dari paket standar hotel di bawah atau klik tombol tambah item kustom.</span>
                             </div>
                             <Button
                                 type="button"
                                 label="Tambah Item Kustom"
                                 icon="pi pi-plus"
-                                className="p-button-sm p-button-outlined"
+                                className="p-button-sm p-button-primary"
+                                style={{ width: 'auto' }}
                                 onClick={() => handleAddItem()}
                             />
                         </div>
 
-                        {/* Quick Presets */}
-                        <div className="surface-50 p-2 border-round border-1 border-200 mb-3 flex flex-wrap align-items-center gap-2">
-                            <span className="text-xs font-semibold text-600 mr-1">Preset Cepat:</span>
-                            <Button
-                                type="button"
-                                label="+ Coffee Break (25rb/pax)"
-                                className="p-button-xs p-button-outlined p-button-secondary py-1 px-2 text-xs"
-                                onClick={() =>
-                                    handleAddItem({
-                                        item_type: 'fnb',
-                                        item_name: 'Coffee Break Standard',
-                                        qty: jumlahTamu || 1,
-                                        unit: 'pax',
-                                        harga_satuan: 25000,
-                                        catatan: 'Kopi, teh, dan 2 macam snack',
-                                    })
-                                }
-                            />
-                            <Button
-                                type="button"
-                                label="+ Lunch Buffet (75rb/pax)"
-                                className="p-button-xs p-button-outlined p-button-secondary py-1 px-2 text-xs"
-                                onClick={() =>
-                                    handleAddItem({
-                                        item_type: 'fnb',
-                                        item_name: 'Prasmanan Makan Siang (Lunch Buffet)',
-                                        qty: jumlahTamu || 1,
-                                        unit: 'pax',
-                                        harga_satuan: 75000,
-                                        catatan: 'Menu standar hotel 4 lauk utama',
-                                    })
-                                }
-                            />
-                            <Button
-                                type="button"
-                                label="+ Projector & Screen (350rb)"
-                                className="p-button-xs p-button-outlined p-button-secondary py-1 px-2 text-xs"
-                                onClick={() =>
-                                    handleAddItem({
-                                        item_type: 'equipment',
-                                        item_name: 'LCD Projector 4000 Lumens + Tripod Screen',
-                                        qty: 1,
-                                        unit: 'set',
-                                        harga_satuan: 350000,
-                                        catatan: 'Termasuk kabel HDMI & pointer',
-                                    })
-                                }
-                            />
-                            <Button
-                                type="button"
-                                label="+ Sound & Wireless Mic (500rb)"
-                                className="p-button-xs p-button-outlined p-button-secondary py-1 px-2 text-xs"
-                                onClick={() =>
-                                    handleAddItem({
-                                        item_type: 'equipment',
-                                        item_name: 'Sound System + 2 Wireless Mic',
-                                        qty: 1,
-                                        unit: 'paket',
-                                        harga_satuan: 500000,
-                                        catatan: 'Didampingi 1 operator audio',
-                                    })
-                                }
-                            />
+                        {/* Quick Presets with compact chips/buttons */}
+                        <div className="surface-50 p-3 border-round border-1 border-200 mb-3">
+                            <span className="text-xs font-bold text-700 block mb-2">
+                                <i className="pi pi-bolt mr-1 text-orange-500"></i>
+                                Preset Cepat Menu & Alat Populer:
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    icon="pi pi-coffee"
+                                    label="Coffee Break Standard (Rp 25.000/pax)"
+                                    className="p-button-sm p-button-outlined p-button-secondary text-xs"
+                                    style={{ width: 'auto' }}
+                                    onClick={() =>
+                                        handleAddItem({
+                                            item_type: 'fnb',
+                                            item_name: 'Coffee Break Standard',
+                                            qty: jumlahTamu || 1,
+                                            unit: 'pax',
+                                            harga_satuan: 25000,
+                                            catatan: 'Kopi, teh, dan 2 macam snack',
+                                        })
+                                    }
+                                />
+                                <Button
+                                    type="button"
+                                    icon="pi pi-shopping-bag"
+                                    label="Prasmanan Lunch Buffet (Rp 75.000/pax)"
+                                    className="p-button-sm p-button-outlined p-button-secondary text-xs"
+                                    style={{ width: 'auto' }}
+                                    onClick={() =>
+                                        handleAddItem({
+                                            item_type: 'fnb',
+                                            item_name: 'Prasmanan Makan Siang (Lunch Buffet)',
+                                            qty: jumlahTamu || 1,
+                                            unit: 'pax',
+                                            harga_satuan: 75000,
+                                            catatan: 'Menu standar hotel 4 lauk utama',
+                                        })
+                                    }
+                                />
+                                <Button
+                                    type="button"
+                                    icon="pi pi-desktop"
+                                    label="LCD Projector + Tripod Screen (Rp 350.000)"
+                                    className="p-button-sm p-button-outlined p-button-secondary text-xs"
+                                    style={{ width: 'auto' }}
+                                    onClick={() =>
+                                        handleAddItem({
+                                            item_type: 'equipment',
+                                            item_name: 'LCD Projector 4000 Lumens + Tripod Screen',
+                                            qty: 1,
+                                            unit: 'set',
+                                            harga_satuan: 350000,
+                                            catatan: 'Termasuk kabel HDMI & pointer laser',
+                                        })
+                                    }
+                                />
+                                <Button
+                                    type="button"
+                                    icon="pi pi-volume-up"
+                                    label="Sound System + 2 Wireless Mic (Rp 500.000)"
+                                    className="p-button-sm p-button-outlined p-button-secondary text-xs"
+                                    style={{ width: 'auto' }}
+                                    onClick={() =>
+                                        handleAddItem({
+                                            item_type: 'equipment',
+                                            item_name: 'Sound System + 2 Wireless Mic',
+                                            qty: 1,
+                                            unit: 'paket',
+                                            harga_satuan: 500000,
+                                            catatan: 'Didampingi 1 teknisi audio',
+                                        })
+                                    }
+                                />
+                                <Button
+                                    type="button"
+                                    icon="pi pi-star"
+                                    label="Prasmanan Dinner Buffet (Rp 95.000/pax)"
+                                    className="p-button-sm p-button-outlined p-button-secondary text-xs"
+                                    style={{ width: 'auto' }}
+                                    onClick={() =>
+                                        handleAddItem({
+                                            item_type: 'fnb',
+                                            item_name: 'Prasmanan Makan Malam (Dinner Buffet)',
+                                            qty: jumlahTamu || 1,
+                                            unit: 'pax',
+                                            harga_satuan: 95000,
+                                            catatan: 'Menu spesial lengkap dengan dessert',
+                                        })
+                                    }
+                                />
+                            </div>
                         </div>
 
+                        {/* Items Table / Repeater */}
                         {items.length === 0 ? (
-                            <div className="text-center p-4 surface-100 border-round text-500 text-sm">
-                                <i className="pi pi-inbox text-3xl mb-2 text-400 block"></i>
-                                Belum ada item tambahan. Gunakan tombol <b>Preset Cepat</b> atau klik <b>Tambah Item Kustom</b>.
+                            <div className="text-center p-5 surface-100 border-round text-500 text-sm">
+                                <i className="pi pi-inbox text-4xl mb-2 text-400 block"></i>
+                                <div className="font-semibold text-700 mb-1">Belum Ada Item F&B atau Peralatan</div>
+                                <div className="text-xs text-500 mb-3">Klik tombol preset cepat di atas atau buat item kustom sesuai kebutuhan acara.</div>
+                                <Button
+                                    type="button"
+                                    label="Tambah Item Sekarang"
+                                    icon="pi pi-plus"
+                                    className="p-button-sm p-button-outlined"
+                                    style={{ width: 'auto' }}
+                                    onClick={() => handleAddItem()}
+                                />
                             </div>
                         ) : (
-                            <div className="flex flex-column gap-2">
-                                {items.map((it, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="grid formgrid p-fluid align-items-center surface-50 p-2 border-round border-1 border-200"
-                                    >
-                                        <div className="col-12 md:col-2 mb-1 md:mb-0">
-                                            <label className="text-xs text-500 mb-1 block">Kategori</label>
-                                            <Dropdown
-                                                value={it.item_type}
-                                                options={[
-                                                    { label: 'F&B (Catering)', value: 'fnb' },
-                                                    { label: 'Equipment (Alat)', value: 'equipment' },
-                                                    { label: 'Facility (Fasilitas)', value: 'facility' },
-                                                    { label: 'Lainnya', value: 'other' },
-                                                ]}
-                                                onChange={(e) => handleUpdateItem(idx, 'item_type', e.value)}
-                                                className="p-inputtext-sm"
-                                            />
+                            <div className="border-1 border-200 border-round overflow-hidden">
+                                {/* Header Table */}
+                                <div className="grid formgrid m-0 py-2 px-3 bg-primary-50 text-700 text-xs font-bold border-bottom-1 border-200 align-items-center hidden md:flex">
+                                    <div className="col-2">KATEGORI</div>
+                                    <div className="col-4">NAMA ITEM / PAKET</div>
+                                    <div className="col-1 text-center">QTY</div>
+                                    <div className="col-1">SATUAN</div>
+                                    <div className="col-2 text-right">HARGA SATUAN</div>
+                                    <div className="col-1 text-right">SUBTOTAL</div>
+                                    <div className="col-1 text-center">AKSI</div>
+                                </div>
+
+                                {/* Rows */}
+                                <div className="flex flex-column">
+                                    {items.map((it, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`grid formgrid m-0 p-2 align-items-center border-bottom-1 border-200 ${
+                                                idx % 2 === 0 ? 'bg-white' : 'surface-50'
+                                            }`}
+                                        >
+                                            <div className="col-12 md:col-2 mb-2 md:mb-0">
+                                                <span className="text-xs text-500 md:hidden font-semibold block mb-1">Kategori:</span>
+                                                <Dropdown
+                                                    value={it.item_type}
+                                                    options={[
+                                                        { label: 'F&B (Catering)', value: 'fnb' },
+                                                        { label: 'Equipment (Alat)', value: 'equipment' },
+                                                        { label: 'Facility (Fasilitas)', value: 'facility' },
+                                                        { label: 'Lainnya', value: 'other' },
+                                                    ]}
+                                                    onChange={(e) => handleUpdateItem(idx, 'item_type', e.value)}
+                                                    className="p-inputtext-sm"
+                                                />
+                                            </div>
+
+                                            <div className="col-12 md:col-4 mb-2 md:mb-0">
+                                                <span className="text-xs text-500 md:hidden font-semibold block mb-1">Nama Item / Paket:</span>
+                                                <InputText
+                                                    value={it.item_name}
+                                                    onChange={(e) => handleUpdateItem(idx, 'item_name', e.target.value)}
+                                                    placeholder="Contoh: Coffee Break / LCD Projector"
+                                                    className="p-inputtext-sm"
+                                                />
+                                            </div>
+
+                                            <div className="col-4 md:col-1 mb-2 md:mb-0">
+                                                <span className="text-xs text-500 md:hidden font-semibold block mb-1">Qty:</span>
+                                                <InputNumber
+                                                    value={it.qty}
+                                                    onValueChange={(e) => handleUpdateItem(idx, 'qty', e.value || 1)}
+                                                    className="p-inputtext-sm"
+                                                    min={1}
+                                                />
+                                            </div>
+
+                                            <div className="col-4 md:col-1 mb-2 md:mb-0">
+                                                <span className="text-xs text-500 md:hidden font-semibold block mb-1">Satuan:</span>
+                                                <InputText
+                                                    value={it.unit}
+                                                    onChange={(e) => handleUpdateItem(idx, 'unit', e.target.value)}
+                                                    placeholder="pax/set"
+                                                    className="p-inputtext-sm"
+                                                />
+                                            </div>
+
+                                            <div className="col-4 md:col-2 mb-2 md:mb-0">
+                                                <span className="text-xs text-500 md:hidden font-semibold block mb-1">Harga Satuan:</span>
+                                                <InputNumber
+                                                    value={it.harga_satuan}
+                                                    onValueChange={(e) => handleUpdateItem(idx, 'harga_satuan', e.value || 0)}
+                                                    className="p-inputtext-sm"
+                                                    mode="currency"
+                                                    currency="IDR"
+                                                    locale="id-ID"
+                                                />
+                                            </div>
+
+                                            <div className="col-9 md:col-1 text-right mb-2 md:mb-0">
+                                                <span className="text-xs text-500 md:hidden font-semibold block mb-1">Subtotal:</span>
+                                                <span className="font-bold text-xs text-900">{formatCurrency(it.subtotal || 0)}</span>
+                                            </div>
+
+                                            <div className="col-3 md:col-1 text-center">
+                                                <Button
+                                                    type="button"
+                                                    icon="pi pi-trash"
+                                                    className="p-button-sm p-button-danger p-button-text p-1"
+                                                    style={{ width: 'auto' }}
+                                                    onClick={() => handleRemoveItem(idx)}
+                                                    tooltip="Hapus baris item ini"
+                                                    tooltipOptions={{ position: 'top' }}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="col-12 md:col-4 mb-1 md:mb-0">
-                                            <label className="text-xs text-500 mb-1 block">Nama Item / Paket</label>
-                                            <InputText
-                                                value={it.item_name}
-                                                onChange={(e) => handleUpdateItem(idx, 'item_name', e.target.value)}
-                                                placeholder="Nama menu atau peralatan"
-                                                className="p-inputtext-sm"
-                                            />
-                                        </div>
-                                        <div className="col-4 md:col-1 mb-1 md:mb-0">
-                                            <label className="text-xs text-500 mb-1 block">Qty</label>
-                                            <InputNumber
-                                                value={it.qty}
-                                                onValueChange={(e) => handleUpdateItem(idx, 'qty', e.value || 1)}
-                                                className="p-inputtext-sm"
-                                                min={1}
-                                            />
-                                        </div>
-                                        <div className="col-4 md:col-1 mb-1 md:mb-0">
-                                            <label className="text-xs text-500 mb-1 block">Satuan</label>
-                                            <InputText
-                                                value={it.unit}
-                                                onChange={(e) => handleUpdateItem(idx, 'unit', e.target.value)}
-                                                placeholder="pax/set"
-                                                className="p-inputtext-sm"
-                                            />
-                                        </div>
-                                        <div className="col-4 md:col-2 mb-1 md:mb-0">
-                                            <label className="text-xs text-500 mb-1 block">Harga Satuan</label>
-                                            <InputNumber
-                                                value={it.harga_satuan}
-                                                onValueChange={(e) => handleUpdateItem(idx, 'harga_satuan', e.value || 0)}
-                                                className="p-inputtext-sm"
-                                                mode="currency"
-                                                currency="IDR"
-                                                locale="id-ID"
-                                            />
-                                        </div>
-                                        <div className="col-10 md:col-1 text-right mb-1 md:mb-0">
-                                            <label className="text-xs text-500 mb-1 block">Subtotal</label>
-                                            <div className="font-bold text-xs mt-1 text-900">{formatCurrency(it.subtotal || 0)}</div>
-                                        </div>
-                                        <div className="col-2 md:col-1 text-center">
-                                            <label className="text-xs text-500 mb-1 block invisible md:visible">Aksi</label>
-                                            <Button
-                                                type="button"
-                                                icon="pi pi-trash"
-                                                className="p-button-sm p-button-danger p-button-text p-1"
-                                                onClick={() => handleRemoveItem(idx)}
-                                                tooltip="Hapus Baris"
-                                            />
-                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Table Footer Summary */}
+                                <div className="p-3 bg-surface-50 flex flex-wrap justify-content-between align-items-center gap-2 border-top-1 border-200">
+                                    <span className="text-xs text-600 font-semibold">
+                                        <i className="pi pi-check-circle mr-1 text-primary"></i>
+                                        {items.length} item terdaftar dalam lembar BEO
+                                    </span>
+                                    <div className="flex align-items-center gap-2">
+                                        <span className="text-xs text-600">Total Biaya F&B & Perlengkapan:</span>
+                                        <span className="text-base font-bold text-primary">{formatCurrency(totalBiayaTambahan)}</span>
                                     </div>
-                                ))}
+                                </div>
                             </div>
                         )}
-
-                        <div className="flex justify-content-end align-items-center gap-2 mt-3 pt-2 border-top-1 border-200">
-                            <span className="text-sm text-600">Total Biaya Tambahan (F&B + Peralatan):</span>
-                            <span className="text-base font-bold text-900">{formatCurrency(totalBiayaTambahan)}</span>
-                        </div>
                     </div>
 
-                    <div className="flex justify-content-between mt-3">
+                    <div className="flex justify-content-between align-items-center mt-3 pt-2">
                         <Button
                             type="button"
                             label="← Kembali ke PIC"
                             icon="pi pi-arrow-left"
                             className="p-button-sm p-button-text p-button-secondary"
+                            style={{ width: 'auto' }}
                             onClick={() => setActiveIndex(1)}
                         />
                         <Button
@@ -935,6 +1052,7 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             icon="pi pi-arrow-right"
                             iconPos="right"
                             className="p-button-sm p-button-outlined"
+                            style={{ width: 'auto' }}
                             onClick={() => setActiveIndex(3)}
                         />
                     </div>
@@ -954,7 +1072,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                                 </div>
                                 <div className="grid formgrid p-fluid">
                                     <div className="field col-12 mb-3">
-                                        <label className="font-semibold text-sm mb-1 block">Tarif Dasar Sewa Ruangan</label>
+                                        <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                            <i className="pi pi-building text-primary text-xs"></i>
+                                            <span>Tarif Dasar Sewa Ruangan</span>
+                                        </label>
                                         <InputNumber
                                             value={tarifSewa}
                                             onValueChange={(e) => setTarifSewa(e.value || 0)}
@@ -965,13 +1086,19 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                                     </div>
 
                                     <div className="field col-12 mb-3">
-                                        <label className="font-semibold text-sm mb-1 block">Total Item Tambahan (F&B / Alat)</label>
+                                        <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                            <i className="pi pi-box text-primary text-xs"></i>
+                                            <span>Total Item Tambahan (F&B / Alat)</span>
+                                        </label>
                                         <InputNumber value={totalBiayaTambahan} disabled mode="currency" currency="IDR" locale="id-ID" />
                                         <small className="text-500">Dihitung otomatis dari tab F&B & Perlengkapan</small>
                                     </div>
 
                                     <div className="field col-12 mb-3">
-                                        <label className="font-semibold text-sm mb-1 block">Potongan / Diskon Khusus</label>
+                                        <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                            <i className="pi pi-percentage text-primary text-xs"></i>
+                                            <span>Potongan / Diskon Khusus</span>
+                                        </label>
                                         <InputNumber
                                             value={diskon}
                                             onValueChange={(e) => setDiskon(e.value || 0)}
@@ -982,7 +1109,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                                     </div>
 
                                     <div className="field col-6 mb-2">
-                                        <label className="font-semibold text-sm mb-1 block">Service Charge (%)</label>
+                                        <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                            <i className="pi pi-info-circle text-primary text-xs"></i>
+                                            <span>Service Charge (%)</span>
+                                        </label>
                                         <InputNumber
                                             value={serviceChargePersen}
                                             onValueChange={(e) => setServiceChargePersen(e.value || 0)}
@@ -993,7 +1123,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                                     </div>
 
                                     <div className="field col-6 mb-2">
-                                        <label className="font-semibold text-sm mb-1 block">Pajak Daerah (PB1) (%)</label>
+                                        <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                            <i className="pi pi-info-circle text-primary text-xs"></i>
+                                            <span>Pajak Daerah (PB1) (%)</span>
+                                        </label>
                                         <InputNumber
                                             value={pajakPersen}
                                             onValueChange={(e) => setPajakPersen(e.value || 0)}
@@ -1036,8 +1169,9 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
 
                                     <div className="grid formgrid p-fluid">
                                         <div className="field col-12 mb-3">
-                                            <label className="font-semibold text-sm mb-1 block">
-                                                Uang Muka / Deposit Diterima
+                                            <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                                <i className="pi pi-wallet text-primary text-xs"></i>
+                                                <span>Uang Muka / Deposit Diterima</span>
                                             </label>
                                             <InputNumber
                                                 value={depositPaid}
@@ -1049,7 +1183,10 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                                         </div>
 
                                         <div className="field col-12 mb-2">
-                                            <label className="font-semibold text-sm mb-1 block">Sisa Tagihan Pelunasan</label>
+                                            <label className="font-semibold text-sm mb-2 flex align-items-center gap-2 text-700">
+                                                <i className="pi pi-money-bill text-primary text-xs"></i>
+                                                <span>Sisa Tagihan Pelunasan</span>
+                                            </label>
                                             <div
                                                 className={`p-3 border-round text-base font-bold flex justify-content-between align-items-center ${
                                                     sisaTagihan === 0
@@ -1070,12 +1207,13 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex justify-content-between mt-3">
+                    <div className="flex justify-content-between align-items-center mt-3 pt-2">
                         <Button
                             type="button"
                             label="← Kembali ke Perlengkapan"
                             icon="pi pi-arrow-left"
                             className="p-button-sm p-button-text p-button-secondary"
+                            style={{ width: 'auto' }}
                             onClick={() => setActiveIndex(2)}
                         />
                         <Button
@@ -1083,6 +1221,7 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
                             label={isEdit ? 'Simpan Perubahan (BEO)' : 'Selesai: Buat Pemesanan (BEO)'}
                             icon="pi pi-check"
                             className="p-button-sm p-button-primary"
+                            style={{ width: 'auto' }}
                             onClick={handleSubmit}
                             loading={submitting}
                         />
@@ -1092,4 +1231,5 @@ export const EventFormDialog: React.FC<EventFormDialogProps> = ({
         </Dialog>
     );
 };
+
 
