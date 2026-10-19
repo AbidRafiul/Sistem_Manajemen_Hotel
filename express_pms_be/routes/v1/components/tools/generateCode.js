@@ -49,7 +49,8 @@ const TABLE_MAP = {
   "FMT-MSTSHIFT": "mst_shift",
   "FMT-USR": "mst_user",
   "FMT-MINIBAR": "trx_minibar_consumption",
-  "FMT-LOSTFOUND": "trx_lost_and_found"
+  "FMT-LOSTFOUND": "trx_lost_and_found",
+  "FMT-NIGHTAUDIT": "trx_night_audit"
 };
 
 const COL_MAP = {
@@ -87,7 +88,8 @@ const COL_MAP = {
   mst_harga_ruang_event: "kode_harga_ruang_event",
   mst_user: "kode_user",
   trx_minibar_consumption: "kode_minibar_consumption",
-  trx_lost_and_found: "kode_lost_and_found"
+  trx_lost_and_found: "kode_lost_and_found",
+  trx_night_audit: "kode_night_audit"
 };
 
 const PREFIX_MAP = {
@@ -102,7 +104,8 @@ const PREFIX_MAP = {
   "FMT-INVOICE": "INV",
   "FMT-MSTSHIFT": "SFT",
   "FMT-MINIBAR": "MNB",
-  "FMT-LOSTFOUND": "LNF"
+  "FMT-LOSTFOUND": "LNF",
+  "FMT-NIGHTAUDIT": "NA"
 };
 
 /**

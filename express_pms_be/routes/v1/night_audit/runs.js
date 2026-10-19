@@ -23,6 +23,9 @@ const handleRunsList = async (req, res) => {
   try {
     const requestedBranch = req.query.kode_cabang || req.body?.kode_cabang;
     const { kodeCabang } = resolveEffectiveBranch(req, requestedBranch);
+    const hasTotalInHouse = await DB.schema.hasColumn("trx_night_audit", "total_in_house").catch(() => false);
+    const hasTriggeredBy = await DB.schema.hasColumn("trx_night_audit", "triggered_by").catch(() => false);
+
     const query = DB("trx_night_audit as na")
       .leftJoin("mst_user as u", "na.run_by", "u.id")
       .select(
@@ -31,15 +34,15 @@ const handleRunsList = async (req, res) => {
         "na.kode_cabang",
         "na.business_date",
         "na.status",
-        "na.total_in_house",
-        "na.total_posted",
-        "na.total_failed",
-        "na.total_room_revenue",
-        "na.total_tax",
-        "na.total_service",
+        hasTotalInHouse ? "na.total_in_house" : DB.raw("0 as total_in_house"),
+        hasTotalInHouse ? "na.total_posted" : DB.raw("0 as total_posted"),
+        hasTotalInHouse ? "na.total_failed" : DB.raw("0 as total_failed"),
+        hasTotalInHouse ? "na.total_room_revenue" : DB.raw("0.00 as total_room_revenue"),
+        hasTotalInHouse ? "na.total_tax" : DB.raw("0.00 as total_tax"),
+        hasTotalInHouse ? "na.total_service" : DB.raw("0.00 as total_service"),
         "na.started_at",
         "na.completed_at",
-        "na.triggered_by",
+        hasTriggeredBy ? "na.triggered_by" : DB.raw("'manual' as triggered_by"),
         "na.note",
         "u.username as run_by_user"
       )

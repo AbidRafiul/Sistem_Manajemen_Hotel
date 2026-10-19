@@ -31,6 +31,8 @@ router.post("/", async (req, res) => {
       .groupBy("kode_kamar")
       .as("latest_t");
 
+    const hasTaskNotes = await DB.schema.hasColumn("trx_housekeeping_task", "notes").catch(() => false);
+
     let query = DB("trx_reservation_room as rr")
       .select(
         "rr.kode_reservasi_room",
@@ -44,7 +46,7 @@ router.post("/", async (req, res) => {
         "t_hk.kode_housekeeping_task",
         "t_hk.status as task_status",
         "t_hk.priority as task_priority",
-        "t_hk.notes as task_notes",
+        hasTaskNotes ? "t_hk.notes as task_notes" : DB.raw("NULL as task_notes"),
         "u_hk.fullname as task_pic_name",
         "g.kode_tamu",
         "g.full_name as guest_name",
