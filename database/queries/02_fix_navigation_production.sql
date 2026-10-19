@@ -14,9 +14,14 @@ SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 -- [LANGKAH 1] BERSIHKAN DATA DUPLIKAT DI `mst_navigation`
 -- --------------------------------------------------------------------
 -- Menghapus entri menu duplikat terdahulu (seperti ID 7 lama) dan menjaga ID tertinggi
-DELETE n1 FROM `mst_navigation` n1
-JOIN `mst_navigation` n2 
-  ON LOWER(TRIM(n1.`role`)) = LOWER(TRIM(n2.`role`)) AND n1.`id` < n2.`id`;
+DELETE FROM `mst_navigation`
+WHERE `id` NOT IN (
+  SELECT max_id FROM (
+    SELECT MAX(`id`) AS max_id
+    FROM `mst_navigation`
+    GROUP BY LOWER(TRIM(`role`))
+  ) AS `temp_nav`
+);
 
 -- --------------------------------------------------------------------
 -- [LANGKAH 2] PASANG UNIQUE KEY PADA KOLOM `role` DI `mst_navigation`
