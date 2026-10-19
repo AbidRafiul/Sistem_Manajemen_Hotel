@@ -52,7 +52,37 @@ CREATE TABLE IF NOT EXISTS `user_scope_assignments` (
   KEY `idx_user_scope_type_id` (`scope_type`, `scope_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. ALTER TABLE: Menambahkan Kolom Hierarchy pada mst_cabang & mst_user (Idempoten via Dynamic SQL)
+-- 4. Tabel log (Error & Request Logging Sistem)
+CREATE TABLE IF NOT EXISTS `log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Tgl` DATETIME NULL,
+  `Controller` VARCHAR(255) NULL,
+  `Function` VARCHAR(255) NULL,
+  `Request` LONGTEXT NULL,
+  `Response` LONGTEXT NULL,
+  `Stack` LONGTEXT NULL,
+  `User` VARCHAR(100) NULL,
+  `DateTime` DATETIME NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. Tabel log_perubahan (Audit Trail Perubahan Data)
+CREATE TABLE IF NOT EXISTS `log_perubahan` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `keterangan` TEXT NULL,
+  `nama_tabel` VARCHAR(100) NULL,
+  `kode_referensi` VARCHAR(100) NULL,
+  `aksi` VARCHAR(50) NULL,
+  `data_sebelum` LONGTEXT NULL,
+  `data_sesudah` LONGTEXT NULL,
+  `tz` VARCHAR(50) NOT NULL DEFAULT 'UTC',
+  `created_by` VARCHAR(100) NULL,
+  `created_at` DATETIME NULL,
+  `created_at_eng` DATETIME NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. ALTER TABLE: Menambahkan Kolom Hierarchy pada mst_cabang & mst_user (Idempoten via Dynamic SQL)
 -- Kolom mst_cabang.company_id
 SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_cabang' AND COLUMN_NAME = 'company_id');
 SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_cabang` ADD COLUMN `company_id` BIGINT UNSIGNED NULL DEFAULT 1 AFTER `id`', 'SELECT 1');
@@ -81,12 +111,66 @@ PREPARE exec_stmt FROM @stmt_sql;
 EXECUTE exec_stmt;
 DEALLOCATE PREPARE exec_stmt;
 
--- Kolom mst_user.can_switch_branch
-SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'can_switch_branch');
-SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_user` ADD COLUMN `can_switch_branch` TINYINT NOT NULL DEFAULT 0 AFTER `default_branch_id`', 'SELECT 1');
+-- Kolom mst_user.org_node_id
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'org_node_id');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_user` ADD COLUMN `org_node_id` BIGINT UNSIGNED NULL AFTER `default_branch_id`', 'SELECT 1');
 PREPARE exec_stmt FROM @stmt_sql;
 EXECUTE exec_stmt;
 DEALLOCATE PREPARE exec_stmt;
+
+-- Kolom mst_user.can_switch_branch
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'can_switch_branch');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_user` ADD COLUMN `can_switch_branch` TINYINT NOT NULL DEFAULT 0 AFTER `org_node_id`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
+
+-- Kolom mst_amenity.harga
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_amenity' AND COLUMN_NAME = 'harga');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_amenity` ADD COLUMN `harga` DECIMAL(15,2) NOT NULL DEFAULT 0.00 AFTER `icon`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
+
+-- Kolom mst_fasilitas.harga
+SET @col_exists := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_fasilitas' AND COLUMN_NAME = 'harga');
+SET @stmt_sql := IF(@col_exists = 0, 'ALTER TABLE `mst_fasilitas` ADD COLUMN `harga` DECIMAL(15,2) NOT NULL DEFAULT 0.00 AFTER `name`', 'SELECT 1');
+PREPARE exec_stmt FROM @stmt_sql;
+EXECUTE exec_stmt;
+DEALLOCATE PREPARE exec_stmt;
+
+CREATE TABLE IF NOT EXISTS `mst_tipe_kamar_foto` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kode_tipe_kamar` VARCHAR(50) NOT NULL,
+  `foto_url` VARCHAR(255) NOT NULL,
+  `urutan` INT NOT NULL DEFAULT 0,
+  `is_cover` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_by` BIGINT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `deleted_by` BIGINT DEFAULT NULL,
+  `deleted_at` DATETIME DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `idx_tkf_tipe_kamar` (`kode_tipe_kamar`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `mst_room_type_amenity` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kode_rta` VARCHAR(50) NOT NULL,
+  `kode_tipe_kamar` VARCHAR(50) NOT NULL,
+  `kode_amenity` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_rta` (`kode_tipe_kamar`, `kode_amenity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `mst_room_type_fasilitas` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kode_tipe_kamar` VARCHAR(50) NOT NULL,
+  `kode_fasilitas` VARCHAR(50) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_rtf` (`kode_tipe_kamar`, `kode_fasilitas`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
 -- ====================================================================
