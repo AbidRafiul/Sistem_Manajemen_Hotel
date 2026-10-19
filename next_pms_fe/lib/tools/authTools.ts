@@ -21,7 +21,8 @@ import { refreshToken } from '@/lib/tools/serverTools'; // Pastikan path import 
 
 const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
 const tokenSecret = process.env.TOKEN_SECRET;
-const isProduction = process.env.NODE_ENV === 'production';
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+const isProduction = process.env.NODE_ENV === 'production' && !isBuildPhase;
 
 // T1 Hardening: Validasi kekuatan secret NextAuth dan TOKEN_SECRET di frontend
 if (!secret) {
