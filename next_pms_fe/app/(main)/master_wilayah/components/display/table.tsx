@@ -1,20 +1,21 @@
 'use client';
 
 import { DataTable } from 'primereact/datatable';
+import { TableData, TableProps } from '../interfaces';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
+import { formatDateSystem } from '@/lib/tools/dateTools';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
-import { Tag } from 'primereact/tag';
-import { useRef } from 'react';
-import { TableData, TableProps } from '../interfaces';
 import Form from './form';
 import { apiEndpointGet } from '../endpoints';
-import { formatDateSystem } from '@/lib/tools/dateTools';
+import { useRef } from 'react';
+import StatusIndicator from '@/app/components/status/StatusIndicator';
+import StatusLegend from '@/app/components/status/StatusLegend';
 
-const Table = ({ state, setState, formik, toast, onCustomPage, onCustomSort, getData }: TableProps) => {
+const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const headerTemplate = (
@@ -46,7 +47,7 @@ const Table = ({ state, setState, formik, toast, onCustomPage, onCustomSort, get
                     icon="pi pi-filter-slash"
                     outlined
                     severity="danger"
-                    tooltip="Reset Pencarian"
+                    tooltip="Reset Semua Filter"
                     tooltipOptions={{ position: 'bottom' }}
                     onClick={() => {
                         setState((p) => ({
@@ -67,49 +68,33 @@ const Table = ({ state, setState, formik, toast, onCustomPage, onCustomSort, get
             <Button
                 icon="pi pi-pencil"
                 outlined
-                severity="warning"
                 className="p-button-sm"
-                tooltip="Edit Wilayah"
-                tooltipOptions={{ position: 'bottom' }}
                 onClick={() => {
                     formik.setValues({
                         id: rowData.id,
                         kode_wilayah: rowData.kode_wilayah || '',
                         nama_wilayah: rowData.nama_wilayah || '',
-                        status: rowData.status || 'active',
+                        status: rowData.status || (rowData.is_active === 1 ? 'active' : 'inactive'),
                         is_active: rowData.is_active !== undefined ? rowData.is_active : 1
                     });
-                    setState((p) => ({ ...p, edit: true }));
+                    setState((p) => ({ ...p, add: false, delete: false, edit: true }));
                 }}
+                tooltip="Edit Wilayah"
             />
             <Button
                 icon="pi pi-trash"
                 outlined
                 severity="danger"
                 className="p-button-sm"
+                onClick={() => setState((p) => ({ ...p, delete: true, selectedDatas: [rowData] }))}
                 tooltip="Hapus Wilayah"
-                tooltipOptions={{ position: 'bottom' }}
-                onClick={() => {
-                    setState((p) => ({
-                        ...p,
-                        selectedDatas: [rowData],
-                        delete: true
-                    }));
-                }}
             />
         </div>
     );
 
-    const statusBodyTemplate = (rowData: TableData) => {
-        const isActive = rowData.status === 'active' || rowData.is_active === 1;
-        return (
-            <Tag
-                value={isActive ? 'AKTIF' : 'NON-AKTIF'}
-                severity={isActive ? 'success' : 'danger'}
-                className="text-xs px-2 py-1 font-semibold"
-            />
-        );
-    };
+    const activeStatusBodyTemplate = (rowData: TableData) => (
+        <StatusIndicator status={rowData.is_active} />
+    );
 
     const totalCabangBodyTemplate = (rowData: TableData) => {
         const total = rowData.total_cabang || 0;
@@ -122,109 +107,96 @@ const Table = ({ state, setState, formik, toast, onCustomPage, onCustomSort, get
     };
 
     return (
-        <div className="card">
-            {/* Action Toolbar */}
-            <div className="flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <div className="flex align-items-center gap-2">
+        <>
+            <div className="card">
+                <div className="flex justify-content-between align-items-start mb-4">
+                    <div className="flex flex-column">
+                        <h3 className="text-2xl font-semibold flex align-items-center gap-2">
+                            <i className="pi pi-map text-blue-600 text-3xl"></i>Master Wilayah
+                        </h3>
+                        <p className="text-gray-500">Kelola zonasi wilayah geografis dan kluster penugasan unit hotel di jaringan Enterprise PMS.</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-row flex-wrap align-items-center gap-2 mb-3">
                     <Button
-                        label="Tambah Wilayah"
+                        size="small"
+                        label="Baru"
                         icon="pi pi-plus"
-                        className="p-button-primary"
+                        outlined
+                        severity="success"
                         onClick={() => {
                             formik.resetForm();
-                            setState((p) => ({ ...p, add: true }));
+                            formik.setValues({
+                                id: undefined,
+                                kode_wilayah: '',
+                                nama_wilayah: '',
+                                status: 'active',
+                                is_active: 1
+                            });
+                            setState((p) => ({ ...p, selectedDatas: [], add: true, edit: false }));
                         }}
                     />
+                    <Divider layout="vertical" />
+                    <Button size="small" label="Cetak" icon="pi pi-print" outlined onClick={() => getPrintData(apiEndpointGet)} loading={dataRekap.load} />
+                    <Divider layout="vertical" />
                     <Button
-                        label="Hapus Terpilih"
+                        size="small"
+                        label={`Hapus${state.selectedDatas.length > 0 ? ` (${state.selectedDatas.length})` : ''}`}
                         icon="pi pi-trash"
                         severity="danger"
                         outlined
-                        disabled={!state.selectedDatas || state.selectedDatas.length === 0}
-                        onClick={() => setState((p) => ({ ...p, delete: true }))}
+                        onClick={() => {
+                            if (state.selectedDatas.length < 1) {
+                                setState((p) => ({ ...p, selectedDatas: [], delete: false }));
+                                return;
+                            }
+                            setState((p) => ({ ...p, delete: true }));
+                        }}
+                        disabled={state.selectedDatas.length === 0}
                     />
+                    <Divider layout="vertical" />
+                    <Button size="small" label="Refresh" icon="pi pi-refresh" outlined onClick={() => getData(apiEndpointGet)} loading={state.load} />
                 </div>
-                <div className="flex align-items-center gap-2">
-                    <Button
-                        icon="pi pi-refresh"
-                        outlined
-                        severity="secondary"
-                        tooltip="Refresh Data"
-                        tooltipOptions={{ position: 'bottom' }}
-                        onClick={() => getData(apiEndpointGet)}
-                    />
-                </div>
+
+                <StatusLegend />
+
+                <DataTable
+                    value={state.data}
+                    scrollable
+                    lazy={true}
+                    paginator={true}
+                    first={state.first}
+                    rows={state.rows}
+                    totalRecords={state.totalData}
+                    onPage={onLazyLoad}
+                    onSort={onLazyLoad}
+                    sortField={state.sortField}
+                    sortOrder={state.sortOrder === 'asc' ? 1 : -1}
+                    selectionMode={'multiple'}
+                    header={headerTemplate}
+                    loading={state.load}
+                    selection={state.selectedDatas}
+                    onSelectionChange={(e) => setState((p) => ({ ...p, selectedDatas: e.value }))}
+                    dataKey="id"
+                    emptyMessage="Tidak ada data wilayah"
+                    rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    currentPageReportTemplate="Menampilkan {first} - {last} dari {totalRecords} data wilayah"
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
+                    <Column field="kode_wilayah" header="Kode Wilayah" align="center" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="nama_wilayah" header="Nama Wilayah / Regional" sortable style={{ minWidth: '18rem' }}></Column>
+                    <Column header="Unit Cabang Binaan" align="center" body={totalCabangBodyTemplate} style={{ minWidth: '14rem' }}></Column>
+                    <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
+                    <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
+                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
+                </DataTable>
             </div>
 
-            <Divider />
-
-            {/* Data Table */}
-            <DataTable
-                value={state.data}
-                selectionMode="multiple"
-                selection={state.selectedDatas}
-                onSelectionChange={(e: any) => setState((p) => ({ ...p, selectedDatas: e.value }))}
-                dataKey="id"
-                paginator
-                lazy
-                rows={state.rows}
-                first={state.first}
-                totalRecords={state.totalData}
-                onPage={onCustomPage}
-                onSort={onCustomSort}
-                sortField={state.sortField}
-                sortOrder={state.sortOrder === 'asc' ? 1 : -1}
-                loading={state.load}
-                header={headerTemplate}
-                emptyMessage="Tidak ada data wilayah ditemukan"
-                className="p-datatable-sm"
-                stripedRows
-                responsiveLayout="scroll"
-            >
-                <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
-                <Column
-                    field="kode_wilayah"
-                    header="Kode Wilayah"
-                    sortable
-                    className="font-bold text-primary"
-                    style={{ minWidth: '140px' }}
-                />
-                <Column
-                    field="nama_wilayah"
-                    header="Nama Wilayah / Regional"
-                    sortable
-                    style={{ minWidth: '240px' }}
-                    className="font-semibold text-900"
-                />
-                <Column
-                    header="Unit Cabang Binaan"
-                    body={totalCabangBodyTemplate}
-                    style={{ minWidth: '180px' }}
-                />
-                <Column
-                    field="status"
-                    header="Status"
-                    body={statusBodyTemplate}
-                    sortable
-                    style={{ minWidth: '120px' }}
-                />
-                <Column
-                    field="created_at"
-                    header="Dibuat Pada"
-                    body={(row) => (row.created_at ? formatDateSystem(new Date(row.created_at), 'dd-MM-yyyy HH:mm') : '-')}
-                    style={{ minWidth: '150px' }}
-                />
-                <Column
-                    header="Aksi"
-                    body={actionBodyTemplate}
-                    exportable={false}
-                    style={{ minWidth: '110px', textAlign: 'center' }}
-                />
-            </DataTable>
-
-            {/* Modal Dialog Form & Delete Confirmation */}
-            <Form state={state} setState={setState} formik={formik} toast={toast} getData={getData} />
-        </div>
+            <Form getData={getData} toast={toast} state={state} setState={setState} formik={formik} />
+        </>
     );
 };
 

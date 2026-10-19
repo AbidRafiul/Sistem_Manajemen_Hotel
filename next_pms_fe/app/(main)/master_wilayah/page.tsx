@@ -5,12 +5,15 @@ import { Toast } from 'primereact/toast';
 import { useEffect, useRef, useState } from 'react';
 import { showError } from '@/lib/tools/generalTools';
 import { useFormik } from 'formik';
-import { initValue, State } from './components/interfaces';
+import { FORMATTER_CONFIG, HEADER_CONFIG, initValue, State } from './components/interfaces';
 import Table from './components/display/table';
 import { FilterMatchMode } from 'primereact/api';
 import { useSession } from 'next-auth/react';
 import { DataTableStateEvent } from 'primereact/datatable';
 import { apiEndpointGet } from './components/endpoints';
+import { DataRekap } from '@/types/print-tools';
+import Print from './components/display/print';
+import { transformTableData } from '@/lib/tools/printTools/transformData';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
@@ -32,12 +35,26 @@ const Page = () => {
         page: 1,
         keyword: '',
         totalData: 0,
-        sortField: 'created_at',
-        sortOrder: 'asc'
+        sortField: 'updated_at',
+        sortOrder: 'desc'
+    });
+
+    const [dataRekap, setDataRekap] = useState<DataRekap>({
+        data: [],
+        totalData: 0,
+        head: [],
+        load: false,
+        columnStyles: {},
+        show: false,
+        adjust: false,
+        fileName: `laporan-master-wilayah-${new Date().toISOString().slice(0, 10)}`,
+        judul1: 'Laporan Master Wilayah (Regional)',
+        judul2: ''
     });
 
     const formik = useFormik<initValue>({
         initialValues: {
+            id: undefined,
             kode_wilayah: '',
             nama_wilayah: '',
             status: 'active',
@@ -47,6 +64,8 @@ const Page = () => {
             let errors: Record<string, string> = {};
             if (!data.nama_wilayah || !data.nama_wilayah.trim()) {
                 errors.nama_wilayah = 'Nama Wilayah wajib diisi.';
+            } else if (data.nama_wilayah.length < 3) {
+                errors.nama_wilayah = 'Nama Wilayah minimal 3 karakter.';
             }
             return errors;
         },
@@ -62,81 +81,122 @@ const Page = () => {
                 page: state.page,
                 perPage: state.rows,
                 keyword: state.keyword,
-                sortField: state.sortField || 'created_at',
-                sortOrder: state.sortOrder || 'asc'
+                sortField: state.sortField || 'updated_at',
+                sortOrder: state.sortOrder || 'desc'
             };
 
             const res = await postData(apiEndpoint, oPayload);
-            if (res?.data?.status === '00') {
-                const dataList = res.data?.data || [];
-                const total = res.data?.total_data ?? dataList.length;
-                setState((p) => ({
-                    ...p,
-                    data: dataList,
-                    totalData: total,
-                    load: false
-                }));
-            } else {
-                showError(toast as any, res?.data?.message || 'Gagal memuat data wilayah');
-                setState((p) => ({ ...p, load: false }));
-            }
+            setState((p) => ({
+                ...p,
+                data: res.data.data,
+                totalData: res.data.total_data
+            }));
         } catch (error: any) {
-            showError(toast as any, error?.response?.data?.message || error.message || 'Gagal terhubung ke server');
+            const e = error?.response?.data || error;
+            showError(toast, e?.message || 'Terjadi Kesalahan saat memuat data');
+        } finally {
             setState((p) => ({ ...p, load: false }));
         }
     };
 
-    const onCustomPage = (event: DataTableStateEvent) => {
-        const newPage = (event.page ?? 0) + 1;
-        setState((p) => ({
-            ...p,
-            first: event.first,
-            rows: event.rows,
-            page: newPage
-        }));
+    const getPrintData = async (apiEndpoint: string) => {
+        setDataRekap((p) => ({ ...p, load: true }));
+        try {
+            const oPayload = {
+                keyword: state.keyword,
+                sortField: state.sortField || 'updated_at',
+                sortOrder: state.sortOrder || 'desc'
+            };
+
+            const res = await postData(apiEndpoint, oPayload);
+
+            let columnStyles = {
+                0: { halign: 'center' },
+                1: { halign: 'left' },
+                2: { halign: 'center' },
+                3: { halign: 'center' },
+                4: { halign: 'center' }
+            };
+
+            const formattedData = transformTableData(res.data.data, {
+                headerMap: HEADER_CONFIG,
+                customFormatters: FORMATTER_CONFIG,
+                excludeKeys: ['id', 'node_type', 'status']
+            });
+
+            setDataRekap((p) => ({
+                ...p,
+                data: formattedData,
+                totalData: res.data.total_data,
+                show: true,
+                adjust: true,
+                columnStyles
+            }));
+        } catch (error: any) {
+            const e = error?.response?.data || error;
+            showError(toast, e?.message || 'Terjadi Kesalahan saat menyiapkan data cetak');
+        } finally {
+            setDataRekap((p) => ({ ...p, load: false }));
+        }
     };
 
-    const onCustomSort = (event: DataTableStateEvent) => {
-        setState((p) => ({
-            ...p,
-            sortField: event.sortField,
-            sortOrder: event.sortOrder === 1 ? 'asc' : 'desc'
-        }));
+    const onLazyLoad = (event: DataTableStateEvent) => {
+        setState((prev) => {
+            const newPage = typeof event.page === 'number' ? event.page + 1 : prev.page;
+
+            return {
+                ...prev,
+                first: event.first,
+                rows: event.rows,
+                page: newPage,
+                sortField: event.sortField || prev.sortField,
+                sortOrder: event.sortOrder ? (event.sortOrder === 1 ? 'asc' : 'desc') : prev.sortOrder
+            };
+        });
     };
 
     useEffect(() => {
         getData(apiEndpointGet);
-    }, [state.page, state.rows, state.keyword, state.sortField, state.sortOrder]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.page, state.rows, state.sortField, state.sortOrder, state.keyword]);
+
+    useEffect(() => {
+        if (session) {
+            setState((prev) => ({
+                ...prev,
+                session: session
+            }));
+        }
+    }, [session]);
 
     return (
-        <div className="grid">
-            <Toast ref={toast} />
-            <div className="col-12">
-                <div className="card mb-3 py-3 px-4 surface-card shadow-1 border-round">
-                    <div className="flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
-                        <div>
-                            <h4 className="m-0 font-bold text-900 flex align-items-center gap-2">
-                                <i className="pi pi-map text-primary text-2xl" />
-                                Master Wilayah (Regional)
-                            </h4>
-                            <p className="text-500 m-0 text-sm mt-1">
-                                Kelola zonasi wilayah geografis dan kluster penugasan unit hotel di jaringan Enterprise PMS.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
+        <>
+            <div className="p-0">
+                <Toast ref={toast} position="top-right" />
                 <Table
+                    dataRekap={dataRekap}
+                    setDataRekap={setDataRekap}
+                    getData={getData}
+                    getPrintData={getPrintData}
                     state={state}
                     setState={setState}
                     formik={formik}
                     toast={toast}
-                    onCustomPage={onCustomPage}
-                    onCustomSort={onCustomSort}
+                    onLazyLoad={onLazyLoad}
+                />
+                <Print
+                    dataRekap={dataRekap}
+                    setDataRekap={setDataRekap}
                     getData={getData}
+                    getPrintData={getPrintData}
+                    state={state}
+                    setState={setState}
+                    formik={formik}
+                    toast={toast}
+                    onLazyLoad={onLazyLoad}
                 />
             </div>
-        </div>
+        </>
     );
 };
 
