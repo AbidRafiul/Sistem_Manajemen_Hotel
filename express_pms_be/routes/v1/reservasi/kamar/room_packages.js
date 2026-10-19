@@ -179,6 +179,20 @@ router.post("/", async (req, res) => {
                         source: rateInfo.source
                     });
                 }
+
+                // Fallback otomatis: jika belum ada paket harga yang terbentuk atau rate plan belum disetup,
+                // sediakan paket tarif default dari harga_default tipe kamar agar tidak mengunci operasional front office
+                if (productGroup.packages.length === 0 && parseFloat(tk.harga_default || 0) > 0) {
+                    const defaultPrice = parseFloat(tk.harga_default || 0);
+                    productGroup.packages.push({
+                        kode_rate_plan: 'RP0001',
+                        nama_rate_plan: 'Room Only (Tarif Standar)',
+                        price_per_night: defaultPrice,
+                        total_price: defaultPrice * nights,
+                        available_count: available_count,
+                        source: 'default_master'
+                    });
+                }
                 
                 if (productGroup.packages.length > 0) {
                     packagesList.push(productGroup);
