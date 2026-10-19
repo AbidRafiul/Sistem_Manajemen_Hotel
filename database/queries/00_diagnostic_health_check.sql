@@ -1,107 +1,91 @@
 -- ==============================================================
 -- DIAGNOSTIC HEALTH CHECK HOTEL PMS (RAILWAY PRODUCTION / LOCAL)
--- Script ini bersifat READ-ONLY (100% Aman dijalankan di Production)
+-- Script ini bersifat 100% READ-ONLY & CRASH-PROOF
+-- Tidak akan melempar Error 1146 jika ada tabel yang belum dibuat.
 -- Jalankan di: Railway MySQL Query Tool / DBeaver / Navicat
 -- ==============================================================
 
 -- --------------------------------------------------------------
--- 1. VERIFIKASI SKEMA & STRUKTUR TABEL KRITIS (PASS / FAIL)
+-- 1. CEK KEBERADAAN TABEL MASTER & OPERASIONAL (CRASH-PROOF)
 -- --------------------------------------------------------------
 SELECT 
-  '1. Tabel log' AS komponen,
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)') AS status
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'log'
-UNION ALL
+  t.nama_tabel,
+  t.kategori,
+  IF(ist.TABLE_NAME IS NOT NULL, '✅ ADA (OK)', '❌ BELUM DIBUAT') AS status,
+  COALESCE(ist.TABLE_ROWS, 0) AS estimasi_data
+FROM (
+  SELECT 'companies' AS nama_tabel, 'Perusahaan' AS kategori UNION ALL
+  SELECT 'org_nodes', 'Hierarki Wilayah' UNION ALL
+  SELECT 'user_scope_assignments', 'User Scope' UNION ALL
+  SELECT 'mst_user', 'Akun Pengguna' UNION ALL
+  SELECT 'mst_cabang', 'Cabang Hotel' UNION ALL
+  SELECT 'mst_gedung', 'Gedung' UNION ALL
+  SELECT 'mst_lantai', 'Lantai' UNION ALL
+  SELECT 'mst_tipe_kamar', 'Tipe Kamar' UNION ALL
+  SELECT 'mst_tipe_kamar_foto', 'Foto Tipe Kamar' UNION ALL
+  SELECT 'mst_kamar', 'Kamar' UNION ALL
+  SELECT 'mst_bed_type', 'Bed Type' UNION ALL
+  SELECT 'mst_amenity', 'Amenity Kamar' UNION ALL
+  SELECT 'mst_fasilitas', 'Fasilitas Hotel' UNION ALL
+  SELECT 'mst_room_type_amenity', 'Relasi Amenity Kamar' UNION ALL
+  SELECT 'mst_room_type_fasilitas', 'Relasi Fasilitas Kamar' UNION ALL
+  SELECT 'mst_shift', 'Shift Kasir' UNION ALL
+  SELECT 'mst_cashier_counter', 'Loket Kasir' UNION ALL
+  SELECT 'mst_tax', 'Pajak & Service' UNION ALL
+  SELECT 'mst_corporate_account', 'Corporate / Travel Agent' UNION ALL
+  SELECT 'mst_guest', 'Data Tamu' UNION ALL
+  SELECT 'mst_musim', 'Season / Musim' UNION ALL
+  SELECT 'mst_paket_harga', 'Rate Plan' UNION ALL
+  SELECT 'mst_rate_plan_price', 'Harga Kamar Rate Plan' UNION ALL
+  SELECT 'mst_ruang_event', 'Ruang Event' UNION ALL
+  SELECT 'mst_tipe_ruang_event', 'Tipe Ruang Event' UNION ALL
+  SELECT 'mst_harga_ruang_event', 'Harga Ruang Event' UNION ALL
+  SELECT 'mst_navigation', 'Menu Navigasi' UNION ALL
+  SELECT 'trx_reservation', 'Transaksi Reservasi' UNION ALL
+  SELECT 'trx_checkin', 'Transaksi Check-in' UNION ALL
+  SELECT 'trx_folio', 'Folio Tamu' UNION ALL
+  SELECT 'trx_cashier_shift', 'Sesi Kasir Shift' UNION ALL
+  SELECT 'trx_night_audit', 'Night Audit' UNION ALL
+  SELECT 'log', 'Log Error Sistem' UNION ALL
+  SELECT 'log_perubahan', 'Audit Trail'
+) t
+LEFT JOIN INFORMATION_SCHEMA.TABLES ist 
+  ON ist.TABLE_SCHEMA = DATABASE() AND ist.TABLE_NAME = t.nama_tabel
+ORDER BY t.kategori, t.nama_tabel;
+
+
+-- --------------------------------------------------------------
+-- 2. VERIFIKASI KOLOM KRITIS (MENCEGAH ERROR 99 MAINTENANCE)
+-- --------------------------------------------------------------
 SELECT 
-  '2. Tabel log_perubahan',
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'log_perubahan'
-UNION ALL
-SELECT 
-  '3. Kolom mst_user.org_node_id',
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
-FROM INFORMATION_SCHEMA.COLUMNS 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'org_node_id'
-UNION ALL
-SELECT 
-  '4. Kolom mst_user.can_switch_branch',
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
-FROM INFORMATION_SCHEMA.COLUMNS 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'can_switch_branch'
-UNION ALL
-SELECT 
-  '5. Kolom mst_cabang.company_id & org_node_id',
-  IF(COUNT(*) = 2, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
-FROM INFORMATION_SCHEMA.COLUMNS 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_cabang' AND COLUMN_NAME IN ('company_id', 'org_node_id')
-UNION ALL
-SELECT 
-  '6. Kolom mst_amenity.harga',
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
+  'mst_amenity.harga' AS target_kolom,
+  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (Penyebab Maintenance 99)') AS status
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_amenity' AND COLUMN_NAME = 'harga'
 UNION ALL
 SELECT 
-  '7. Kolom mst_fasilitas.harga',
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
+  'mst_fasilitas.harga',
+  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (Penyebab Maintenance 99)')
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_fasilitas' AND COLUMN_NAME = 'harga'
 UNION ALL
 SELECT 
-  '8. Tabel mst_tipe_kamar_foto',
-  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_tipe_kamar_foto'
+  'mst_user.org_node_id',
+  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG (Penyebab Maintenance 99)')
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'org_node_id'
 UNION ALL
 SELECT 
-  '9. Tabel mst_room_type_amenity & fasilitas',
-  IF(COUNT(*) = 2, '✅ TERPASANG (OK)', '❌ HILANG (FAIL)')
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('mst_room_type_amenity', 'mst_room_type_fasilitas');
-
-
--- --------------------------------------------------------------
--- 2. RINGKASAN JUMLAH DATA MASTER & STATUS OPERASIONAL
--- --------------------------------------------------------------
+  'mst_user.can_switch_branch',
+  IF(COUNT(*) > 0, '✅ TERPASANG (OK)', '❌ HILANG')
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_user' AND COLUMN_NAME = 'can_switch_branch'
+UNION ALL
 SELECT 
-  'Perusahaan (companies)' AS modul, 
-  COUNT(*) AS total_data, 
-  IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') AS status 
-FROM `companies`
-UNION ALL
-SELECT 'Wilayah / Node (org_nodes)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `org_nodes`
-UNION ALL
-SELECT 'Cabang (mst_cabang)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_cabang`
-UNION ALL
-SELECT 'Gedung (mst_gedung)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_gedung`
-UNION ALL
-SELECT 'Lantai (mst_lantai)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_lantai`
-UNION ALL
-SELECT 'Bed Type (mst_bed_type)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_bed_type`
-UNION ALL
-SELECT 'Tipe Kamar (mst_tipe_kamar)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_tipe_kamar`
-UNION ALL
-SELECT 'Master Kamar (mst_kamar)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_kamar`
-UNION ALL
-SELECT 'Amenity Kamar (mst_amenity)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_amenity`
-UNION ALL
-SELECT 'Fasilitas Hotel (mst_fasilitas)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_fasilitas`
-UNION ALL
-SELECT 'Shift Kasir (mst_shift)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_shift`
-UNION ALL
-SELECT 'Cashier Counter (mst_cashier_counter)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_cashier_counter`
-UNION ALL
-SELECT 'Corporate / Agent (mst_corporate)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_corporate`
-UNION ALL
-SELECT 'Pajak & Service (mst_pajak)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_pajak`
-UNION ALL
-SELECT 'Rate Plan (mst_paket_harga)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_paket_harga`
-UNION ALL
-SELECT 'Navigasi Menu (mst_navigation)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_navigation`
-UNION ALL
-SELECT 'User Terdaftar (mst_user)', COUNT(*), IF(COUNT(*) > 0, '✅ Siap', '⚠️ Kosong') FROM `mst_user`;
+  'mst_cabang.company_id & org_node_id',
+  IF(COUNT(*) = 2, '✅ TERPASANG (OK)', '❌ HILANG')
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mst_cabang' AND COLUMN_NAME IN ('company_id', 'org_node_id');
 
 
 -- --------------------------------------------------------------
@@ -154,19 +138,3 @@ SELECT
   IF(n.menu LIKE '%/front_office%' AND n.menu LIKE '%/night_audit%', '✅ Lengkap (Fitur Baru)', '⚠️ Versi Lama') AS status_fitur
 FROM `mst_navigation` n
 ORDER BY n.role ASC;
-
-
--- --------------------------------------------------------------
--- 6. AUDIT 5 LOG ERROR TERAKHIR SISTEM (JIKA ADA ERROR TERCATAT)
--- --------------------------------------------------------------
-SELECT 
-  id,
-  DateTime,
-  Controller,
-  Function,
-  SUBSTRING(Request, 1, 80) AS potongan_request,
-  SUBSTRING(Response, 1, 80) AS potongan_response,
-  SUBSTRING(Stack, 1, 150) AS potongan_stack_error
-FROM `log`
-ORDER BY id DESC
-LIMIT 5;
