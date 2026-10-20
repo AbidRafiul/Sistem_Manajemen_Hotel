@@ -29,7 +29,10 @@ const schema = Joi.object({
     bank_name: Joi.string().max(50).optional().allow(null, ""),
     card_type: Joi.string().max(20).optional().allow(null, ""),
     reference_no: Joi.string().max(100).optional().allow(null, ""),
-    guest_count: Joi.number().integer().min(1).optional().allow(null)
+    guest_count: Joi.number().integer().min(1).optional().allow(null),
+    is_early_checkin: Joi.boolean().optional().allow(null),
+    apply_early_checkin_fee: Joi.boolean().optional().allow(null),
+    early_checkin_amount: Joi.number().min(0).optional().allow(null)
 }).unknown(true);
 
 router.post("/", async (req, res) => {
@@ -52,11 +55,16 @@ router.post("/", async (req, res) => {
             const resRoom = await trx("trx_reservation_room as rr")
                 .join("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
                 .join("mst_guest as g", "r.kode_guest", "g.kode_tamu")
+                .leftJoin("mst_cabang as c", "r.kode_cabang", "c.kode_cabang")
                 .select(
                     "rr.*",
                     "r.status as res_status",
+                    "r.check_in_date",
+                    "r.check_out_date",
                     "r.deposit_amount",
                     "r.kode_cabang",
+                    "c.waktu_checkin",
+                    "c.waktu_checkout",
                     "g.is_blacklisted",
                     "g.blacklist_reason"
                 )
@@ -75,6 +83,23 @@ router.post("/", async (req, res) => {
             }
             if (resRoom.res_status === 'cancelled' || resRoom.res_status === 'no_show') {
                 throw new Error(`Kamar tidak bisa di-check-in karena status reservasi: ${resRoom.res_status}`);
+            }
+
+            // Validasi Tanggal Check-in
+            const todayStr = formatDateSystem(new Date(), "yyyy-MM-dd");
+            const cinDateStr = formatDateSystem(new Date(resRoom.check_in_date), "yyyy-MM-dd");
+
+            if (cinDateStr > todayStr) {
+                throw new Error(`Jadwal check-in belum tiba. Reservasi ini dijadwalkan tiba pada tanggal ${formatDateSystem(new Date(resRoom.check_in_date), 'dd/MM/yyyy')}. Check-in hanya dapat diproses pada hari kedatangan. Silakan gunakan menu Reschedule jika tamu ingin memajukan tanggal menginap.`);
+            }
+
+            // Validasi Waktu Check-in (Standard Hotel Check-In Time vs Early Check-In)
+            const standardCheckinTime = resRoom.waktu_checkin || "14:00:00";
+            const currentTimeStr = formatDateSystem(new Date(), "HH:mm:ss");
+            const isBeforeStandardTime = (cinDateStr === todayStr && currentTimeStr < standardCheckinTime);
+
+            if (isBeforeStandardTime && oPayload.is_early_checkin !== true) {
+                throw new Error(`Waktu check-in standar hotel adalah pk. ${standardCheckinTime.substring(0, 5)}. Tamu tiba lebih awal pada pk. ${currentTimeStr.substring(0, 5)} WIB (Early Check-In). Harap konfirmasi opsi Early Check-In untuk melanjutkan.`);
             }
 
             // 2. Cek Blacklist
@@ -96,14 +121,17 @@ router.post("/", async (req, res) => {
             }
 
             // 3. Proses Check-in (Helper)
-            // Ini akan assign kamar secara otomatis/manual, buat folio, charge kamar, dll.
+            // Ini akan assign kamar secara otomatis/manual, buat folio, catat early checkin, charge kamar/amenity, dll.
             const checkinData = await processCheckIn({
                 kode_reservasi_room: oPayload.kode_reservasi_room,
                 trx: trx,
                 userId: userId,
                 kode_kamar_manual: resRoom.kode_kamar || oPayload.kode_kamar || null,
                 kode_cashier_shift: shiftCode,
-                guest_count: oPayload.guest_count || null
+                guest_count: oPayload.guest_count || null,
+                is_early_checkin: isBeforeStandardTime || Boolean(oPayload.is_early_checkin),
+                apply_early_checkin_fee: Boolean(oPayload.apply_early_checkin_fee),
+                early_checkin_amount: oPayload.early_checkin_amount !== undefined ? Number(oPayload.early_checkin_amount) : 150000
             });
 
             // 4. Proses Deposit Tambahan saat Check-in (Hanya jika kasir menerima uang deposit baru > 0)
