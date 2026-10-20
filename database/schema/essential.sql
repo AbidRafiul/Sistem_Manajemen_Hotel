@@ -1,4 +1,4 @@
-﻿-- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
 --
 -- Host: localhost    Database: hotel_pms
 -- ------------------------------------------------------
@@ -2214,7 +2214,7 @@ CREATE TABLE `trx_reservation_room` (
   `room_preference` varchar(100) DEFAULT NULL,
   `rate_per_night` decimal(14,2) NOT NULL,
   `nights` int NOT NULL,
-  `status` enum('booked','assigned','checked_in','checked_out','room_moved') NOT NULL DEFAULT 'booked',
+  `status` varchar(50) NOT NULL DEFAULT 'booked',
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_by` bigint DEFAULT NULL,

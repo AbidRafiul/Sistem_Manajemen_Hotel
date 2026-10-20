@@ -20,9 +20,10 @@ const router = express.Router();
 
 const schema = Joi.object({
   kode_reservasi: Joi.string().required().label("Kode Reservasi"),
+  kode_reservasi_room: Joi.string().optional().allow(null, "").label("Kode Kamar Reservasi"),
   cancellation_reason: Joi.string().required().label("Alasan Pembatalan"),
   notes: Joi.string().optional().allow(null, "").label("Catatan Tambahan"),
-  refund_type: Joi.string().valid("refund_deposit", "non_refundable").required().label("Jenis Kebijakan Refund"),
+  refund_type: Joi.string().valid("refund_deposit", "non_refundable").optional().allow(null, "").label("Jenis Kebijakan Refund"),
   penalty_amount: Joi.number().min(0).default(0).label("Biaya Administrasi / Denda Pembatalan"),
   payment_method: Joi.string().valid("cash", "transfer", "card", "qris").optional().allow(null, "").label("Metode Pengembalian Dana"),
   bank_name: Joi.string().optional().allow(null, "").label("Nama Bank"),
@@ -70,6 +71,78 @@ router.post("/", async (req, res) => {
 
       if (["checked_in", "checked_out", "cancelled"].includes(reservation.status)) {
         throw new Error(`Reservasi tidak dapat dibatalkan karena status saat ini: '${reservation.status}'.`);
+      }
+
+      // Cek apakah ini pembatalan parsial satu unit kamar spesifik
+      if (oPayload.kode_reservasi_room) {
+        const targetRoom = await trx("trx_reservation_room")
+          .where("kode_reservasi_room", oPayload.kode_reservasi_room)
+          .where("kode_reservation", oPayload.kode_reservasi)
+          .first();
+
+        if (!targetRoom) {
+          throw new Error(`Kamar '${oPayload.kode_reservasi_room}' tidak ditemukan dalam reservasi ini.`);
+        }
+        if (targetRoom.status === "checked_in") {
+          throw new Error("Kamar sudah berstatus check-in, tidak dapat dibatalkan.");
+        }
+        if (targetRoom.status === "cancelled") {
+          throw new Error("Kamar sudah dibatalkan sebelumnya.");
+        }
+
+        // Cek kamar aktif lainnya
+        const allActiveRooms = await trx("trx_reservation_room")
+          .where("kode_reservation", oPayload.kode_reservasi)
+          .whereNotIn("status", ["cancelled", "checked_out"]);
+
+        // Jika masih ada kamar aktif lain (>1), batalkan HANYA unit kamar ini (Partial Cancellation)
+        if (allActiveRooms.length > 1) {
+          const cancelNote = oPayload.notes 
+            ? `${oPayload.cancellation_reason} (${oPayload.notes})` 
+            : oPayload.cancellation_reason;
+
+          await trx("trx_reservation_room")
+            .where("kode_reservasi_room", oPayload.kode_reservasi_room)
+            .update({
+              status: "cancelled",
+              updated_by: userId,
+              updated_at: tNow
+            });
+
+          // Lepas nomor kamar fisik jika sudah sempat di-assign
+          if (targetRoom.kode_kamar) {
+            await trx("mst_kamar")
+              .where("kode_kamar", targetRoom.kode_kamar)
+              .update({
+                occupancy_status: "vacant",
+                updated_by: userId,
+                updated_at: tNow
+              });
+          }
+
+          // Nonaktifkan charges room di folio jika ada
+          const folio = await trx("trx_folio")
+            .where("kode_reservation", oPayload.kode_reservasi)
+            .first();
+
+          if (folio) {
+            await trx("trx_folio_charge")
+              .where("kode_folio", folio.kode_folio)
+              .where("kode_ref_source", oPayload.kode_reservasi_room)
+              .update({
+                is_active: 0
+              });
+          }
+
+          return {
+            is_partial: true,
+            kode_reservasi: oPayload.kode_reservasi,
+            kode_reservasi_room: oPayload.kode_reservasi_room,
+            remaining_rooms: allActiveRooms.length - 1,
+            cancellation_reason: cancelNote
+          };
+        }
+        // Jika allActiveRooms <= 1, kamar ini adalah kamar aktif terakhir, lanjut ke pembatalan reservasi penuh di bawah
       }
 
       const depositAmount = parseFloat(reservation.deposit_amount || 0);
@@ -224,9 +297,11 @@ router.post("/", async (req, res) => {
       };
     });
 
-    const msg = result.refund_type === "refund_deposit"
-      ? `Reservasi berhasil dibatalkan. Pengembalian deposit sebesar Rp ${result.refund_amount.toLocaleString("id-ID")} diproses melalui ${result.payment_method || "kasir"}.`
-      : `Reservasi berhasil dibatalkan. Dana deposit sebesar Rp ${result.deposit_awal.toLocaleString("id-ID")} dibukukan sebagai denda pembatalan (Non-Refundable).`;
+    const msg = result.is_partial
+      ? `Kamar berhasil dibatalkan dari reservasi ${result.kode_reservasi}. Sisa ${result.remaining_rooms} kamar lainnya tetap aktif.`
+      : result.refund_type === "refund_deposit"
+        ? `Reservasi berhasil dibatalkan. Pengembalian deposit sebesar Rp ${result.refund_amount.toLocaleString("id-ID")} diproses melalui ${result.payment_method || "kasir"}.`
+        : `Reservasi berhasil dibatalkan. Dana deposit sebesar Rp ${result.deposit_awal.toLocaleString("id-ID")} dibukukan sebagai denda pembatalan (Non-Refundable).`;
 
     return res.status(200).json({
       status: status.SUKSES,
