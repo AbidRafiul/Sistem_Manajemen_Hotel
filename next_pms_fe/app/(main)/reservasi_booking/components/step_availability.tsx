@@ -175,17 +175,29 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
             return;
         }
 
-        if (rm.status !== 'available') {
-            if (rm.status === 'occupied') {
-                showError(toast, `Kamar ${rm.nomor_kamar} sudah dibooking / terisi pada tanggal tersebut.`);
-            } else if (rm.status === 'maintenance') {
-                showError(toast, `Kamar ${rm.nomor_kamar} sedang dalam perbaikan (maintenance) atau ditutup.`);
-            }
-            return;
-        }
-
         const currentSelected: SelectedRoomItem[] = formik.values.selected_rooms || [];
         const isAlreadySelected = currentSelected.some(s => s.kode_kamar === rm.kode_kamar);
+
+        // Jika kamar belum dipilih, lakukan validasi ketersediaan ketat:
+        if (!isAlreadySelected) {
+            if (tk.available_count <= 0) {
+                showError(toast, `Tipe kamar ${tk.nama_tipe} sudah habis pada rentang tanggal tersebut.`);
+                return;
+            }
+
+            if (rm.status !== 'available') {
+                if (rm.status === 'occupied') {
+                    showError(toast, `Kamar ${rm.nomor_kamar} sudah dibooking / terisi pada tanggal tersebut.`);
+                } else if (rm.status === 'dirty') {
+                    showError(toast, `Kamar ${rm.nomor_kamar} sedang kotor / dalam proses pembersihan.`);
+                } else if (rm.status === 'maintenance') {
+                    showError(toast, `Kamar ${rm.nomor_kamar} sedang dalam perbaikan (maintenance) atau ditutup.`);
+                } else {
+                    showError(toast, `Kamar ${rm.nomor_kamar} sedang tidak tersedia.`);
+                }
+                return;
+            }
+        }
 
         let updated: SelectedRoomItem[] = [];
         if (isAlreadySelected) {
@@ -620,13 +632,19 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ state, setState, fo
                                                                 };
                                                             }
 
+                                                            const isBtnDisabled = (!isAvailable && !isSelected) || (tk.available_count <= 0 && !isSelected);
+
                                                             return (
                                                                 <button
                                                                     key={idx}
                                                                     type="button"
+                                                                    disabled={isBtnDisabled}
                                                                     onClick={() => toggleRoomSelection(tk, rm)}
                                                                     className={`border-none ${badgeClass}`}
-                                                                    style={badgeStyle}
+                                                                    style={{
+                                                                        ...badgeStyle,
+                                                                        ...(isBtnDisabled ? { cursor: 'not-allowed', opacity: 0.6 } : {})
+                                                                    }}
                                                                     title={`Kamar ${rm.nomor_kamar} - ${rm.status_label}${isSelected ? ' (Dipilih)' : ''}`}
                                                                 >
                                                                     {isSelected && <i className="pi pi-check font-bold mr-1" style={{ fontSize: '0.85rem' }}></i>}

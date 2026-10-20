@@ -150,25 +150,41 @@ router.post("/", async (req, res) => {
                 .where("is_active", 1)
                 .whereNull("deleted_at");
 
-            let totalSubtotal = 0;
-            const processedRooms = [];
+            // Validasi Ketersediaan Kamar Agregat & Duplikasi Kamar Fisik
+            const physicalRoomCodes = roomsToProcess.map(r => r.kode_kamar).filter(Boolean);
+            const uniquePhysicalRooms = new Set(physicalRoomCodes);
+            if (physicalRoomCodes.length !== uniquePhysicalRooms.size) {
+                throw new Error("Terdapat duplikasi pemilihan nomor kamar fisik dalam satu pesanan.");
+            }
 
+            const requestedCountPerType = {};
             for (const rm of roomsToProcess) {
-                // Pastikan kamar tersedia
+                requestedCountPerType[rm.kode_tipe_kamar] = (requestedCountPerType[rm.kode_tipe_kamar] || 0) + 1;
+            }
+
+            for (const [kodeTipe, reqCount] of Object.entries(requestedCountPerType)) {
                 const { available_count, terpakai_kamar_ids } = await hitungKetersediaanTipeKamar({
                     kode_cabang: oPayload.kode_cabang,
-                    kode_tipe_kamar: rm.kode_tipe_kamar,
+                    kode_tipe_kamar: kodeTipe,
                     check_in_date: cin,
                     check_out_date: cout
                 }, trx);
 
-                if (available_count <= 0) {
-                    throw new Error(`Tipe kamar ${rm.kode_tipe_kamar} sudah penuh pada rentang tanggal tersebut.`);
-                }
-                if (rm.kode_kamar && terpakai_kamar_ids && terpakai_kamar_ids.includes(rm.kode_kamar)) {
-                    throw new Error(`Kamar fisik ${rm.kode_kamar} sedang tidak tersedia.`);
+                if (available_count < reqCount) {
+                    throw new Error(`Kamar tipe ${kodeTipe} tidak mencukupi untuk dipesan. Diminta: ${reqCount} kamar, namun hanya tersedia: ${available_count} kamar pada rentang tanggal tersebut.`);
                 }
 
+                for (const rm of roomsToProcess.filter(r => r.kode_tipe_kamar === kodeTipe && r.kode_kamar)) {
+                    if (terpakai_kamar_ids && terpakai_kamar_ids.includes(rm.kode_kamar)) {
+                        throw new Error(`Kamar fisik ${rm.kode_kamar} sedang tidak tersedia atau sudah dipesan pada rentang tanggal tersebut.`);
+                    }
+                }
+            }
+
+            let totalSubtotal = 0;
+            const processedRooms = [];
+
+            for (const rm of roomsToProcess) {
                 // Hitung harga
                 const rateInfo = await hitungHargaKamar({
                     kode_tipe_kamar: rm.kode_tipe_kamar,
