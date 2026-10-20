@@ -336,8 +336,73 @@ const CheckoutContent = () => {
         );
     };
 
-    const isSelectedSettled = selectedRoom ? selectedRoom.is_settled || Number(selectedRoom.balance || 0) <= 0 : false;
-    const selectedBalance = selectedRoom ? Math.max(0, Number(selectedRoom.balance || 0)) : 0;
+    const activePricing = useMemo(() => {
+        if (!selectedRoom) {
+            return {
+                subtotal: 0,
+                tax: 0,
+                grandTotal: 0,
+                paid: 0,
+                balance: 0,
+                isSettled: true
+            };
+        }
+
+        const allRooms = selectedRoom.rooms || [selectedRoom];
+        const selectedRooms = allRooms.filter((r: any) => selectedRoomIds.includes(r.kode_reservasi_room));
+
+        // If all rooms or 1 room exists, use selectedRoom's calculated values
+        if (selectedRooms.length === allRooms.length || allRooms.length <= 1) {
+            const grandTotal = Number(selectedRoom.total_charges || selectedRoom.grand_total || selectedRoom.current_grand_total || 0);
+            const paid = Number(selectedRoom.total_paid || 0);
+            const balance = Math.max(0, grandTotal - paid);
+            return {
+                subtotal: Number(selectedRoom.subtotal || 0),
+                tax: Number(selectedRoom.total_tax || (selectedRoom.tax_amount || 0) + (selectedRoom.service_charge_amount || 0)),
+                grandTotal,
+                paid,
+                balance,
+                isSettled: balance <= 0
+            };
+        }
+
+        // Partial room checkout from multi-room group:
+        const roomSubtotal = selectedRooms.reduce((acc: number, r: any) => {
+            const rate = parseFloat(r.rate_per_night || 0);
+            const n = parseInt(r.nights || 1, 10);
+            return acc + (r.subtotal ? parseFloat(r.subtotal) : (rate * n));
+        }, 0);
+
+        const selectedCodes = selectedRooms.map((r: any) => r.kode_reservasi_room);
+        const extraCharges = (selectedRoom.charges || []).filter((c: any) => {
+            if (c.charge_type === 'room') return false;
+            if (c.ref_source_type === 'trx_reservation_room') return selectedCodes.includes(c.kode_ref_source);
+            return true;
+        });
+        const extraSubtotal = extraCharges.reduce((acc: number, c: any) => acc + (parseFloat(c.amount) || 0), 0);
+        const totalSubtotal = roomSubtotal + extraSubtotal;
+
+        const taxRate = selectedRoom.subtotal > 0
+            ? (Number(selectedRoom.total_tax || 0) / Number(selectedRoom.subtotal))
+            : 0.15;
+        const totalTax = Math.round(totalSubtotal * taxRate);
+        const grandTotal = totalSubtotal + totalTax;
+
+        const paid = Number(selectedRoom.total_paid || 0);
+        const balance = Math.max(0, grandTotal - paid);
+
+        return {
+            subtotal: totalSubtotal,
+            tax: totalTax,
+            grandTotal,
+            paid,
+            balance,
+            isSettled: balance <= 0
+        };
+    }, [selectedRoom, selectedRoomIds]);
+
+    const isSelectedSettled = activePricing.isSettled;
+    const selectedBalance = activePricing.balance;
 
     // Body templates matching Master Tamu conventions
     const roomBodyTemplate = (rowData: any) => {
@@ -1171,20 +1236,20 @@ const CheckoutContent = () => {
                         <div className="surface-100 p-3.5 border-round-xl border-1 surface-border">
                             <div className="flex justify-content-between align-items-center text-sm py-1.5">
                                 <span className="text-700">Subtotal Biaya</span>
-                                <span className="font-bold text-900">{formatCurrency(selectedRoom.subtotal || selectedRoom.current_grand_total)}</span>
+                                <span className="font-bold text-900">{formatCurrency(activePricing.subtotal)}</span>
                             </div>
                             <div className="flex justify-content-between align-items-center text-sm py-1.5">
                                 <span className="text-700">Pajak &amp; Service Charge</span>
-                                <span className="font-bold text-900">{formatCurrency(selectedRoom.total_tax)}</span>
+                                <span className="font-bold text-900">{formatCurrency(activePricing.tax)}</span>
                             </div>
                             <Divider className="my-1.5" />
                             <div className="flex justify-content-between align-items-center text-base py-1.5 font-bold">
                                 <span className="text-900">Total Tagihan (Grand Total)</span>
-                                <span className="text-primary text-lg font-black">{formatCurrency(selectedRoom.total_charges || selectedRoom.current_grand_total)}</span>
+                                <span className="text-primary text-lg font-black">{formatCurrency(activePricing.grandTotal)}</span>
                             </div>
                             <div className="flex justify-content-between align-items-center text-sm py-1.5">
                                 <span className="text-green-700 font-semibold">Total Pembayaran Masuk</span>
-                                <span className="font-bold text-green-700">- {formatCurrency(selectedRoom.total_paid)}</span>
+                                <span className="font-bold text-green-700">- {formatCurrency(activePricing.paid)}</span>
                             </div>
                             <Divider className="my-1.5" />
                             <div className={`flex justify-content-between align-items-center p-3 border-round-xl mt-1 ${

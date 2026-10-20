@@ -14,6 +14,7 @@ import DB from "../../../../core/config/knex.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { resolveEffectiveBranch } from "../../components/tools/scope_helper.js";
+import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
 
 const router = express.Router();
 
@@ -32,6 +33,8 @@ router.post("/", async (req, res) => {
         "tk.nama_tipe as nama_tipe_kamar",
         "rr.kode_kamar",
         "mk.nomor_kamar",
+        "rr.rate_per_night",
+        "rr.nights",
         "g.kode_tamu",
         "g.full_name as guest_name",
         "g.phone as guest_phone",
@@ -168,6 +171,7 @@ router.post("/", async (req, res) => {
 
     for (const row of rows) {
       const key = row.kode_folio || row.kode_reservation;
+      const tipeName = row.nama_tipe_kamar || row.nama_tipe || "Kamar";
       if (!folioGroupMap.has(key)) {
         folioGroupMap.set(key, {
           kode_folio: row.kode_folio,
@@ -177,13 +181,9 @@ router.post("/", async (req, res) => {
           nomor_kamar: row.nomor_kamar,
           guest_name: row.guest_name,
           guest_phone: row.guest_phone,
-          nama_tipe: row.nama_tipe,
+          nama_tipe: tipeName,
           check_in_date: row.check_in_date,
           check_out_date: row.check_out_date,
-          subtotal: parseFloat(row.subtotal || 0),
-          tax_amount: parseFloat(row.tax_amount || 0),
-          service_charge_amount: parseFloat(row.service_charge_amount || 0),
-          grand_total: parseFloat(row.grand_total || 0),
           rooms: []
         });
       }
@@ -193,52 +193,75 @@ router.post("/", async (req, res) => {
         kode_reservasi_room: row.kode_reservasi_room,
         kode_kamar: row.kode_kamar,
         nomor_kamar: row.nomor_kamar,
-        nama_tipe: row.nama_tipe,
+        nama_tipe: tipeName,
         rate_per_night: parseFloat(row.rate_per_night || 0),
+        nights: parseInt(row.nights || 1, 10),
+        subtotal: (parseFloat(row.rate_per_night || 0)) * (parseInt(row.nights || 1, 10)),
         inspection_task: inspectionTaskMap[row.kode_kamar] || null
       });
     }
 
-    const data = Array.from(folioGroupMap.values()).map((group) => {
-      const grandTotal = group.grand_total;
-      const totalPaid = paymentsMap[group.kode_folio] || 0;
-      const balance = grandTotal - totalPaid;
-      const isSettled = balance <= 0;
-      const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
-      const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe).filter(Boolean))];
+    const data = await Promise.all(
+      Array.from(folioGroupMap.values()).map(async (group) => {
+        const targetRoomIds = group.rooms.map((r) => r.kode_reservasi_room);
 
-      // Tentukan status inspeksi untuk grup kamar
-      const groupTasks = group.rooms.map((r) => r.inspection_task).filter(Boolean);
-      const primaryTask = groupTasks.length > 0 ? groupTasks[0] : null;
+        // Dapatkan kalkulasi billing presisi untuk kamar-kamar yang checked_in ini
+        const billing = await calculateFolioBilling({
+          kode_folio: group.kode_folio,
+          target_room_ids: targetRoomIds,
+          trx: DB
+        });
 
-      let inspectionStatus = "not_requested";
-      if (primaryTask) {
-        if (primaryTask.status === "assigned" || primaryTask.status === "in_progress") {
-          inspectionStatus = "in_progress";
-        } else if (primaryTask.status === "finished") {
-          inspectionStatus = primaryTask.inspection_result === "with_charges" ? "with_charges" : "clear";
+        const subtotal = billing?.folio?.subtotal || 0;
+        const taxAmount = billing?.folio?.tax_amount || 0;
+        const serviceCharge = billing?.folio?.service_charge_amount || 0;
+        const grandTotal = billing?.folio?.grand_total || 0;
+        const totalPaid = billing?.folio?.total_paid || (paymentsMap[group.kode_folio] || 0);
+        const balance = billing?.folio?.balance ?? Math.max(0, grandTotal - totalPaid);
+        const isSettled = billing?.folio?.is_settled ?? (balance <= 0);
+
+        const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
+        const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe).filter(Boolean))];
+
+        // Tentukan status inspeksi untuk grup kamar
+        const groupTasks = group.rooms.map((r) => r.inspection_task).filter(Boolean);
+        const primaryTask = groupTasks.length > 0 ? groupTasks[0] : null;
+
+        let inspectionStatus = "not_requested";
+        if (primaryTask) {
+          if (primaryTask.status === "assigned" || primaryTask.status === "in_progress") {
+            inspectionStatus = "in_progress";
+          } else if (primaryTask.status === "finished") {
+            inspectionStatus = primaryTask.inspection_result === "with_charges" ? "with_charges" : "clear";
+          }
         }
-      }
 
-      return {
-        ...group,
-        room_count: group.rooms.length,
-        nomor_kamar: roomNumbers.join(", "),
-        nama_tipe: roomTypes.join(", "),
-        current_grand_total: grandTotal,
-        total_charges: grandTotal,
-        total_tax: group.tax_amount + group.service_charge_amount,
-        grand_total: grandTotal,
-        total_paid: totalPaid,
-        balance: balance,
-        is_settled: isSettled,
-        invoice_number: invoiceMap[group.kode_folio] || null,
-        billing_status: isSettled ? "settled" : "outstanding",
-        inspection_status: inspectionStatus,
-        active_inspection_task: primaryTask,
-        inspection_tasks: groupTasks
-      };
-    });
+        return {
+          ...group,
+          subtotal,
+          tax_amount: taxAmount,
+          service_charge_amount: serviceCharge,
+          room_count: group.rooms.length,
+          nomor_kamar: roomNumbers.join(", "),
+          nama_tipe: roomTypes.join(", "),
+          current_grand_total: grandTotal,
+          total_charges: grandTotal,
+          total_tax: taxAmount + serviceCharge,
+          grand_total: grandTotal,
+          total_paid: totalPaid,
+          balance: balance,
+          is_settled: isSettled,
+          invoice_number: invoiceMap[group.kode_folio] || null,
+          billing_status: isSettled ? "settled" : "outstanding",
+          inspection_status: inspectionStatus,
+          active_inspection_task: primaryTask,
+          inspection_tasks: groupTasks,
+          charges: billing?.charges || [],
+          payments: billing?.payments || [],
+          tax_details: billing?.tax_breakdown || []
+        };
+      })
+    );
 
     return res.status(200).json({
       status: status.SUKSES,

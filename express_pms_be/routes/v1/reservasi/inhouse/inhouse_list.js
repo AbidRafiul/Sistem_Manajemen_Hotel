@@ -13,6 +13,7 @@ import { status } from "../../components/tools/general.js";
 import DB from "../../../../core/config/knex.js";
 import { Logging } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
+import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
 
 const router = express.Router();
 
@@ -158,33 +159,45 @@ router.post("/", async (req, res) => {
     }
 
     // Format data dan kalkulasi balance real-time
-    const data = Array.from(folioGroupMap.values()).map((group) => {
-      const grandTotal = group.grand_total;
-      const totalPaid = paymentsMap[group.kode_folio] || 0;
-      const balance = grandTotal - totalPaid;
-      const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
-      const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe_kamar).filter(Boolean))];
-      const primaryRoom = group.rooms[0] || {};
+    const data = await Promise.all(
+      Array.from(folioGroupMap.values()).map(async (group) => {
+        const targetRoomIds = group.rooms.map((r) => r.kode_reservasi_room);
+        const billing = await calculateFolioBilling({
+          kode_folio: group.kode_folio,
+          target_room_ids: targetRoomIds,
+          trx: DB
+        });
 
-      return {
-        ...group,
-        room_count: group.rooms.length,
-        nomor_kamar: roomNumbers.join(", "),
-        nama_tipe_kamar: roomTypes.join(", "),
-        kode_kamar: primaryRoom.kode_kamar || null,
-        grand_total: grandTotal,
-        total_paid: totalPaid,
-        balance: balance,
-        billing_status: balance <= 0 ? "settled" : "outstanding",
-        // Housekeeping info (dari primary room)
-        housekeeping_status: primaryRoom.housekeeping_status || "clean",
-        kode_housekeeping_task: primaryRoom.kode_housekeeping_task || null,
-        task_status: primaryRoom.task_status || null,
-        task_priority: primaryRoom.task_priority || null,
-        task_notes: primaryRoom.task_notes || null,
-        task_pic_name: primaryRoom.task_pic_name || null
-      };
-    });
+        const grandTotal = billing?.folio?.grand_total || group.grand_total;
+        const totalPaid = billing?.folio?.total_paid || (paymentsMap[group.kode_folio] || 0);
+        const balance = billing?.folio?.balance ?? Math.max(0, grandTotal - totalPaid);
+        const roomNumbers = group.rooms.map((r) => r.nomor_kamar).filter(Boolean);
+        const roomTypes = [...new Set(group.rooms.map((r) => r.nama_tipe_kamar).filter(Boolean))];
+        const primaryRoom = group.rooms[0] || {};
+
+        return {
+          ...group,
+          subtotal: billing?.folio?.subtotal || group.subtotal,
+          tax_amount: billing?.folio?.tax_amount || group.tax_amount,
+          service_charge_amount: billing?.folio?.service_charge_amount || group.service_charge_amount,
+          room_count: group.rooms.length,
+          nomor_kamar: roomNumbers.join(", "),
+          nama_tipe_kamar: roomTypes.join(", "),
+          kode_kamar: primaryRoom.kode_kamar || null,
+          grand_total: grandTotal,
+          total_paid: totalPaid,
+          balance: balance,
+          billing_status: balance <= 0 ? "settled" : "outstanding",
+          // Housekeeping info (dari primary room)
+          housekeeping_status: primaryRoom.housekeeping_status || "clean",
+          kode_housekeeping_task: primaryRoom.kode_housekeeping_task || null,
+          task_status: primaryRoom.task_status || null,
+          task_priority: primaryRoom.task_priority || null,
+          task_notes: primaryRoom.task_notes || null,
+          task_pic_name: primaryRoom.task_pic_name || null
+        };
+      })
+    );
 
     return res.status(200).json({
       status: status.SUKSES,
