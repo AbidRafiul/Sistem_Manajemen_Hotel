@@ -78,7 +78,8 @@ export async function seed(knex) {
       label: "Kasir",
       icon: "pi pi-fw pi-wallet",
       items: [
-        { label: "Shift Kasir", icon: "pi pi-fw pi-clock", to: "/kasir_shift" }
+        { label: "Shift Kasir", icon: "pi pi-fw pi-clock", to: "/kasir_shift" },
+        { label: "Night Audit", icon: "pi pi-fw pi-moon", to: "/night_audit" }
       ]
     },
     {
@@ -92,6 +93,14 @@ export async function seed(knex) {
         { label: "Kedatangan (Arrivals)", icon: "pi pi-fw pi-sign-in", to: "/reservasi_checkin" },
         { label: "Tamu Menginap", icon: "pi pi-fw pi-users", to: "/tamu_menginap" },
         { label: "Checkout", icon: "pi pi-fw pi-sign-out", to: "/checkout" }
+      ]
+    },
+    {
+      label: "Event & Banquet",
+      icon: "pi pi-fw pi-ticket",
+      items: [
+        { label: "Pemesanan Ruang Event", icon: "pi pi-fw pi-ticket", to: "/event_booking" },
+        { label: "Monitoring Ruang Event", icon: "pi pi-fw pi-desktop", to: "/event_monitoring" }
       ]
     },
     {

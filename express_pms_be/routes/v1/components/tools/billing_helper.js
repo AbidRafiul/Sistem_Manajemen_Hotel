@@ -20,7 +20,14 @@ import DB from "../../../../core/config/knex.js";
  * @param {import("knex").Knex} [params.trx] - Instance transaksi knex (opsional)
  * @returns {Promise<Object>} Data kalkulasi billing komprehensif
  */
-export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode_reservasi_room, trx = DB }) => {
+export const calculateFolioBilling = async ({
+  kode_folio,
+  kode_reservation,
+  kode_reservasi_room,
+  target_room_ids,
+  include_unrealized_rooms = false,
+  trx = DB
+}) => {
   const db = trx;
 
   // 1. Cari Folio
@@ -54,6 +61,12 @@ export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode
         .from("trx_reservation_room")
         .where("kode_reservasi_room", kode_reservasi_room);
     });
+  } else if (Array.isArray(target_room_ids) && target_room_ids.length > 0) {
+    folioQuery.whereIn("f.kode_reservation", function () {
+      this.select("kode_reservation")
+        .from("trx_reservation_room")
+        .whereIn("kode_reservasi_room", target_room_ids);
+    });
   } else {
     throw new Error("calculateFolioBilling membutuhkan kode_folio, kode_reservation, atau kode_reservasi_room");
   }
@@ -84,18 +97,53 @@ export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode
     .whereNull("rr.deleted_at")
     .where("rr.is_active", 1);
 
-  // 3. Ambil Daftar Tagihan (Charges)
-  const charges = await db("trx_folio_charge")
+  // 3. Filter Kamar & Tagihan (Charges) yang Relevan
+  const requestedRoomIds = Array.isArray(target_room_ids) && target_room_ids.length > 0
+    ? target_room_ids
+    : (kode_reservasi_room ? [kode_reservasi_room] : null);
+
+  let relevantRooms = rooms;
+  if (requestedRoomIds) {
+    relevantRooms = rooms.filter(r => requestedRoomIds.includes(r.kode_reservasi_room));
+  } else if (!include_unrealized_rooms) {
+    // Sesuai standar industri hotel: Jangan menagih kamar yang belum check-in ('booked') atau dibatalkan ('cancelled')
+    const activeOrFinished = rooms.filter(r => r.room_stay_status === "checked_in" || r.room_stay_status === "checked_out");
+    if (activeOrFinished.length > 0) {
+      relevantRooms = activeOrFinished;
+    }
+  }
+
+  const activeRoomCodes = relevantRooms.map(r => r.kode_reservasi_room);
+
+  // Ambil seluruh charges aktif dari database
+  const allCharges = await db("trx_folio_charge")
     .where("kode_folio", folioInfo.kode_folio)
     .andWhere("is_active", 1)
     .orderBy("created_at", "asc");
 
-  // Subtotal dihitung dari akumulasi rincian charges aktif
-  let subtotal = charges.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  // Filter charges yang berlaku untuk kamar yang relevan
+  let applicableCharges = allCharges;
+  if (!include_unrealized_rooms || requestedRoomIds) {
+    applicableCharges = allCharges.filter(curr => {
+      // Jika charge tipe room, harus milik kamar yang relevan
+      if (curr.charge_type === "room") {
+        return activeRoomCodes.includes(curr.kode_ref_source);
+      }
+      // Jika charge lain terikat ke kamar spesifik
+      if (curr.ref_source_type === "trx_reservation_room") {
+        return activeRoomCodes.includes(curr.kode_ref_source);
+      }
+      // Jika charge terikat ke reservasi global, tetap diikutsertakan
+      return true;
+    });
+  }
+
+  // Subtotal dihitung dari akumulasi rincian charges aktif yang relevan
+  let subtotal = applicableCharges.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   // Fallback jika belum ada charge tersimpan di DB tapi kamar sudah terdaftar
-  if (subtotal === 0 && rooms.length > 0) {
-    subtotal = rooms.reduce((acc, r) => {
+  if (subtotal === 0 && relevantRooms.length > 0) {
+    subtotal = relevantRooms.reduce((acc, r) => {
       const rate = parseFloat(r.rate_per_night) || 0;
       const n = parseInt(r.nights) || 1;
       return acc + (rate * n);
@@ -143,7 +191,7 @@ export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode
     .orderBy("paid_at", "asc");
 
   const totalPaid = payments.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const balance = grandTotal - totalPaid;
+  const balance = Math.max(0, grandTotal - totalPaid);
 
   // 6. Tentukan Status Pembayaran (Payment Status)
   let paymentStatus = "unpaid";
@@ -224,9 +272,46 @@ export const calculateFolioBilling = async ({ kode_folio, kode_reservation, kode
       id_number: folioInfo.guest_id_number || "-",
       guest_id_number: folioInfo.guest_id_number || "-"
     },
-    rooms,
-    charges,
+    rooms: relevantRooms,
+    all_rooms: rooms,
+    charges: applicableCharges,
+    all_charges: allCharges,
     tax_breakdown: taxBreakdown,
     payments
   };
+};
+
+/**
+ * Menyimpan data pembayaran ke trx_payment secara defensif.
+ * Memeriksa apakah kolom bank_name dan card_type ada pada skema database.
+ * 
+ * @param {import("knex").Knex} trx - Instance Knex / Transaksi
+ * @param {Object} data - Payload pembayaran
+ * @returns {Promise<any>}
+ */
+export const insertPaymentRecord = async (trx, data) => {
+  const hasBankName = await trx.schema.hasColumn("trx_payment", "bank_name").catch(() => false);
+  const hasCardType = await trx.schema.hasColumn("trx_payment", "card_type").catch(() => false);
+
+  const payload = {
+    kode_payment: data.kode_payment,
+    kode_folio: data.kode_folio,
+    payment_method: data.payment_method || "cash",
+    amount: data.amount,
+    kode_cashier_shift: data.kode_cashier_shift || null,
+    reference_no: data.reference_no || null,
+    received_by: data.received_by || null,
+    paid_at: data.paid_at,
+    created_by: data.created_by || null,
+    created_at: data.created_at
+  };
+
+  if (hasBankName && data.bank_name !== undefined) {
+    payload.bank_name = data.bank_name;
+  }
+  if (hasCardType && data.card_type !== undefined) {
+    payload.card_type = data.card_type;
+  }
+
+  return trx("trx_payment").insert(payload);
 };

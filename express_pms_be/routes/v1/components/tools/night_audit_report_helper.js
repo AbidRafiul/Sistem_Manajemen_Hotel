@@ -225,26 +225,75 @@ export const generateNightAuditReports = async ({ auditCode, kodeCabang, busines
   };
 
   // 9. Deposit & City Ledger (Folio saldo piutang & deposit)
-  const openFolios = await DB("trx_folio")
-    .where("kode_cabang", kodeCabang)
-    .where("status", "open")
-    .select("folio_owner_type", "grand_total");
+  // Sesuai standar akuntansi perhotelan (USALI):
+  // - Guest Ledger: Saldo piutang tamu yang BENAR-BENAR SEDANG MENGINAP (in-house) pada saat audit.
+  // - City Ledger: Saldo piutang korporasi dari tamu yang telah check-out (direct billing).
+  // - Advance Deposit: Uang muka yang diterima untuk reservasi masa depan (future bookings).
+
+  const inhouseFolioCodes = inhouseListReport
+    .map((g) => g.kode_folio)
+    .filter(Boolean);
 
   let guestLedgerTotal = 0;
   let cityLedgerTotal = 0;
 
-  for (const f of openFolios) {
-    const tot = parseFloat(f.grand_total || 0);
-    if (f.folio_owner_type === "corporate") {
-      cityLedgerTotal += tot;
-    } else {
-      guestLedgerTotal += tot;
+  if (inhouseFolioCodes.length > 0) {
+    const uniqueFolioCodes = [...new Set(inhouseFolioCodes)];
+    for (const fCode of uniqueFolioCodes) {
+      const folioCharges = await DB("trx_folio_charge")
+        .where("kode_folio", fCode)
+        .where("is_active", 1)
+        .where(function () {
+          this.where("business_date", "<=", businessDate).orWhereNull("business_date");
+        })
+        .sum("amount as total_charges");
+
+      const folioPayments = await DB("trx_payment")
+        .where("kode_folio", fCode)
+        .where("is_active", 1)
+        .sum("amount as total_payments");
+
+      const cAmt = parseFloat(folioCharges[0]?.total_charges || 0);
+      const pAmt = parseFloat(folioPayments[0]?.total_payments || 0);
+      guestLedgerTotal += Math.max(0, cAmt - pAmt);
     }
   }
+
+  // City Ledger: Piutang korporasi dari folio yang dialihkan ke corporate account / bill to company
+  const corporateFolios = await DB("trx_folio as f")
+    .join("trx_reservation as r", "f.kode_reservation", "r.kode_reservasi")
+    .where("f.kode_cabang", kodeCabang)
+    .where("f.folio_owner_type", "corporate")
+    .where("f.status", "open")
+    .where("r.status", "checked_out")
+    .select("f.kode_folio", "f.grand_total");
+
+  for (const cf of corporateFolios) {
+    const cfPayments = await DB("trx_payment")
+      .where("kode_folio", cf.kode_folio)
+      .where("is_active", 1)
+      .sum("amount as total_payments");
+    const gTot = parseFloat(cf.grand_total || 0);
+    const pTot = parseFloat(cfPayments[0]?.total_payments || 0);
+    cityLedgerTotal += Math.max(0, gTot - pTot);
+  }
+
+  // Advance Deposit: Pembayaran uang muka untuk reservasi mendatang (status confirmed / booked)
+  const advanceDepositRows = await DB("trx_payment as p")
+    .join("trx_folio as f", "p.kode_folio", "f.kode_folio")
+    .join("trx_reservation as r", "f.kode_reservation", "r.kode_reservasi")
+    .where("f.kode_cabang", kodeCabang)
+    .where("p.is_active", 1)
+    .where("r.check_in_date", ">", businessDate)
+    .whereIn("r.status", ["confirmed", "booked"])
+    .sum("p.amount as total_advance");
+
+  const advanceDepositTotal = parseFloat(advanceDepositRows[0]?.total_advance || 0);
 
   const ledgerReport = {
     guest_ledger_total: guestLedgerTotal,
     city_ledger_total: cityLedgerTotal,
+    advance_deposit_total: advanceDepositTotal,
     total_open_receivables: guestLedgerTotal + cityLedgerTotal
   };
 

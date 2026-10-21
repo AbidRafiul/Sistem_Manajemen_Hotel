@@ -1,198 +1,224 @@
 'use client';
 
 import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
+import { FormProps, initValue } from '../interfaces';
 import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
-import { showError, showSuccess } from '@/lib/tools/generalTools';
-import postData from '@/lib/axios/postData';
-import { useState } from 'react';
-import { FormProps } from '../interfaces';
+import { Button } from 'primereact/button';
 import { apiEndpointCreate, apiEndpointDelete, apiEndpointGet, apiEndpointUpdate } from '../endpoints';
+import postData from '@/lib/axios/postData';
+import { showError, showSuccess } from '@/lib/tools/generalTools';
+import { useEffect } from 'react';
+import { getTzUser } from '@/lib/tools/dateTools';
+import { InputSwitch } from 'primereact/inputswitch';
 
 const Form = ({ state, setState, formik, toast, getData }: FormProps) => {
-    const [loading, setLoading] = useState(false);
+    const handleSave = async (input: initValue) => {
+        setState((p) => ({ ...p, load: true }));
 
-    const isEdit = state.edit;
-    const isVisible = state.add || state.edit;
-
-    const handleHide = () => {
-        setState((p) => ({ ...p, add: false, edit: false }));
-        formik.resetForm();
-    };
-
-    const handleSave = async () => {
-        if (!formik.values.nama_wilayah || !formik.values.nama_wilayah.trim()) {
-            showError(toast as any, 'Nama Wilayah wajib diisi.');
-            return;
-        }
-
-        setLoading(true);
         try {
-            const endpoint = isEdit ? apiEndpointUpdate : apiEndpointCreate;
-            const payload = {
-                id: formik.values.id,
-                kode_wilayah: formik.values.kode_wilayah?.trim() || undefined,
-                nama_wilayah: formik.values.nama_wilayah.trim(),
-                status: formik.values.is_active === 1 ? 'active' : 'inactive',
-                is_active: formik.values.is_active
+            const isEdit = Boolean(state.edit);
+            const cEndPoint = isEdit ? apiEndpointUpdate : apiEndpointCreate;
+
+            const oHeaders: Record<string, string> = {
+                'X-Level': '1'
             };
 
-            const res = await postData(endpoint, payload);
+            const oBody: Record<string, any> = {
+                kode_wilayah: input.kode_wilayah?.trim() || undefined,
+                nama_wilayah: input.nama_wilayah?.trim(),
+                status: input.is_active === 1 ? 'active' : 'inactive',
+                is_active: input.is_active,
+                tz: getTzUser()
+            };
 
-            if (res?.data?.status === '00') {
-                showSuccess(toast as any, isEdit ? 'Wilayah berhasil diperbarui' : 'Wilayah berhasil ditambahkan');
-                handleHide();
-                await getData(apiEndpointGet);
-            } else {
-                showError(toast as any, res?.data?.message || 'Gagal menyimpan data wilayah');
+            if (isEdit) {
+                oBody['id'] = input.id;
+                oBody['kode_wilayah'] = input.kode_wilayah;
             }
-        } catch (err: any) {
-            showError(toast as any, err?.response?.data?.message || err.message || 'Terjadi kesalahan sistem');
+
+            const vaData = await postData(cEndPoint, oBody, oHeaders);
+            const res = vaData.data;
+
+            showSuccess(toast, res.message || (isEdit ? 'Berhasil memperbarui data Master Wilayah' : 'Berhasil menyimpan data Master Wilayah'));
+            formik.resetForm();
+            setState((p) => ({ ...p, add: false, edit: false, delete: false }));
+            await getData(apiEndpointGet);
+        } catch (error: any) {
+            const e = error?.response?.data || error;
+            showError(toast, e?.message || 'Terjadi kesalahan saat menyimpan data');
         } finally {
-            setLoading(false);
+            setState((p) => ({ ...p, load: false, submittedData: null }));
         }
     };
 
     const handleDelete = async () => {
-        if (!state.selectedDatas || state.selectedDatas.length === 0) return;
+        setState((p) => ({ ...p, load: true }));
 
-        setLoading(true);
         try {
-            const ids = state.selectedDatas.map((d) => d.id);
-            const res = await postData(apiEndpointDelete, { ids });
-
-            if (res?.data?.status === '00') {
-                showSuccess(toast as any, res?.data?.message || 'Data wilayah berhasil dihapus');
-                setState((p) => ({ ...p, delete: false, selectedDatas: [] }));
-                await getData(apiEndpointGet);
-            } else {
-                showError(toast as any, res?.data?.message || 'Gagal menghapus data wilayah');
+            if (state.selectedDatas.length < 1) {
+                showError(toast, 'Tidak ada data yang dipilih.');
+                return;
             }
-        } catch (err: any) {
-            showError(toast as any, err?.response?.data?.message || err.message || 'Terjadi kesalahan saat menghapus');
+
+            const vaIds = state.selectedDatas.map((v) => v.id);
+            const vaCodes = state.selectedDatas.map((v) => v.kode_wilayah);
+
+            const vaData = await postData(apiEndpointDelete, { ids: vaIds, kode_wilayah: vaCodes, tz: getTzUser() });
+            const res = vaData.data;
+
+            showSuccess(toast, res.message || 'Berhasil menghapus data Master Wilayah.');
+            setState((p) => ({ ...p, selectedDatas: [], add: false, edit: false, delete: false }));
+            await getData(apiEndpointGet);
+        } catch (error: any) {
+            const e = error?.response?.data || error;
+            showError(toast, e?.message || 'Terjadi kesalahan saat menghapus data.');
         } finally {
-            setLoading(false);
+            setState((p) => ({ ...p, load: false }));
         }
     };
 
-    const statusOptions = [
-        { label: 'Aktif', value: 1 },
-        { label: 'Non-Aktif', value: 0 }
-    ];
-
-    const formFooter = (
-        <div className="flex justify-content-end gap-2">
-            <Button label="Batal" icon="pi pi-times" outlined severity="secondary" onClick={handleHide} disabled={loading} />
-            <Button
-                label={isEdit ? 'Perbarui' : 'Simpan'}
-                icon="pi pi-check"
-                severity="success"
-                onClick={handleSave}
-                loading={loading}
-            />
-        </div>
-    );
-
-    const deleteFooter = (
-        <div className="flex justify-content-end gap-2">
+    const deleteFooterTemplate = (
+        <div className="flex justify-content-center gap-2">
             <Button
                 label="Batal"
                 icon="pi pi-times"
-                outlined
                 severity="secondary"
-                onClick={() => setState((p) => ({ ...p, delete: false }))}
-                disabled={loading}
+                outlined
+                onClick={() => {
+                    setState((p) => ({ ...p, add: false, edit: false, delete: false }));
+                }}
+                disabled={state.load}
             />
-            <Button
-                label="Hapus"
-                icon="pi pi-trash"
-                severity="danger"
-                onClick={handleDelete}
-                loading={loading}
-            />
+            <Button label="Ya, Hapus" icon="pi pi-trash" severity="danger" onClick={handleDelete} loading={state.load} />
         </div>
     );
 
+    const isFormFieldInvalid = (name: keyof initValue) => !!(formik?.touched[name] && formik?.errors[name]);
+
+    const getFormErrorMessage = (name: keyof initValue) => {
+        return isFormFieldInvalid(name) ? <small className="p-error">{formik?.errors[name] as string}</small> : <small className="p-error">&nbsp;</small>;
+    };
+
+    useEffect(() => {
+        if (state.submittedData) {
+            handleSave(state.submittedData);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.submittedData]);
+
     return (
         <>
-            {/* Modal Form Tambah / Edit */}
             <Dialog
-                visible={isVisible}
-                style={{ width: '480px' }}
-                header={isEdit ? 'Ubah Master Wilayah' : 'Tambah Master Wilayah Baru'}
+                visible={state.add || state.edit}
+                header={state.edit ? 'Edit Data Master Wilayah' : 'Tambah Master Wilayah Baru'}
                 modal
-                className="p-fluid"
-                footer={formFooter}
-                onHide={handleHide}
+                style={{ width: '100%', maxWidth: '600px' }}
+                breakpoints={{ '641px': '90vw' }}
+                onHide={() => {
+                    setState((p) => ({ ...p, add: false, edit: false, delete: false }));
+                    formik?.resetForm();
+                }}
             >
-                <div className="field mb-3">
-                    <label htmlFor="kode_wilayah" className="font-semibold text-900">
-                        Kode Wilayah {isEdit && <span className="text-500 font-normal">(Tidak dapat diubah)</span>}
-                    </label>
-                    <InputText
-                        id="kode_wilayah"
-                        value={formik.values.kode_wilayah || ''}
-                        onChange={(e) => formik.setFieldValue('kode_wilayah', e.target.value.toUpperCase())}
-                        placeholder="Contoh: REG-JATIM (Kosongkan untuk auto-generate)"
-                        disabled={isEdit || loading}
-                        className="p-inputtext-sm uppercase font-bold"
-                    />
-                    <small className="text-500">
-                        Biarkan kosong untuk membuat kode otomatis berurutan (misal: REG-001, REG-002).
-                    </small>
-                </div>
+                <form onSubmit={formik?.handleSubmit} className="flex gap-3 flex-column pt-2">
+                    <div className="flex gap-2 flex-column w-full">
+                        {/* Kode Wilayah */}
+                        <div className="flex flex-column gap-1 w-full">
+                            <label htmlFor="kode_wilayah" className="font-semibold text-sm">
+                                Kode Wilayah
+                            </label>
+                            <InputText
+                                id="kode_wilayah"
+                                name="kode_wilayah"
+                                disabled={state.edit}
+                                readOnly={state.edit}
+                                value={formik?.values.kode_wilayah || ''}
+                                placeholder={state.edit ? formik?.values.kode_wilayah : 'Otomatis (Contoh: REG-001) atau isi kustom'}
+                                onChange={(e) => formik?.setFieldValue('kode_wilayah', e.target.value.toUpperCase())}
+                                className="w-full uppercase font-bold"
+                            />
+                            <small className="text-gray-500">
+                                {state.edit ? 'Kode wilayah tidak dapat diubah.' : 'Kosongkan untuk pembuatan kode otomatis oleh sistem.'}
+                            </small>
+                        </div>
 
-                <div className="field mb-3">
-                    <label htmlFor="nama_wilayah" className="font-semibold text-900">
-                        Nama Wilayah / Regional <span className="text-danger font-bold">*</span>
-                    </label>
-                    <InputText
-                        id="nama_wilayah"
-                        value={formik.values.nama_wilayah || ''}
-                        onChange={(e) => formik.setFieldValue('nama_wilayah', e.target.value)}
-                        placeholder="Contoh: Wilayah Jawa Timur & Madura"
-                        disabled={loading}
-                        className="p-inputtext-sm"
-                        autoFocus
-                    />
-                </div>
+                        {/* Nama Wilayah */}
+                        <div className="flex flex-column gap-1 w-full">
+                            <label htmlFor="nama_wilayah" className="font-semibold text-sm">
+                                Nama Wilayah / Regional <span className="text-red-500">*</span>
+                            </label>
+                            <InputText
+                                id="nama_wilayah"
+                                name="nama_wilayah"
+                                value={formik?.values.nama_wilayah || ''}
+                                placeholder="Contoh: Wilayah Jawa Timur & Madura"
+                                onChange={(e) => formik?.setFieldValue('nama_wilayah', e.target.value)}
+                                className={isFormFieldInvalid('nama_wilayah') ? 'p-invalid w-full' : 'w-full'}
+                            />
+                            {getFormErrorMessage('nama_wilayah')}
+                        </div>
 
-                <div className="field mb-2">
-                    <label htmlFor="is_active" className="font-semibold text-900">
-                        Status Keaktifan
-                    </label>
-                    <Dropdown
-                        id="is_active"
-                        value={formik.values.is_active}
-                        options={statusOptions}
-                        onChange={(e) => formik.setFieldValue('is_active', e.value)}
-                        placeholder="Pilih Status"
-                        disabled={loading}
-                        className="p-inputtext-sm"
-                    />
-                </div>
+                        {/* Status Aktif */}
+                        <div className="flex flex-column gap-4 mt-2">
+                            <div className="flex align-items-center gap-2">
+                                <InputSwitch
+                                    id="is_active"
+                                    name="is_active"
+                                    checked={formik?.values.is_active === 1}
+                                    onChange={(e) => formik?.setFieldValue('is_active', e.value ? 1 : 0)}
+                                />
+                                <label htmlFor="is_active" className="font-semibold text-sm cursor-pointer select-none">
+                                    Status Wilayah Aktif
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-content-end mt-3 border-t-1 border-300 pt-3 gap-2">
+                        <Button
+                            label="Batal"
+                            severity="secondary"
+                            outlined
+                            icon="pi pi-times"
+                            onClick={() => {
+                                setState((p) => ({ ...p, add: false, edit: false, delete: false }));
+                                formik?.resetForm();
+                            }}
+                            className="w-full md:w-auto"
+                        />
+                        <Button type="submit" severity="success" label="Simpan" icon="pi pi-check" loading={state?.load} className="w-full md:w-auto" />
+                    </div>
+                </form>
             </Dialog>
 
-            {/* Modal Dialog Konfirmasi Delete */}
             <Dialog
+                header="Konfirmasi Hapus"
                 visible={state.delete}
-                style={{ width: '420px' }}
-                header="Konfirmasi Hapus Wilayah"
+                onHide={() => setState((p) => ({ ...p, add: false, edit: false, delete: false }))}
                 modal
-                footer={deleteFooter}
-                onHide={() => setState((p) => ({ ...p, delete: false }))}
+                style={{ width: '25rem' }}
+                footer={deleteFooterTemplate}
             >
-                <div className="flex align-items-center gap-3">
-                    <i className="pi pi-exclamation-triangle text-danger text-4xl" />
+                <div className="flex flex-column align-items-center text-center gap-4 py-4">
+                    <i className="pi pi-exclamation-triangle text-red-500 text-6xl" />
                     <div>
-                        <p className="m-0 font-medium text-800">
-                            Apakah Anda yakin ingin menghapus{' '}
-                            <strong>{state.selectedDatas.length}</strong> data wilayah terpilih?
+                        <h3 className="font-bold mb-2">
+                            {state.selectedDatas.length > 1 ? `Hapus ${state.selectedDatas.length} data Master Wilayah?` : 'Hapus data Master Wilayah ini?'}
+                        </h3>
+                        <p className="text-color-secondary">
+                            {state.selectedDatas.length > 1 ? (
+                                `Anda akan menghapus ${state.selectedDatas.length} item wilayah.`
+                            ) : (
+                                <>
+                                    Anda akan menghapus data wilayah: <br />
+                                    <strong>
+                                        {state.selectedDatas[0]?.kode_wilayah || ''} - {state.selectedDatas[0]?.nama_wilayah || ''}
+                                    </strong>
+                                </>
+                            )}
+                            <br />
+                            <br />
+                            Wilayah yang masih memiliki unit cabang binaan tidak dapat dihapus.
                         </p>
-                        <small className="text-500 mt-1 block">
-                            Catatan: Wilayah yang masih memiliki unit cabang hotel binaan tidak dapat dihapus.
-                        </small>
                     </div>
                 </div>
             </Dialog>

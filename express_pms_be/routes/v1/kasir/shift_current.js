@@ -76,51 +76,71 @@ router.post("/", async (req, res) => {
     const shiftCode = existingOpenShift.kode_cashier_shift;
 
     // 1. Metrik Check-in (Kamar & Pax)
-    const checkinStats = await DB("trx_checkin as ci")
-      .leftJoin("trx_reservation_room as rr", "ci.kode_reservation_room", "rr.kode_reservasi_room")
-      .leftJoin("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
-      .where("ci.kode_cashier_shift", shiftCode)
-      .whereNull("ci.deleted_at")
-      .select(
-        DB.raw("COUNT(ci.id) as total_checkin_kamar"),
-        DB.raw("COALESCE(SUM(ci.guest_count), 0) as total_checkin_pax"),
-        DB.raw("COALESCE(SUM(CASE WHEN r.booking_type = 'walk_in' OR r.source_channel = 'walk_in' THEN 1 ELSE 0 END), 0) as walkin_kamar"),
-        DB.raw("COALESCE(SUM(CASE WHEN r.booking_type = 'walk_in' OR r.source_channel = 'walk_in' THEN ci.guest_count ELSE 0 END), 0) as walkin_pax"),
-        DB.raw("COALESCE(SUM(CASE WHEN r.booking_type != 'walk_in' AND r.source_channel != 'walk_in' THEN 1 ELSE 0 END), 0) as reservasi_kamar"),
-        DB.raw("COALESCE(SUM(CASE WHEN r.booking_type != 'walk_in' AND r.source_channel != 'walk_in' THEN ci.guest_count ELSE 0 END), 0) as reservasi_pax")
-      )
-      .first();
+    let checkinStats = null;
+    try {
+      checkinStats = await DB("trx_checkin as ci")
+        .leftJoin("trx_reservation_room as rr", "ci.kode_reservation_room", "rr.kode_reservasi_room")
+        .leftJoin("trx_reservation as r", "rr.kode_reservation", "r.kode_reservasi")
+        .where("ci.kode_cashier_shift", shiftCode)
+        .whereNull("ci.deleted_at")
+        .select(
+          DB.raw("COUNT(ci.id) as total_checkin_kamar"),
+          DB.raw("COALESCE(SUM(ci.guest_count), 0) as total_checkin_pax"),
+          DB.raw("COALESCE(SUM(CASE WHEN r.booking_type = 'walk_in' OR r.source_channel = 'walk_in' THEN 1 ELSE 0 END), 0) as walkin_kamar"),
+          DB.raw("COALESCE(SUM(CASE WHEN r.booking_type = 'walk_in' OR r.source_channel = 'walk_in' THEN ci.guest_count ELSE 0 END), 0) as walkin_pax"),
+          DB.raw("COALESCE(SUM(CASE WHEN r.booking_type != 'walk_in' AND r.source_channel != 'walk_in' THEN 1 ELSE 0 END), 0) as reservasi_kamar"),
+          DB.raw("COALESCE(SUM(CASE WHEN r.booking_type != 'walk_in' AND r.source_channel != 'walk_in' THEN ci.guest_count ELSE 0 END), 0) as reservasi_pax")
+        )
+        .first();
+    } catch (err) {
+      // Graceful fallback jika kolom belum dimigrasi
+    }
 
     // 2. Metrik Check-out (Kamar & Pax)
-    const checkoutStats = await DB("trx_checkout")
-      .where("kode_cashier_shift", shiftCode)
-      .whereNull("deleted_at")
-      .select(
-        DB.raw("COUNT(id) as total_checkout_kamar"),
-        DB.raw("COALESCE(SUM(guest_count), 0) as total_checkout_pax")
-      )
-      .first();
+    let checkoutStats = null;
+    try {
+      checkoutStats = await DB("trx_checkout")
+        .where("kode_cashier_shift", shiftCode)
+        .whereNull("deleted_at")
+        .select(
+          DB.raw("COUNT(id) as total_checkout_kamar"),
+          DB.raw("COALESCE(SUM(guest_count), 0) as total_checkout_pax")
+        )
+        .first();
+    } catch (err) {
+      // Graceful fallback jika kolom belum dimigrasi
+    }
 
     // 3. Metrik Pembayaran (Cash, Non-Cash, Total)
-    const paymentStats = await DB("trx_payment")
-      .where("kode_cashier_shift", shiftCode)
-      .select(
-        DB.raw("COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as total_cash_in"),
-        DB.raw("COALESCE(SUM(CASE WHEN payment_method != 'cash' THEN amount ELSE 0 END), 0) as total_non_cash_in"),
-        DB.raw("COALESCE(SUM(amount), 0) as total_payment_in")
-      )
-      .first();
+    let paymentStats = null;
+    try {
+      paymentStats = await DB("trx_payment")
+        .where("kode_cashier_shift", shiftCode)
+        .select(
+          DB.raw("COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as total_cash_in"),
+          DB.raw("COALESCE(SUM(CASE WHEN payment_method != 'cash' THEN amount ELSE 0 END), 0) as total_non_cash_in"),
+          DB.raw("COALESCE(SUM(amount), 0) as total_payment_in")
+        )
+        .first();
+    } catch (err) {
+      // Graceful fallback
+    }
 
     // 4. Metrik Fasilitas Tambahan Terjual
-    const facilityStats = await DB("trx_folio_charge")
-      .where("kode_cashier_shift", shiftCode)
-      .where("charge_type", "!=", "room")
-      .where("is_active", 1)
-      .select(
-        DB.raw("COALESCE(SUM(qty), 0) as total_fasilitas_item"),
-        DB.raw("COALESCE(SUM(amount), 0) as total_fasilitas_amount")
-      )
-      .first();
+    let facilityStats = null;
+    try {
+      facilityStats = await DB("trx_folio_charge")
+        .where("kode_cashier_shift", shiftCode)
+        .where("charge_type", "!=", "room")
+        .where("is_active", 1)
+        .select(
+          DB.raw("COALESCE(SUM(qty), 0) as total_fasilitas_item"),
+          DB.raw("COALESCE(SUM(amount), 0) as total_fasilitas_amount")
+        )
+        .first();
+    } catch (err) {
+      // Graceful fallback
+    }
 
     const openingCash = parseFloat(existingOpenShift.opening_cash) || 0;
     const totalCashIn = parseFloat(paymentStats?.total_cash_in) || 0;

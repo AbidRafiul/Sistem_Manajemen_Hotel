@@ -11,12 +11,13 @@ import { Session } from 'next-auth';
 import { Toast } from 'primereact/toast';
 import { RefObject } from 'react';
 import { DataTableStateEvent } from 'primereact/datatable';
+import { DataRekap } from '@/types/print-tools';
 
 export interface TableData {
     id: number;
     kode_wilayah: string;
     nama_wilayah: string;
-    node_type: string;
+    node_type?: string;
     status: string;
     is_active: number;
     total_cabang?: number;
@@ -28,7 +29,7 @@ export interface initValue {
     id?: number;
     kode_wilayah: string;
     nama_wilayah: string;
-    status: string;
+    status?: string;
     is_active: number;
 }
 
@@ -58,19 +59,34 @@ export interface State {
 }
 
 export interface TableProps {
+    dataRekap: DataRekap;
+    setDataRekap: React.Dispatch<React.SetStateAction<DataRekap>>;
     state: State;
     setState: React.Dispatch<React.SetStateAction<State>>;
     formik: FormikProps<initValue>;
-    toast: RefObject<Toast | null>;
-    onCustomPage: (event: DataTableStateEvent) => void;
-    onCustomSort: (event: DataTableStateEvent) => void;
+    toast: RefObject<Toast>;
     getData: (apiEndpoint: string) => Promise<void>;
+    getPrintData: (apiEndpoint: string) => Promise<void>;
+    onLazyLoad: (event: DataTableStateEvent) => void;
 }
 
 export interface FormProps {
     state: State;
     setState: React.Dispatch<React.SetStateAction<State>>;
     formik: FormikProps<initValue>;
-    toast: RefObject<Toast | null>;
+    toast: RefObject<Toast>;
     getData: (apiEndpoint: string) => Promise<void>;
 }
+
+export const HEADER_CONFIG = {
+    kode_wilayah: 'Kode Wilayah',
+    nama_wilayah: 'Nama Wilayah / Regional',
+    total_cabang: 'Unit Cabang Binaan',
+    created_at: 'Waktu Dibuat',
+    updated_at: 'Waktu Diperbarui'
+};
+
+export const FORMATTER_CONFIG = {
+    is_active: (val: number) => (val === 1 ? 'Aktif' : 'Non-Aktif'),
+    total_cabang: (val: number) => `${val || 0} Cabang Hotel`
+};

@@ -45,14 +45,18 @@ export const hitungHargaKamar = async ({ kode_tipe_kamar, kode_rate_plan, kode_s
   const hargaDefault = parseFloat(tkData.harga_default || 0);
 
   // 2. Dapatkan detail rate plan
-  const rpData = await trx("mst_paket_harga")
+  let rpData = await trx("mst_paket_harga")
     .where("kode_paket_harga", kode_rate_plan)
     .whereNull("deleted_at")
     .select("tipe_markup", "nilai_markup")
     .first();
 
   if (!rpData) {
-    throw new Error(`Rate plan ${kode_rate_plan} tidak ditemukan`);
+    if (!kode_rate_plan || kode_rate_plan === "RP0001" || kode_rate_plan === "DEFAULT_STANDARD") {
+      rpData = { tipe_markup: "nominal", nilai_markup: 0 };
+    } else {
+      throw new Error(`Rate plan ${kode_rate_plan} tidak ditemukan`);
+    }
   }
 
   // 3. Auto-detect season jika tidak dikirim

@@ -18,11 +18,14 @@ router.post("/", async (req, res) => {
   const username = req?.auth?.username || "";
   const hasPagination = oPayload.page !== undefined || oPayload.perPage !== undefined;
   const keyword = oPayload.keyword || "";
-  const sortField = ["code", "name", "status", "created_at", "updated_at"].includes(
-    oPayload.sortField
-  )
-    ? oPayload.sortField
-    : "created_at";
+  let sortColumn = "created_at";
+  if (oPayload.sortField === "kode_wilayah" || oPayload.sortField === "code") {
+    sortColumn = "code";
+  } else if (oPayload.sortField === "nama_wilayah" || oPayload.sortField === "name") {
+    sortColumn = "name";
+  } else if (["status", "created_at", "updated_at"].includes(oPayload.sortField)) {
+    sortColumn = oPayload.sortField;
+  }
   const sortOrder = oPayload.sortOrder || "desc";
 
   try {
@@ -60,14 +63,14 @@ router.post("/", async (req, res) => {
       vaData = await baseQuery
         .clone()
         .select(selectFields)
-        .orderBy(`o.${sortField}`, sortOrder)
+        .orderBy(`o.${sortColumn}`, sortOrder)
         .limit(perPage)
         .offset((page - 1) * perPage);
     } else {
       vaData = await baseQuery
         .clone()
         .select(selectFields)
-        .orderBy(`o.${sortField}`, sortOrder);
+        .orderBy(`o.${sortColumn}`, sortOrder);
       totalRecords = vaData.length;
     }
 

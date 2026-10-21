@@ -463,16 +463,16 @@ export const DialogReports: React.FC<DialogReportsProps> = ({
             {depositLedger && (
               <TabPanel header="Buku Besar Piutang & Deposit (Ledgers)" leftIcon="pi pi-book mr-2">
                 <div className="grid">
-                  <div className="col-12 md:col-4">
+                  <div className="col-12 md:col-3">
                     <div className="surface-card p-3 border-round border-1 surface-border">
                       <span className="text-xs text-500 block font-semibold">BUKU BESAR TAMU INDIVIDU (Guest Ledger)</span>
                       <span className="text-xl font-bold text-900 block mt-1">
                         {formatCurrency(depositLedger.guest_ledger_total)}
                       </span>
-                      <span className="text-xs text-400 block mt-1">Akumulasi tagihan tamu menginap individu</span>
+                      <span className="text-xs text-400 block mt-1">Akumulasi tagihan tamu yang sedang menginap</span>
                     </div>
                   </div>
-                  <div className="col-12 md:col-4">
+                  <div className="col-12 md:col-3">
                     <div className="surface-card p-3 border-round border-1 surface-border">
                       <span className="text-xs text-500 block font-semibold">BUKU BESAR PERUSAHAAN (City Ledger)</span>
                       <span className="text-xl font-bold text-900 block mt-1">
@@ -481,7 +481,16 @@ export const DialogReports: React.FC<DialogReportsProps> = ({
                       <span className="text-xs text-400 block mt-1">Akumulasi tagihan korporasi atau travel agent</span>
                     </div>
                   </div>
-                  <div className="col-12 md:col-4">
+                  <div className="col-12 md:col-3">
+                    <div className="surface-card p-3 border-round border-1 surface-border">
+                      <span className="text-xs text-500 block font-semibold">UANG MUKA RESERVASI (Advance Deposit)</span>
+                      <span className="text-xl font-bold text-teal-600 block mt-1">
+                        {formatCurrency(depositLedger.advance_deposit_total || 0)}
+                      </span>
+                      <span className="text-xs text-400 block mt-1">Titipan deposit untuk reservasi mendatang</span>
+                    </div>
+                  </div>
+                  <div className="col-12 md:col-3">
                     <div className="surface-card p-3 border-round border-1 surface-border">
                       <span className="text-xs text-500 block font-semibold">TOTAL SELURUH PIUTANG TERBUKA (Open Receivables)</span>
                       <span className="text-xl font-bold text-primary block mt-1">

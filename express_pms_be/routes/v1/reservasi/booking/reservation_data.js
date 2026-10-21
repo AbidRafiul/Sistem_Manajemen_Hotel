@@ -43,6 +43,7 @@ router.post("/", async (req, res) => {
             .join('trx_reservation as r', 'rr.kode_reservation', 'r.kode_reservasi')
             .join('mst_guest as g', 'r.kode_guest', 'g.kode_tamu')
             .join('mst_tipe_kamar as tk', 'rr.kode_tipe_kamar', 'tk.kode_tipe_kamar')
+            .leftJoin('mst_cabang as c', 'r.kode_cabang', 'c.kode_cabang')
             .leftJoin('mst_kamar as k', 'rr.kode_kamar', 'k.kode_kamar')
             .leftJoin('trx_folio as f', function() {
                 this.on('f.kode_reservation', '=', 'r.kode_reservasi')
@@ -52,6 +53,9 @@ router.post("/", async (req, res) => {
                 'rr.kode_reservasi_room',
                 'r.kode_reservasi',
                 'r.kode_cabang',
+                'c.nama_hotel as nama_cabang',
+                'c.waktu_checkin',
+                'c.waktu_checkout',
                 'g.kode_tamu',
                 'g.full_name as guest_name',
                 'g.phone as guest_phone',

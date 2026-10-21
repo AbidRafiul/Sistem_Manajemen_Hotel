@@ -16,7 +16,7 @@ import { Logging, validatePayload } from "../../components/tools/servertool.js";
 import { formatDateSystem } from "../../components/tools/date_tools.js";
 import { generateSequence } from "../../components/tools/generateCode.js";
 import { findIdleHousekeeper } from "../../components/tools/housekeeping_helper.js";
-import { calculateFolioBilling } from "../../components/tools/billing_helper.js";
+import { calculateFolioBilling, insertPaymentRecord } from "../../components/tools/billing_helper.js";
 import { assertBranchScope } from "../../components/tools/scope_helper.js";
 
 const router = express.Router();
@@ -117,6 +117,7 @@ router.post("/", async (req, res) => {
       // 2. Dapatkan perhitungan tagihan akurat via calculateFolioBilling
       const billing = await calculateFolioBilling({
         kode_reservasi_room: primaryResRoom.kode_reservasi_room,
+        target_room_ids: targetRoomIds,
         kode_folio: oPayload.kode_folio,
         trx: trx
       });
@@ -159,7 +160,7 @@ router.post("/", async (req, res) => {
           }
 
           const payCode = await generateSequence("FMT-PAYMENT", trx);
-          await trx("trx_payment").insert({
+          await insertPaymentRecord(trx, {
             kode_payment: payCode,
             kode_folio: folio.kode_folio,
             payment_method: pay.payment_method,
@@ -306,19 +307,26 @@ router.post("/", async (req, res) => {
       const allRoomsInRes = await trx("trx_reservation_room")
         .where("kode_reservation", primaryResRoom.kode_reservation);
 
-      const allCheckedOut = allRoomsInRes.every((r) => r.status === "checked_out");
-      isFolioClosed = allCheckedOut;
+      const allCheckedOut = allRoomsInRes.every((r) => r.status === "checked_out" || r.status === "cancelled");
+      const hasCheckedOut = allRoomsInRes.some((r) => r.status === "checked_out");
+      isFolioClosed = allCheckedOut && hasCheckedOut;
 
-      if (allCheckedOut) {
+      if (isFolioClosed) {
+        // Hitung total kumulatif seluruh kamar yang telah check-out (tanpa yang cancelled)
+        const finalBilling = await calculateFolioBilling({
+          kode_folio: folio.kode_folio,
+          trx: trx
+        });
+
         // Tutup Folio
         await trx("trx_folio")
           .where("kode_folio", folio.kode_folio)
           .update({
             status: "closed",
-            subtotal: billing.folio.subtotal,
-            tax_amount: billing.folio.tax_amount,
-            service_charge_amount: billing.folio.service_charge_amount,
-            grand_total: billing.folio.grand_total,
+            subtotal: finalBilling?.folio?.subtotal || billing.folio.subtotal,
+            tax_amount: finalBilling?.folio?.tax_amount || billing.folio.tax_amount,
+            service_charge_amount: finalBilling?.folio?.service_charge_amount || billing.folio.service_charge_amount,
+            grand_total: finalBilling?.folio?.grand_total || billing.folio.grand_total,
             closed_at: tNow,
             updated_by: user_id,
             updated_at: tNow

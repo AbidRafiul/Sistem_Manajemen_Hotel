@@ -18,6 +18,7 @@ import { hitungHargaKamar } from "../../components/tools/pricing_helper.js";
 import { processCheckIn } from "../../components/tools/checkin_helper.js";
 import { hitungKetersediaanTipeKamar } from "../../components/tools/availability_helper.js";
 import { assertBranchScope } from "../../components/tools/scope_helper.js";
+import { insertPaymentRecord } from "../../components/tools/billing_helper.js";
 
 const router = express.Router();
 
@@ -191,26 +192,41 @@ router.post("/", async (req, res) => {
             created_at: tNow
         });
 
-        let lastFolioCode = null;
-        const processedRooms = [];
+        // Validasi Ketersediaan Kamar Agregat & Duplikasi Kamar Fisik
+        const physicalRoomCodes = roomsToProcess.map(r => r.kode_kamar).filter(Boolean);
+        const uniquePhysicalRooms = new Set(physicalRoomCodes);
+        if (physicalRoomCodes.length !== uniquePhysicalRooms.size) {
+            throw new Error("Terdapat duplikasi pemilihan nomor kamar fisik dalam satu transaksi walk-in.");
+        }
 
+        const requestedCountPerType = {};
         for (const rm of roomsToProcess) {
-            // Validasi ketersediaan kamar
+            requestedCountPerType[rm.kode_tipe_kamar] = (requestedCountPerType[rm.kode_tipe_kamar] || 0) + 1;
+        }
+
+        for (const [kodeTipe, reqCount] of Object.entries(requestedCountPerType)) {
             const ketersediaan = await hitungKetersediaanTipeKamar({
                 kode_cabang: oPayload.kode_cabang,
-                kode_tipe_kamar: rm.kode_tipe_kamar,
+                kode_tipe_kamar: kodeTipe,
                 check_in_date: checkinDate,
                 check_out_date: checkoutDate
             }, trx);
 
-            if (ketersediaan.available_count <= 0) {
-                throw new Error(`Kamar pada tipe ${rm.kode_tipe_kamar} sudah penuh atau belum siap.`);
+            if (ketersediaan.available_count < reqCount) {
+                throw new Error(`Kamar tipe ${kodeTipe} tidak mencukupi atau belum bersih. Diminta: ${reqCount} kamar, namun hanya tersedia: ${ketersediaan.available_count} kamar siap huni.`);
             }
 
-            if (rm.kode_kamar && ketersediaan.terpakai_kamar_ids.includes(rm.kode_kamar)) {
-                throw new Error(`Kamar fisik ${rm.kode_kamar} sedang tidak tersedia atau belum bersih.`);
+            for (const rm of roomsToProcess.filter(r => r.kode_tipe_kamar === kodeTipe && r.kode_kamar)) {
+                if (ketersediaan.terpakai_kamar_ids && ketersediaan.terpakai_kamar_ids.includes(rm.kode_kamar)) {
+                    throw new Error(`Kamar fisik ${rm.kode_kamar} sedang tidak tersedia atau belum bersih.`);
+                }
             }
+        }
 
+        let lastFolioCode = null;
+        const processedRooms = [];
+
+        for (const rm of roomsToProcess) {
             // Hitung harga
             const rateInfo = await hitungHargaKamar({
                 kode_tipe_kamar: rm.kode_tipe_kamar,
@@ -328,7 +344,7 @@ router.post("/", async (req, res) => {
             const noPayment = await generateSequence("FMT-PAYMENT", trx);
             if (!noPayment) throw new Error("Gagal membuat nomor transaksi pembayaran");
 
-            await trx("trx_payment").insert({
+            await insertPaymentRecord(trx, {
                 kode_payment: noPayment,
                 kode_folio: lastFolioCode,
                 payment_method: oPayload.payment_method || 'cash',

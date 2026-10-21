@@ -30,6 +30,12 @@ router.post("/", async (req, res) => {
       .groupBy("kode_kamar")
       .as("latest_t");
 
+    const hasNotes = await DB.schema.hasColumn("trx_housekeeping_task", "notes").catch(() => false);
+    const hasChecklist = await DB.schema.hasColumn("trx_housekeeping_task", "checklist").catch(() => false);
+    const hasInspectionResult = await DB.schema.hasColumn("trx_housekeeping_task", "inspection_result").catch(() => false);
+    const hasRequestSource = await DB.schema.hasColumn("trx_housekeeping_task", "request_source").catch(() => false);
+    const hasStartedAt = await DB.schema.hasColumn("trx_housekeeping_task", "started_at").catch(() => false);
+
     const query = DB("mst_kamar as k")
       .select(
         "k.kode_cabang",
@@ -42,16 +48,16 @@ router.post("/", async (req, res) => {
         "t.kode_housekeeping_task",
         "t.task_type",
         "t.priority",
-        "t.notes",
-        "t.request_source",
-        "t.kode_reservasi_room",
+        hasNotes ? "t.notes" : DB.raw("NULL as notes"),
+        hasRequestSource ? "t.request_source" : DB.raw("'guest_request' as request_source"),
+        hasNotes ? "t.kode_reservasi_room" : DB.raw("NULL as kode_reservasi_room"),
         "t.status as task_status",
         "t.created_at as task_created_at",
-        "t.started_at as task_started_at",
-        "t.finished_at as task_finished_at",
-        "t.checklist",
-        "t.inspection_result",
-        "t.inspection_details",
+        hasStartedAt ? "t.started_at as task_started_at" : DB.raw("NULL as task_started_at"),
+        hasStartedAt ? "t.finished_at as task_finished_at" : DB.raw("NULL as task_finished_at"),
+        hasChecklist ? "t.checklist" : DB.raw("NULL as checklist"),
+        hasInspectionResult ? "t.inspection_result" : DB.raw("'pending' as inspection_result"),
+        hasInspectionResult ? "t.inspection_details" : DB.raw("NULL as inspection_details"),
         "u.fullname as assigned_to_name"
       )
       .leftJoin("mst_tipe_kamar as tk", "k.kode_tipe_kamar", "tk.kode_tipe_kamar")
