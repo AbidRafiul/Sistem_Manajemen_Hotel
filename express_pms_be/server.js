@@ -15,6 +15,7 @@
  */
 
 
+import "dotenv/config";
 import app from "./app.js";
 import { startNightAuditScheduler } from "./routes/v1/components/tools/night_audit_scheduler.js";
 import validateEnvironment from "./core/config/env_check.js";

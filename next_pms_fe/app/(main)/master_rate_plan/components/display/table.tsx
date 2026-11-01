@@ -11,6 +11,7 @@ import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { Tag } from 'primereact/tag';
 import Form from './form';
+import Detail from './detail';
 import { apiEndpointGet } from '../endpoints';
 import { useRef } from 'react';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
@@ -65,7 +66,16 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const actionBodyTemplate = (rowData: TableData) => (
-        <div className="flex justify-content-center gap-2">
+        <div className="flex justify-content-center gap-1">
+            <Button
+                icon="pi pi-eye"
+                outlined
+                severity="info"
+                className="p-button-sm"
+                onClick={() => setState((p) => ({ ...p, selectedDetail: rowData, detail: true }))}
+                tooltip="Detail Rate Plan"
+                tooltipOptions={{ position: 'top' }}
+            />
             <Button
                 icon="pi pi-pencil"
                 outlined
@@ -87,6 +97,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
                 }}
                 tooltip="Edit Rate Plan"
+                tooltipOptions={{ position: 'top' }}
             />
             <Button
                 icon="pi pi-trash"
@@ -95,6 +106,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 className="p-button-sm"
                 onClick={() => setState((p) => ({ ...p, delete: true, selectedDatas: [rowData] }))}
                 tooltip="Hapus Rate Plan"
+                tooltipOptions={{ position: 'top' }}
             />
         </div>
     );
@@ -196,7 +208,6 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
                     <Column field="is_active" header="Status" align="center" body={activeStatusBodyTemplate} style={{ minWidth: '5rem', width: '5rem' }}></Column>
                     <Column field="kode_paket_harga" header="Kode" align="center" sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="kode_cabang" header="Cabang" sortable style={{ minWidth: '10rem' }} body={(rowData) => rowData.kode_cabang}></Column>
                     <Column field="name" header="Nama Rate Plan" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="tipe_paket" header="Tipe Paket" align="center" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="markup" header="Markup" align="center" style={{ minWidth: '10rem' }} body={(rowData) => rowData.tipe_markup === 'nominal' ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rowData.nilai_markup || 0) : `${rowData.nilai_markup || 0}%`}></Column>
@@ -205,11 +216,12 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="minimal_malam" header="Min Malam" align="center" sortable style={{ minWidth: '8rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
-                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
+                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '9.5rem' }}></Column>
                 </DataTable>
             </div>
 
             <Form getData={getData} toast={toast} state={state} setState={setState} formik={formik} />
+            <Detail state={state} setState={setState} formik={formik} />
         </>
     );
 };

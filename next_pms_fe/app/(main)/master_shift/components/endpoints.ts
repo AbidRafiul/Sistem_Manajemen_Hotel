@@ -4,3 +4,4 @@ export const apiEndpointUpdate = '/master/shift/shift-update';
 export const apiEndpointDelete = '/master/shift/shift-delete';
 export const apiEndpointDropdown = '/master/shift/shift-dropdown';
 export const apiEndpointCabang = '/master/cabang/cabang-data';
+export const apiEndpointShiftHistory = '/kasir/shift-history';

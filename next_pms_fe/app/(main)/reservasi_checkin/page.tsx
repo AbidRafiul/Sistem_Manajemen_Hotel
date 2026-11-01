@@ -26,6 +26,41 @@ import CashierPicCard from '@/app/components/payment/CashierPicCard';
 import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 import DialogReschedule from './components/DialogReschedule';
 import DialogCancelRefund from './components/DialogCancelRefund';
+import Print from './components/print';
+import { DataRekap } from '@/types/print-tools';
+import { transformTableData } from '@/lib/tools/printTools/transformData';
+
+const HEADER_CONFIG = {
+    kode_reservasi: 'No. Reservasi',
+    guest_name: 'Nama Tamu',
+    guest_phone: 'No. Telepon',
+    tipe_kamar_name: 'Tipe Kamar',
+    nomor_kamar: 'No. Kamar',
+    check_in_date: 'Tgl Check-In',
+    check_out_date: 'Tgl Check-Out',
+    nights: 'Malam',
+    deposit_amount: 'Deposit Masuk',
+    total_amount: 'Total Transaksi',
+    room_status: 'Status'
+};
+
+const FORMATTER_CONFIG = {
+    deposit_amount: (val: any) => (val ? `Rp ${Number(val).toLocaleString('id-ID')}` : 'Rp 0'),
+    total_amount: (val: any) => (val ? `Rp ${Number(val).toLocaleString('id-ID')}` : 'Rp 0'),
+    nights: (val: any) => `${val || 1} Malam`,
+    room_status: (val: any) => {
+        const map: Record<string, string> = {
+            reserved: 'Reserved',
+            confirmed: 'Confirmed',
+            booked: 'Booked',
+            assigned: 'Assigned',
+            checkin: 'Checked In',
+            checked_in: 'Checked In',
+            cancelled: 'Batal'
+        };
+        return map[String(val).toLowerCase()] || String(val || '-').toUpperCase();
+    }
+};
 
 interface GroupedReservation {
     kode_reservasi: string;
@@ -69,6 +104,19 @@ const CheckinContent = () => {
     const [globalFilter, setGlobalFilter] = useState('');
     const [showFilter, setShowFilter] = useState(false); // Default: panel filter tertutup agar layar lega
     const [expandedRows, setExpandedRows] = useState<any>(null);
+
+    const [dataRekap, setDataRekap] = useState<DataRekap>({
+        data: [],
+        totalData: 0,
+        head: [],
+        load: false,
+        columnStyles: {},
+        show: false,
+        adjust: false,
+        fileName: `laporan-reservasi-${new Date().toISOString().slice(0, 10)}`,
+        judul1: 'Laporan Data Kedatangan & Reservasi Tamu',
+        judul2: ''
+    });
 
     // Inisialisasi keyword pencarian jika diarahkan dari halaman booking atau halaman lain (?search=RSVxxx)
     useEffect(() => {
@@ -801,6 +849,79 @@ const CheckinContent = () => {
         );
     };
 
+    const getPrintData = async () => {
+        setDataRekap((p) => ({ ...p, load: true }));
+        try {
+            const rawList = (globalFilter ? filteredGroupedData.flatMap((g) => g.rooms) : data) || [];
+            if (!rawList || rawList.length === 0) {
+                showError(toast, 'Tidak ada data reservasi yang dapat diekspor');
+                return;
+            }
+
+            const preparedList = rawList.map((item: any) => {
+                const nights = parseInt(item.nights, 10) || 1;
+                const ratePerNight = parseFloat(item.rate_per_night || 0);
+                const roomSubtotal = ratePerNight * nights;
+                const extraCharges = (item.charges || []).filter((c: any) => c.charge_type !== 'room');
+                const extraTotal = extraCharges.reduce((acc: number, c: any) => acc + (parseFloat(c.amount) || 0), 0);
+                const totalTransaksi = parseFloat(item.folio_grand_total) || (roomSubtotal + extraTotal);
+
+                return {
+                    kode_reservasi: item.kode_reservasi || '-',
+                    guest_name: item.guest_name || '-',
+                    guest_phone: item.guest_phone || '-',
+                    tipe_kamar_name: item.tipe_kamar_name || '-',
+                    nomor_kamar: item.nomor_kamar || '-',
+                    check_in_date: item.check_in_date ? formatDateSystem(item.check_in_date) : '-',
+                    check_out_date: item.check_out_date ? formatDateSystem(item.check_out_date) : '-',
+                    nights: nights,
+                    deposit_amount: item.deposit_amount || 0,
+                    total_amount: totalTransaksi,
+                    room_status: item.room_status || item.res_status || '-'
+                };
+            });
+
+            const formattedData = transformTableData(preparedList, {
+                headerMap: HEADER_CONFIG,
+                customFormatters: FORMATTER_CONFIG
+            });
+
+            const columnStyles = {
+                0: { halign: 'center', cellWidth: 8 },  // No
+                1: { halign: 'center' },                // No. Reservasi
+                2: { halign: 'left' },                  // Nama Tamu
+                3: { halign: 'center' },                // No. Telepon
+                4: { halign: 'left' },                  // Tipe Kamar
+                5: { halign: 'center' },                // No. Kamar
+                6: { halign: 'center' },                // Tgl Check-In
+                7: { halign: 'center' },                // Tgl Check-Out
+                8: { halign: 'center' },                // Malam
+                9: { halign: 'right' },                 // Deposit Masuk
+                10: { halign: 'right' },                // Total Transaksi
+                11: { halign: 'center' }                // Status
+            };
+
+            const activeCabangName = session?.user?.active_branch_name || (session?.user?.active_kode_cabang ? `Cabang: ${session.user.active_kode_cabang}` : '');
+            const dateLabel = filterDate ? `Tanggal: ${formatDateSystem(filterDate)}` : 'Semua Tanggal';
+            const periode = [activeCabangName, dateLabel].filter(Boolean).join(' | ');
+
+            setDataRekap((p) => ({
+                ...p,
+                data: formattedData,
+                totalData: formattedData.length,
+                judul2: periode,
+                show: true,
+                adjust: true,
+                columnStyles
+            }));
+        } catch (error: any) {
+            const e = error?.response?.data || error;
+            showError(toast, e?.message || 'Gagal menyiapkan data cetak');
+        } finally {
+            setDataRekap((p) => ({ ...p, load: false }));
+        }
+    };
+
     const headerTemplate = (
         <div className="flex flex-wrap align-items-center justify-content-between gap-3 p-1">
             <div className="flex align-items-center gap-2">
@@ -828,6 +949,17 @@ const CheckinContent = () => {
                 />
             </div>
             <div className="flex align-items-center gap-2 ml-auto w-full md:w-auto">
+                <Button
+                    type="button"
+                    label="Cetak / Export"
+                    icon="pi pi-print"
+                    outlined
+                    size="small"
+                    onClick={getPrintData}
+                    loading={dataRekap.load}
+                    tooltip="Cetak dokumen PDF atau Export data reservasi ke Excel"
+                    tooltipOptions={{ position: 'bottom' }}
+                />
                 <Button
                     type="button"
                     label="Filter"
@@ -1660,6 +1792,12 @@ const CheckinContent = () => {
                     setShiftAktif(s);
                     if (s?.kode_cashier_shift) setShiftCode(s.kode_cashier_shift);
                 }}
+            />
+
+            <Print
+                dataRekap={dataRekap}
+                setDataRekap={setDataRekap}
+                toast={toast}
             />
         </div>
     );

@@ -25,6 +25,8 @@ const Page = () => {
         add: false,
         edit: false,
         delete: false,
+        detail: false,
+        selectedDetail: null,
         selectedDatas: [],
         searchVal: '',
         filters: { global: { value: null, matchMode: FilterMatchMode.CONTAINS } },

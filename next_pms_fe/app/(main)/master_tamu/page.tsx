@@ -7,12 +7,16 @@ import { useSession } from 'next-auth/react';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import postData from '@/lib/axios/postData';
 import { showError, showSuccess } from '@/lib/tools/generalTools';
-import { apiGuestData, apiGuestDelete, apiGuestExport } from './components/endpoints';
-import { GuestData, initValueForm, State } from './components/interfaces';
+import { apiGuestData, apiGuestDelete } from './components/endpoints';
+import { FORMATTER_CONFIG, GuestData, HEADER_CONFIG, initValueForm, State } from './components/interfaces';
 import Table from './components/display/table';
 import Form from './components/display/form';
 import Detail from './components/display/detail';
 import Suspects from './components/display/suspects';
+import Print from './components/display/print';
+import { DataRekap } from '@/types/print-tools';
+import { transformTableData } from '@/lib/tools/printTools/transformData';
+import { formatDateSystem } from '@/lib/tools/dateTools';
 
 export default function MasterTamuPage() {
   const toast = useRef<Toast>(null);
@@ -41,6 +45,19 @@ export default function MasterTamuPage() {
     totalData: 0,
     sortField: 'updated_at',
     sortOrder: 'desc'
+  });
+
+  const [dataRekap, setDataRekap] = useState<DataRekap>({
+    data: [],
+    totalData: 0,
+    head: [],
+    load: false,
+    columnStyles: {},
+    show: false,
+    adjust: false,
+    fileName: `laporan-master-tamu-${new Date().toISOString().slice(0, 10)}`,
+    judul1: 'Laporan Master Data Tamu',
+    judul2: ''
   });
 
   const formik = useFormik<Partial<GuestData>>({
@@ -95,20 +112,67 @@ export default function MasterTamuPage() {
   };
 
   const getPrintData = async () => {
-    setState((p) => ({ ...p, load: true }));
+    setDataRekap((p) => ({ ...p, load: true }));
     try {
-      const res = await postData(apiGuestExport, {
+      const oPayload = {
         keyword: state.keyword,
-        guest_type: state.guestTypeFilter
-      });
-      if (res?.data?.data) {
-        showSuccess(toast, `Data ${res.data.data.length} tamu disiapkan untuk di-export`);
+        guest_type: state.guestTypeFilter || undefined,
+        nationality: state.nationalityFilter || undefined,
+        vip_level: state.vipFilter || undefined,
+        is_blacklisted: state.blacklistFilter !== '' ? state.blacklistFilter : undefined,
+        sortField: state.sortField || 'full_name',
+        sortOrder: state.sortOrder || 'asc'
+      };
+
+      const res = await postData(apiGuestData, oPayload);
+      const rawGuests = res?.data?.data || [];
+
+      if (!rawGuests.length) {
+        showError(toast, 'Tidak ada data tamu yang dapat diekspor');
+        return;
       }
+
+      // Transform data: pastikan kolom laporan proporsional dan rapi
+      const preparedGuests = rawGuests.map((g: any) => ({
+        nama_lengkap: `${g.title ? g.title + '. ' : ''}${g.full_name || '-'}`,
+        identitas: `${(g.id_type || 'KTP').toUpperCase()}: ${g.id_number || '-'}`,
+        phone: g.phone || '-',
+        nationality: g.nationality || '-',
+        guest_type: g.guest_type || 'individual',
+        vip_level: g.vip_level || 'none',
+        is_active: g.is_active !== undefined ? g.is_active : 1
+      }));
+
+      const formattedData = transformTableData(preparedGuests, {
+        headerMap: HEADER_CONFIG,
+        customFormatters: FORMATTER_CONFIG,
+        includeKeys: ['nama_lengkap', 'identitas', 'phone', 'nationality', 'guest_type', 'vip_level', 'is_active']
+      });
+
+      const columnStyles = {
+        0: { halign: 'center', cellWidth: 10 },    // No
+        1: { halign: 'left', cellWidth: 'auto' },  // Nama Lengkap
+        2: { halign: 'left', cellWidth: 35 },      // No. Identitas
+        3: { halign: 'center', cellWidth: 28 },    // No. Telepon
+        4: { halign: 'center', cellWidth: 26 },    // Kewarganegaraan
+        5: { halign: 'center', cellWidth: 24 },    // Jenis Tamu
+        6: { halign: 'center', cellWidth: 24 },    // Tingkat VIP
+        7: { halign: 'center', cellWidth: 18 }     // Status
+      };
+
+      setDataRekap((p) => ({
+        ...p,
+        data: formattedData,
+        totalData: res.data.total_data || formattedData.length,
+        show: true,
+        adjust: true,
+        columnStyles
+      }));
     } catch (error: any) {
       const e = error?.response?.data || error;
-      showError(toast, e?.message || 'Gagal menyiapkan export data');
+      showError(toast, e?.message || 'Gagal menyiapkan data cetak');
     } finally {
-      setState((p) => ({ ...p, load: false }));
+      setDataRekap((p) => ({ ...p, load: false }));
     }
   };
 
@@ -170,12 +234,21 @@ export default function MasterTamuPage() {
       <ConfirmDialog />
 
       <Table
+        dataRekap={dataRekap}
+        setDataRekap={setDataRekap}
         state={state}
         setState={setState}
         getData={getData}
         getPrintData={getPrintData}
         onLazyLoad={onLazyLoad}
         formik={formik}
+        toast={toast}
+      />
+
+      <Print
+        dataRekap={dataRekap}
+        setDataRekap={setDataRekap}
+        toast={toast}
       />
 
       <Form

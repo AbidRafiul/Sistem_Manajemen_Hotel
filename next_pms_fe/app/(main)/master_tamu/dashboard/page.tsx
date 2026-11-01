@@ -23,6 +23,10 @@ import postData from '@/lib/axios/postData';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import { formatCurrency, showError, showSuccess } from '@/lib/tools/generalTools';
 import { apiDashboardAnalytics, apiDashboardSummary, apiGuestData, apiGuestExport } from '../components/endpoints';
+import Print from '../components/display/print';
+import { DataRekap } from '@/types/print-tools';
+import { transformTableData } from '@/lib/tools/printTools/transformData';
+import { HEADER_CONFIG, FORMATTER_CONFIG } from '../components/interfaces';
 
 const STATUS_COLOR_MAP: Record<string, string> = {
   regular: 'bg-gray-500',
@@ -68,6 +72,91 @@ export default function DashboardTamuPage() {
 
   // Total accumulation
   const [totalSpendingAll, setTotalSpendingAll] = useState(0);
+
+  const [dataRekap, setDataRekap] = useState<DataRekap>({
+    data: [],
+    totalData: 0,
+    head: [],
+    load: false,
+    columnStyles: {},
+    show: false,
+    adjust: false,
+    fileName: `laporan-dashboard-tamu-${new Date().toISOString().slice(0, 10)}`,
+    judul1: 'Laporan Data Tamu & Ringkasan Analitik',
+    judul2: ''
+  });
+
+  const getPrintData = async () => {
+    setDataRekap((p) => ({ ...p, load: true }));
+    try {
+      const oPayload: any = {
+        page: 1,
+        perPage: 1000,
+        keyword,
+        guest_type: selectedGuestType && selectedGuestType.length > 0 ? selectedGuestType.join(',') : undefined,
+        vip_level: selectedVip && selectedVip.length > 0 ? selectedVip.join(',') : undefined,
+        is_blacklisted: selectedBlacklist && selectedBlacklist.length > 0 ? selectedBlacklist.join(',') : undefined,
+        sortField: sortField || 'created_at',
+        sortOrder: sortOrder || 'desc',
+        tanggal_awal: tanggalAwal ? formatDateSystem(tanggalAwal, 'yyyy-MM-dd') : undefined,
+        tanggal_akhir: tanggalAkhir ? formatDateSystem(tanggalAkhir, 'yyyy-MM-dd') : undefined
+      };
+
+      const res = await postData(apiGuestData, oPayload);
+      const rawGuests = res?.data?.data || [];
+
+      if (!rawGuests.length) {
+        showError(toast, 'Tidak ada data tamu yang dapat dicetak/diekspor');
+        return;
+      }
+
+      const preparedGuests = rawGuests.map((g: any) => ({
+        nama_lengkap: `${g.title ? g.title + '. ' : ''}${g.full_name || '-'}`,
+        identitas: `${(g.id_type || 'KTP').toUpperCase()}: ${g.id_number || '-'}`,
+        phone: g.phone || '-',
+        nationality: g.nationality || '-',
+        guest_type: g.guest_type || 'individual',
+        vip_level: g.vip_level || 'none',
+        is_active: g.is_active !== undefined ? g.is_active : 1
+      }));
+
+      const formattedData = transformTableData(preparedGuests, {
+        headerMap: HEADER_CONFIG,
+        customFormatters: FORMATTER_CONFIG,
+        includeKeys: ['nama_lengkap', 'identitas', 'phone', 'nationality', 'guest_type', 'vip_level', 'is_active']
+      });
+
+      const columnStyles = {
+        0: { halign: 'center', cellWidth: 10 },    // No
+        1: { halign: 'left', cellWidth: 'auto' },  // Nama Lengkap
+        2: { halign: 'left', cellWidth: 35 },      // No. Identitas
+        3: { halign: 'center', cellWidth: 28 },    // No. Telepon
+        4: { halign: 'center', cellWidth: 26 },    // Kewarganegaraan
+        5: { halign: 'center', cellWidth: 24 },    // Jenis Tamu
+        6: { halign: 'center', cellWidth: 24 },    // Tingkat VIP
+        7: { halign: 'center', cellWidth: 18 }     // Status
+      };
+
+      const periodeText = tanggalAwal && tanggalAkhir
+        ? `Periode: ${formatDateSystem(tanggalAwal)} s/d ${formatDateSystem(tanggalAkhir)}`
+        : 'Semua Periode Tamu';
+
+      setDataRekap((p) => ({
+        ...p,
+        data: formattedData,
+        totalData: res?.data?.total_data || formattedData.length,
+        judul2: periodeText,
+        show: true,
+        adjust: true,
+        columnStyles
+      }));
+    } catch (error: any) {
+      const e = error?.response?.data || error;
+      showError(toast, e?.message || 'Gagal menyiapkan data cetak laporan tamu');
+    } finally {
+      setDataRekap((p) => ({ ...p, load: false }));
+    }
+  };
 
   useEffect(() => {
     fetchSummary();
@@ -426,14 +515,10 @@ export default function DashboardTamuPage() {
             label="Cetak Laporan"
             icon="pi pi-print"
             outlined
-            onClick={async () => {
-              try {
-                const res = await postData(apiGuestExport, {});
-                showSuccess(toast, `Export Laporan Tamu (${res?.data?.data?.length || 0} data) berhasil`);
-              } catch (err) {
-                console.error(err);
-              }
-            }}
+            onClick={getPrintData}
+            loading={dataRekap.load}
+            tooltip="Cetak dokumen PDF atau Export data ke Excel"
+            tooltipOptions={{ position: 'bottom' }}
           />
           <Divider layout="vertical" />
           <Button
@@ -566,6 +651,12 @@ export default function DashboardTamuPage() {
           </TabPanel>
         </TabView>
       </div>
+
+      <Print
+        dataRekap={dataRekap}
+        setDataRekap={setDataRekap}
+        toast={toast}
+      />
     </div>
   );
 }

@@ -15,6 +15,13 @@ export interface TableData {
     is_active: number;
     created_at?: string;
     updated_at?: string;
+    is_in_use?: boolean;
+    active_shift_code?: string | null;
+    active_username?: string | null;
+    active_fullname?: string | null;
+    active_user?: string | null;
+    active_opened_at?: string | null;
+    status_keterangan?: string;
 }
 
 export interface initValue {
@@ -32,6 +39,8 @@ export interface State {
     add: boolean;
     edit: boolean;
     delete: boolean;
+    detail?: boolean;
+    selectedDetail?: TableData | null;
     selectedDatas: TableData[];
     searchVal: string;
     filters: {
@@ -71,8 +80,15 @@ export interface FormProps {
     getData: (apiEndpoint: string) => Promise<void>;
 }
 
+export interface DetailProps {
+    state: State;
+    setState: React.Dispatch<React.SetStateAction<State>>;
+    formik?: FormikProps<initValue>;
+}
+
 export const FORMATTER_CONFIG: Record<string, (value: any) => any> = {
-    is_active: (value: any) => value === 1 ? 'Aktif' : 'Tidak Aktif'
+    is_active: (value: any) => (value === 1 ? 'Aktif' : 'Tidak Aktif'),
+    cabang_name: (value: any) => value || '-'
 };
 
 export const HEADER_CONFIG: Record<string, string> = {
