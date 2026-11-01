@@ -11,21 +11,12 @@ import { Tag } from 'primereact/tag';
 import { Dropdown } from 'primereact/dropdown';
 import { useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { GuestData, State } from '../interfaces';
+import { GuestData, State, TableProps } from '../interfaces';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
 import StatusLegend from '@/app/components/status/StatusLegend';
 
-interface TableProps {
-  state: State;
-  setState: React.Dispatch<React.SetStateAction<State>>;
-  getData: () => void;
-  getPrintData: () => void;
-  onLazyLoad: (e: any) => void;
-  formik: any;
-}
-
-export default function Table({ state, setState, getData, getPrintData, onLazyLoad, formik }: TableProps) {
+export default function Table({ state, setState, getData, getPrintData, onLazyLoad, formik, dataRekap }: TableProps) {
   const { data: session } = useSession();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -237,7 +228,16 @@ export default function Table({ state, setState, getData, getPrintData, onLazyLo
             }}
           />
           <Divider layout="vertical" />
-          <Button size="small" label="Cetak / Export" icon="pi pi-file-excel" outlined onClick={getPrintData} loading={state.load} />
+          <Button
+            size="small"
+            label="Cetak / Export"
+            icon="pi pi-print"
+            outlined
+            onClick={getPrintData}
+            loading={dataRekap?.load}
+            tooltip="Cetak dokumen PDF atau Export data ke Excel"
+            tooltipOptions={{ position: 'bottom' }}
+          />
           <Divider layout="vertical" />
           <Button
             size="small"

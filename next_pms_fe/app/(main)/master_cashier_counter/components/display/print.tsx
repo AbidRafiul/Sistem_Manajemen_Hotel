@@ -12,12 +12,13 @@ const Print = ({ state, toast, dataRekap, setDataRekap }: TableProps) => {
     const handleCustomTable = async ({ doc, marginTopInMm = 10, marginLeftInMm = 10, marginRightInMm = 10, marginBottomInMm = 10 }: CustomTableParams) => {
         let y = marginTopInMm;
 
-        const userName = state.session?.user?.username || '';
+        const userName = state.session?.user?.username || (state.session?.user as any)?.name || 'Admin';
         if (!Array.isArray(dataRekap.data) || dataRekap.data.length === 0) return;
 
         const vaData1 = dataRekap.data;
-        const tableHead1 = Object.keys(vaData1[0]);
-        const tableData1 = vaData1.map((row) => tableHead1.map((key) => row[key]));
+        const rawHeaders = Object.keys(vaData1[0]);
+        const tableHead1 = ['No.', ...rawHeaders];
+        const tableData1 = vaData1.map((row, index) => [index + 1, ...rawHeaders.map((key) => row[key])]);
 
         autoTable(doc, {
             startY: 43 + y,
@@ -36,10 +37,11 @@ const Print = ({ state, toast, dataRekap, setDataRekap }: TableProps) => {
                 fillColor: [255, 255, 255],
                 textColor: [30, 41, 59],
                 fontSize: 8.5,
-                cellPadding: 4,
+                cellPadding: 3.5,
                 valign: 'middle'
             },
             columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
                 ...dataRekap?.columnStyles
             },
             headStyles: {
@@ -58,7 +60,7 @@ const Print = ({ state, toast, dataRekap, setDataRekap }: TableProps) => {
             }
         });
 
-        const finalY = doc.lastAutoTable?.finalY || doc.previousAutoTable?.finalY || y;
+        const finalY = (doc as any).lastAutoTable?.finalY || (doc as any).previousAutoTable?.finalY || y;
         y = finalY;
 
         return y;

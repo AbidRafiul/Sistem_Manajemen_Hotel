@@ -45,6 +45,8 @@ export interface State {
     add: boolean;
     edit: boolean;
     delete: boolean;
+    detail?: boolean;
+    selectedDetail?: TableData | null;
     selectedDatas: TableData[];
     searchVal: string;
     filters: {
@@ -82,6 +84,12 @@ export interface FormProps {
     formik: FormikProps<initValue>;
     toast: RefObject<Toast>;
     getData: (apiEndpoint: string) => Promise<void>;
+}
+
+export interface DetailProps {
+    state: State;
+    setState: React.Dispatch<React.SetStateAction<State>>;
+    formik?: FormikProps<initValue>;
 }
 
 export const HEADER_CONFIG = {

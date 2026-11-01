@@ -3,3 +3,4 @@ export const apiEndpointCreate = '/master/cashier-counter/cashier-counter-create
 export const apiEndpointUpdate = '/master/cashier-counter/cashier-counter-update';
 export const apiEndpointDelete = '/master/cashier-counter/cashier-counter-delete';
 export const apiEndpointCabang = '/master/cabang/cabang-data';
+export const apiEndpointShiftHistory = '/kasir/shift-history';

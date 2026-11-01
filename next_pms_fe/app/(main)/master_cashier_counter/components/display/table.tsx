@@ -10,6 +10,7 @@ import { Divider } from 'primereact/divider';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import Form from './form';
+import Detail from './detail';
 import { apiEndpointGet } from '../endpoints';
 import { useRef } from 'react';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
@@ -64,7 +65,16 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const actionBodyTemplate = (rowData: TableData) => (
-        <div className="flex justify-content-center gap-2">
+        <div className="flex justify-content-center gap-1">
+            <Button
+                icon="pi pi-eye"
+                outlined
+                severity="info"
+                className="p-button-sm"
+                onClick={() => setState((p) => ({ ...p, selectedDetail: rowData, detail: true }))}
+                tooltip="Detail Counter"
+                tooltipOptions={{ position: 'top' }}
+            />
             <Button
                 icon="pi pi-pencil"
                 outlined
@@ -81,6 +91,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
                 }}
                 tooltip="Edit Cashier Counter"
+                tooltipOptions={{ position: 'top' }}
             />
             <Button
                 icon="pi pi-trash"
@@ -89,6 +100,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 className="p-button-sm"
                 onClick={() => setState((p) => ({ ...p, delete: true, selectedDatas: [rowData] }))}
                 tooltip="Hapus Cashier Counter"
+                tooltipOptions={{ position: 'top' }}
             />
         </div>
     );
@@ -180,11 +192,12 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column field="name" header="Nama Counter" sortable style={{ minWidth: '16rem' }}></Column>
                     <Column field="created_at" header="Waktu Dibuat" body={(rowData) => formatDateSystem(rowData.created_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="updated_at" header="Waktu Diperbarui" body={(rowData) => formatDateSystem(rowData.updated_at)} align="center" sortable style={{ minWidth: '12rem' }}></Column>
-                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
+                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '9.5rem' }}></Column>
                 </DataTable>
             </div>
 
             <Form getData={getData} toast={toast} state={state} setState={setState} formik={formik} />
+            <Detail state={state} setState={setState} formik={formik} />
         </>
     );
 };

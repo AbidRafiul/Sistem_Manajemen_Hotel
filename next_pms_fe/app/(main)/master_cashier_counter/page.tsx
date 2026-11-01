@@ -25,6 +25,8 @@ const Page = () => {
         add: false,
         edit: false,
         delete: false,
+        detail: false,
+        selectedDetail: null,
         selectedDatas: [],
         searchVal: '',
         filters: { global: { value: null, matchMode: FilterMatchMode.CONTAINS } },
@@ -85,7 +87,7 @@ const Page = () => {
             setState((p) => ({
                 ...p,
                 data: res.data.data,
-                totalData: res.data.total_data
+                totalData: res.data.total_data ?? res.data.pagination?.totalRows ?? (res.data.data?.length || 0)
             }));
         } catch (error: any) {
             const e = error?.response?.data || error;
@@ -107,18 +109,17 @@ const Page = () => {
             const res = await postData(apiEndpoint, oPayload);
 
             let columnStyles = {
-                0: { halign: 'center' },
-                1: { halign: 'left' },
-                2: { halign: 'left' },
-                3: { halign: 'center' },
-                4: { halign: 'center' },
-                5: { halign: 'center' }
+                0: { halign: 'center', cellWidth: 10 },
+                1: { halign: 'center', cellWidth: 35 },
+                2: { halign: 'left', cellWidth: 45 },
+                3: { halign: 'left', cellWidth: 'auto' },
+                4: { halign: 'center', cellWidth: 28 }
             };
 
             const formattedData = transformTableData(res.data.data, {
                 headerMap: HEADER_CONFIG,
                 customFormatters: FORMATTER_CONFIG,
-                excludeKeys: ['id', 'created_at', 'updated_at']
+                includeKeys: ['kode_counter', 'cabang_name', 'name', 'is_active']
             });
 
             setDataRekap((p) => ({

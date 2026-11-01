@@ -15,6 +15,7 @@
  */
 
 
+import "dotenv/config";
 import cors from "cors";
 import express from "express";
 
@@ -28,7 +29,10 @@ import Logger from "./middleware/logger.js";
 
 const app = express();
 
-const allowedOrigins = process.env.ORIGIN.split(",").map((origin) => origin.trim());
+const allowedOrigins = (process.env.ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(
   cors({

@@ -1,4 +1,7 @@
 import { DataTableStateEvent } from 'primereact/datatable';
+import { DataRekap } from '@/types/print-tools';
+import { Toast } from 'primereact/toast';
+import { RefObject } from 'react';
 
 export interface GuestData {
   id?: number;
@@ -117,4 +120,71 @@ export const initValueForm: Partial<GuestData> = {
   },
   internal_notes: '',
   consent_marketing: 0
+};
+
+export interface TableProps {
+  dataRekap: DataRekap;
+  setDataRekap: React.Dispatch<React.SetStateAction<DataRekap>>;
+  state: State;
+  setState: React.Dispatch<React.SetStateAction<State>>;
+  getData: () => Promise<void> | void;
+  getPrintData: () => Promise<void> | void;
+  onLazyLoad: (e: any) => void;
+  formik: any;
+  toast: RefObject<Toast>;
+}
+
+export const HEADER_CONFIG: Record<string, string> = {
+  nama_lengkap: 'Nama Lengkap',
+  identitas: 'No. Identitas',
+  phone: 'No. Telepon',
+  email: 'Email',
+  nationality: 'Kewarganegaraan',
+  guest_type: 'Jenis Tamu',
+  vip_level: 'Tingkat VIP',
+  company_name: 'Perusahaan / Corporate',
+  total_stay: 'Total Kunjungan',
+  total_spending: 'Total Pengeluaran',
+  last_stay_date: 'Terakhir Menginap',
+  is_blacklisted: 'Status Blacklist',
+  is_active: 'Status',
+  created_at: 'Waktu Registrasi'
+};
+
+export const FORMATTER_CONFIG: Record<string, (val: any) => any> = {
+  guest_type: (val: string) => {
+    switch (val) {
+      case 'individual':
+        return 'Individual';
+      case 'corporate':
+        return 'Corporate';
+      case 'travel_agent':
+        return 'Travel Agent';
+      case 'group':
+        return 'Group';
+      default:
+        return val || '-';
+    }
+  },
+  vip_level: (val: string) => {
+    switch (val) {
+      case 'none':
+        return 'Non-VIP';
+      case 'vip':
+        return 'VIP';
+      case 'vvip':
+        return 'VVIP';
+      case 'owner':
+        return 'Owner Guest';
+      default:
+        return val || '-';
+    }
+  },
+  total_spending: (val: number) => {
+    if (!val || val === 0) return 'Rp 0';
+    return `Rp ${Number(val).toLocaleString('id-ID')}`;
+  },
+  total_stay: (val: number) => `${val || 0}x`,
+  is_blacklisted: (val: number) => (val === 1 ? 'Blacklist' : 'Normal'),
+  is_active: (val: number) => (val === 1 ? 'Aktif' : 'Non-Aktif')
 };

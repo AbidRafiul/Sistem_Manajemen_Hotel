@@ -5,13 +5,15 @@ import { Toast } from 'primereact/toast';
 import { useEffect, useRef, useState } from 'react';
 import { showError } from '@/lib/tools/generalTools';
 import { useFormik } from 'formik';
-import { initValue, State } from './components/interfaces';
+import { FORMATTER_CONFIG, HEADER_CONFIG, initValue, State } from './components/interfaces';
 import Table from './components/display/table';
+import Print from './components/display/print';
 import { FilterMatchMode } from 'primereact/api';
 import { useSession } from 'next-auth/react';
 import { DataTableStateEvent } from 'primereact/datatable';
 import { apiEndpointGet } from './components/endpoints';
 import { DataRekap } from '@/types/print-tools';
+import { transformTableData } from '@/lib/tools/printTools/transformData';
 
 const Page = () => {
     const toast = useRef<Toast>(null);
@@ -108,7 +110,48 @@ const Page = () => {
     };
 
     const getPrintData = async (apiEndpoint: string) => {
-        // Placeholder for now
+        setDataRekap((p) => ({ ...p, load: true }));
+        try {
+            const oPayload = {
+                keyword: state.keyword,
+                sortField: state.sortField || 'updated_at',
+                sortOrder: state.sortOrder || 'desc'
+            };
+
+            const res = await postData(apiEndpoint, oPayload);
+
+            const columnStyles = {
+                0: { halign: 'center', cellWidth: 10 },
+                1: { halign: 'left' },
+                2: { halign: 'left' },
+                3: { halign: 'center' },
+                4: { halign: 'right' },
+                5: { halign: 'right' },
+                6: { halign: 'center' },
+                7: { halign: 'center' },
+                8: { halign: 'center' }
+            };
+
+            const formattedData = transformTableData(res.data.data, {
+                headerMap: HEADER_CONFIG,
+                customFormatters: FORMATTER_CONFIG,
+                excludeKeys: ['id', 'kode_harga_price', 'kode_tipe_kamar', 'kode_rate_plan', 'kode_season', 'created_at', 'updated_at']
+            });
+
+            setDataRekap((p) => ({
+                ...p,
+                data: formattedData,
+                totalData: res.data.total_data || formattedData.length,
+                show: true,
+                adjust: true,
+                columnStyles
+            }));
+        } catch (error: any) {
+            const e = error?.response?.data || error;
+            showError(toast, e?.message || 'Terjadi Kesalahan saat menyiapkan data cetak');
+        } finally {
+            setDataRekap((p) => ({ ...p, load: false }));
+        }
     };
 
     const onLazyLoad = (event: DataTableStateEvent) => {
@@ -154,6 +197,11 @@ const Page = () => {
                     formik={formik}
                     toast={toast}
                     onLazyLoad={onLazyLoad}
+                />
+                <Print
+                    dataRekap={dataRekap}
+                    setDataRekap={setDataRekap}
+                    toast={toast}
                 />
             </div>
         </>

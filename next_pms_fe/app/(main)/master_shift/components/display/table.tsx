@@ -10,6 +10,7 @@ import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { Tag } from 'primereact/tag';
 import Form from './form';
+import Detail from './detail';
 import { apiEndpointGet } from '../endpoints';
 import { useRef } from 'react';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
@@ -68,7 +69,16 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
     );
 
     const actionBodyTemplate = (rowData: TableData) => (
-        <div className="flex justify-content-center gap-2">
+        <div className="flex justify-content-center gap-1">
+            <Button
+                icon="pi pi-eye"
+                outlined
+                severity="info"
+                className="p-button-sm"
+                onClick={() => setState((p) => ({ ...p, selectedDetail: rowData, detail: true }))}
+                tooltip="Detail Shift"
+                tooltipOptions={{ position: 'top' }}
+            />
             <Button
                 icon="pi pi-pencil"
                 outlined
@@ -89,6 +99,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     setState((p) => ({ ...p, add: false, delete: false, edit: true }));
                 }}
                 tooltip="Edit Shift"
+                tooltipOptions={{ position: 'top' }}
             />
             <Button
                 icon="pi pi-trash"
@@ -97,6 +108,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 className="p-button-sm"
                 onClick={() => setState((p) => ({ ...p, delete: true, selectedDatas: [rowData] }))}
                 tooltip="Hapus Shift"
+                tooltipOptions={{ position: 'top' }}
             />
         </div>
     );
@@ -217,7 +229,7 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                     <Column header="Jam Operasional" align="center" body={jamBodyTemplate} style={{ minWidth: '11rem' }}></Column>
                     <Column field="default_opening_cash" header="Modal Standar" align="right" body={openingCashBodyTemplate} sortable style={{ minWidth: '11rem' }}></Column>
                     <Column field="is_night_audit" header="Sesi" align="center" body={nightAuditBodyTemplate} sortable style={{ minWidth: '8rem' }}></Column>
-                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '8rem' }}></Column>
+                    <Column header="Aksi" body={actionBodyTemplate} align="center" frozen alignFrozen="right" style={{ minWidth: '9.5rem' }}></Column>
                 </DataTable>
             </div>
 
@@ -230,6 +242,8 @@ const Table = ({ dataRekap, setDataRekap, state, setState, formik, toast, getDat
                 dataRekap={dataRekap}
                 setDataRekap={setDataRekap}
             />
+
+            <Detail state={state} setState={setState} formik={formik} />
         </>
     );
 };

@@ -14,7 +14,7 @@ import { useRef } from 'react';
 import StatusIndicator from '@/app/components/status/StatusIndicator';
 import StatusLegend from '@/app/components/status/StatusLegend';
 
-const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLoad }: TableProps) => {
+const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLoad, dataRekap }: TableProps) => {
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 
@@ -146,7 +146,16 @@ const Table = ({ state, setState, formik, toast, getData, getPrintData, onLazyLo
                     }}
                 />
                 <Divider layout="vertical" />
-                <Button size="small" label="Cetak" icon="pi pi-print" outlined onClick={() => getPrintData(apiEndpointGet)} loading={state.load} />
+                <Button
+                    size="small"
+                    label="Cetak / Export"
+                    icon="pi pi-print"
+                    outlined
+                    onClick={() => getPrintData(apiEndpointGet)}
+                    loading={dataRekap?.load}
+                    tooltip="Cetak dokumen PDF atau Export data ke Excel"
+                    tooltipOptions={{ position: 'bottom' }}
+                />
                 <Divider layout="vertical" />
                 <Button
                     size="small"
