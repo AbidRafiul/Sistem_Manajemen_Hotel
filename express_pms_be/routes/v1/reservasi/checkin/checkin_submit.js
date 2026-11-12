@@ -126,7 +126,7 @@ router.post("/", async (req, res) => {
                 kode_reservasi_room: oPayload.kode_reservasi_room,
                 trx: trx,
                 userId: userId,
-                kode_kamar_manual: resRoom.kode_kamar || oPayload.kode_kamar || null,
+                kode_kamar_manual: oPayload.kode_kamar || resRoom.kode_kamar || null,
                 kode_cashier_shift: shiftCode,
                 guest_count: oPayload.guest_count || null,
                 is_early_checkin: isBeforeStandardTime || Boolean(oPayload.is_early_checkin),

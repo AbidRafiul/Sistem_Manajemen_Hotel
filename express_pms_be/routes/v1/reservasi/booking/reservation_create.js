@@ -48,7 +48,8 @@ const schema = Joi.object({
         then: Joi.required(),
         otherwise: Joi.optional().allow(null, "")
     }),
-    reference_no: Joi.string().optional().allow(null, "")
+    reference_no: Joi.string().optional().allow(null, ""),
+    source_channel: Joi.string().optional().allow(null, "")
 });
 
 router.post("/", async (req, res) => {
@@ -134,7 +135,7 @@ router.post("/", async (req, res) => {
                 check_out_date: checkoutDateStr,
                 deposit_amount: paymentAmount,
                 status: resStatus,
-                source_channel: "walk_in",
+                source_channel: oPayload.source_channel || "booking",
                 booking_type: bookingType,
                 group_code: groupCode,
                 special_request: specialRequestText || null,

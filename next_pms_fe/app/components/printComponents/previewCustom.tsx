@@ -82,6 +82,8 @@ export default function PreviewCustom({ dataRekap, setDataRekap, toast, handleCu
                 await HeaderLaporan({
                     doc,
                     marginTopInMm,
+                    marginLeftInMm,
+                    marginRightInMm,
                     judulLaporan: dataRekap?.judul1,
                     periodeLaporan: dataRekap?.judul2,
                     companyConfig: companyConfig
@@ -138,14 +140,21 @@ export default function PreviewCustom({ dataRekap, setDataRekap, toast, handleCu
     // -------------------------------------------------------------
     // HANDLE EXPORT EXCEL
     // -------------------------------------------------------------
-    const exportExcel = () => {
+    const exportExcel = (adjust?: PrintPageSettingState) => {
         if (!Array.isArray(dataRekap?.data)) {
             console.error('Data bukan array, export dibatalkan');
             return;
         }
         exportToXLSX({
             data: dataRekap.data,
-            fileName: `${dataRekap.fileName}.xlsx`
+            fileName: `${dataRekap.fileName}.xlsx`,
+            judulLaporan: dataRekap?.judul1,
+            periodeLaporan: dataRekap?.judul2,
+            companyConfig: companyConfig,
+            columnStyles: dataRekap?.columnStyles,
+            adjust: adjust,
+            disableHeader: disableHeader,
+            disableFooter: disableFooter
         });
     };
 

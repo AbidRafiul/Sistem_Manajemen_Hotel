@@ -426,13 +426,18 @@ const DialogShiftDetail: React.FC<DialogShiftDetailProps> = ({ visible, onHide, 
                             <div className="col-12 sm:col-6 lg:col-3">
                                 <div className="surface-card border-1 surface-border border-round-xl p-3 shadow-1 h-full">
                                     <div className="flex justify-content-between align-items-center mb-2">
-                                        <span className="text-xs uppercase font-bold text-500">Total Uang Masuk</span>
+                                        <span className="text-xs uppercase font-bold text-500">Mutasi Bersih Kasir</span>
                                         <div className="w-2rem h-2rem border-round-circle bg-blue-100 flex align-items-center justify-content-center">
                                             <i className="pi pi-wallet text-blue-600"></i>
                                         </div>
                                     </div>
                                     <div className="text-2xl font-bold text-900 mb-1">{formatCurrency(summary.total_payment_in || 0)}</div>
-                                    <span className="text-xs text-500 font-semibold">Tunai: {formatCurrency(summary.total_cash_in || 0)} | Non-Tunai: {formatCurrency(summary.total_non_cash_in || 0)}</span>
+                                    <span className="text-xs text-500 font-semibold block">Tunai: {formatCurrency(summary.total_cash_in || 0)} | Non-Tunai: {formatCurrency(summary.total_non_cash_in || 0)}</span>
+                                    {summary.total_refund_amount > 0 && (
+                                        <span className="text-xs text-red-600 font-bold block mt-1">
+                                            Refund Keluar: -{formatCurrency(summary.total_refund_amount)} ({summary.total_refund_count}x)
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -557,7 +562,25 @@ const DialogShiftDetail: React.FC<DialogShiftDetailProps> = ({ visible, onHide, 
                                             </div>
                                         );
                                     }} style={{ minWidth: '180px' }} />
-                                    <Column field="amount" header="Nominal" body={(r) => formatCurrency(r.amount)} className="text-right font-bold text-primary" style={{ width: '150px' }} />
+                                    <Column
+        field="amount"
+        header="Nominal"
+        body={(r) => {
+            const isRef = r.is_refund || Number(r.amount) < 0;
+            return (
+                <div className="flex flex-column align-items-end">
+                    <span className={`font-bold ${isRef ? 'text-red-600' : 'text-primary'}`}>
+                        {isRef ? `- ${formatCurrency(Math.abs(r.amount))}` : formatCurrency(r.amount)}
+                    </span>
+                    {isRef && (
+                        <Tag severity="danger" value="REFUND" className="text-xs px-1 py-0 mt-1" />
+                    )}
+                </div>
+            );
+        }}
+        className="text-right font-bold"
+        style={{ width: '150px' }}
+    />
                                 </DataTable>
                             </TabPanel>
                         </TabView>
