@@ -4,6 +4,8 @@ import { FormikProps } from 'formik';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { IconField } from 'primereact/iconfield';
+import { InputIcon } from 'primereact/inputicon';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -160,8 +162,10 @@ const StepGuest: React.FC<StepGuestProps> = ({ state, setState, formik, toast })
         return (
             <div className="flex flex-wrap justify-content-between align-items-center gap-2">
                 <span className="p-input-icon-left w-full md:w-20rem">
-                    <i className="pi pi-search" />
-                    <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Cari nama, No KTP/Telp..." className="w-full" />
+                    <IconField iconPosition="left">
+                        <InputIcon className="pi pi-search" />
+                        <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Cari nama, No KTP/Telp..." className="w-full" />
+                    </IconField>
                 </span>
                 <Button label="Tamu Baru" icon="pi pi-user-plus" severity="success" onClick={handleNewGuest} className="w-full md:w-auto" />
             </div>

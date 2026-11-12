@@ -5,3 +5,5 @@ export const apiShiftCurrent = '/kasir/shift-current';
 export const apiRescheduleCheck = '/reservasi/reschedule/reschedule-check';
 export const apiRescheduleSubmit = '/reservasi/reschedule/reschedule-submit';
 export const apiCancelSubmit = '/reservasi/batal/cancel-submit';
+export const apiKamarAvailability = '/reservasi/kamar/availability';
+export const apiAssignRoom = '/reservasi/booking/assign-room';

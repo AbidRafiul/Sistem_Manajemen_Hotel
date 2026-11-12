@@ -29,7 +29,7 @@ const Print = ({ dataRekap, setDataRekap, toast }: PrintProps) => {
         const tableData1 = vaData1.map((row, index) => [index + 1, ...rawHeaders.map((key) => row[key])]);
 
         autoTable(doc, {
-            startY: 43 + y,
+            startY: 39 + y,
             head: [tableHead1],
             body: tableData1,
             theme: 'grid',
@@ -40,28 +40,31 @@ const Print = ({ dataRekap, setDataRekap, toast }: PrintProps) => {
                 bottom: marginBottomInMm + 10
             },
             styles: {
-                lineColor: [220, 220, 220],
-                lineWidth: 0.3,
+                lineColor: [203, 213, 225],
+                lineWidth: 0.25,
                 fillColor: [255, 255, 255],
                 textColor: [30, 41, 59],
                 fontSize: 7.5,
-                cellPadding: 3,
+                cellPadding: { top: 2.5, right: 1.8, bottom: 2.5, left: 1.8 },
                 valign: 'middle'
             },
             columnStyles: {
-                0: { halign: 'center', cellWidth: 8 },
+                0: { halign: 'center', cellWidth: 10 },
                 ...dataRekap?.columnStyles
             },
             headStyles: {
-                fillColor: [240, 240, 240],
+                fillColor: [241, 245, 249],
                 textColor: [15, 23, 42],
+                fontSize: 8,
                 fontStyle: 'bold',
                 halign: 'center',
-                lineColor: [220, 220, 220],
+                valign: 'middle',
+                cellPadding: { top: 3, right: 1.8, bottom: 3, left: 1.8 },
+                lineColor: [203, 213, 225],
                 lineWidth: 0.3
             },
             alternateRowStyles: {
-                fillColor: [255, 255, 255]
+                fillColor: [248, 250, 252]
             },
             didDrawPage: () => {
                 AddPageInfo({ doc, userName, marginRightInMm });

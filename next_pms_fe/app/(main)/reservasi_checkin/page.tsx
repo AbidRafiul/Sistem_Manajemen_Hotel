@@ -17,7 +17,7 @@ import { Dialog } from 'primereact/dialog';
 import { InputNumber } from 'primereact/inputnumber';
 import { useSession } from 'next-auth/react';
 import postData from '@/lib/axios/postData';
-import { apiReservationData, apiCheckinSubmit, apiShiftCurrent, apiCabangDropdown, apiCancelSubmit } from './components/endpoints';
+import { apiReservationData, apiCheckinSubmit, apiShiftCurrent, apiCabangDropdown, apiCancelSubmit, apiKamarAvailability, apiAssignRoom } from './components/endpoints';
 import { showError, showSuccess, formatCurrency } from '@/lib/tools/generalTools';
 import { formatDateSystem } from '@/lib/tools/dateTools';
 import PaymentMethodSelector from '@/app/components/payment/PaymentMethodSelector';
@@ -26,6 +26,7 @@ import CashierPicCard from '@/app/components/payment/CashierPicCard';
 import { buildStandardReferenceNo } from '@/lib/tools/paymentTools';
 import DialogReschedule from './components/DialogReschedule';
 import DialogCancelRefund from './components/DialogCancelRefund';
+import { DialogRefundSlip } from './components/DialogRefundSlip';
 import Print from './components/print';
 import { DataRekap } from '@/types/print-tools';
 import { transformTableData } from '@/lib/tools/printTools/transformData';
@@ -90,6 +91,13 @@ interface GroupedReservation {
     pending_rooms: number;
     room_types_summary: string;
     nights: number;
+    cancellation_reason?: string;
+    cancellation_penalty?: number;
+    cancelled_at?: string;
+    refund_payments?: any[];
+    refund_amount?: number;
+    source_channel?: string;
+    booking_type?: string;
 }
 
 const CheckinContent = () => {
@@ -98,6 +106,9 @@ const CheckinContent = () => {
     const { data: session } = useSession();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'arrivals' | 'refunds'>('arrivals');
+    const [selectedRefundRes, setSelectedRefundRes] = useState<any>(null);
+    const [showRefundSlipDialog, setShowRefundSlipDialog] = useState<boolean>(false);
     const [filterCabang, setFilterCabang] = useState('');
     const [cabangOptions, setCabangOptions] = useState<any[]>([]);
     const [filterDate, setFilterDate] = useState<Date | null>(null); // Default: semua tanggal
@@ -164,6 +175,17 @@ const CheckinContent = () => {
     const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
     const [showCancelRefundDialog, setShowCancelRefundDialog] = useState(false);
 
+    // State Pemilihan Kamar Fisik (Room Assignment) saat Check-In
+    const [selectedRoomCode, setSelectedRoomCode] = useState<string>('');
+    const [availableRoomsForCheckin, setAvailableRoomsForCheckin] = useState<any[]>([]);
+    const [loadingAvailableRooms, setLoadingAvailableRooms] = useState<boolean>(false);
+
+    // State Modal Terpisah: Tetapkan / Plot Nomor Kamar (Pre-Assign Dialog)
+    const [showAssignRoomDialog, setShowAssignRoomDialog] = useState<boolean>(false);
+    const [selectedRoomToAssign, setSelectedRoomToAssign] = useState<any>(null);
+    const [preAssignRoomCode, setPreAssignRoomCode] = useState<string>('');
+    const [preAssignLoading, setPreAssignLoading] = useState<boolean>(false);
+
     const fetchCabang = async () => {
         try {
             const res = await postData(apiCabangDropdown, {});
@@ -200,14 +222,16 @@ const CheckinContent = () => {
             loadData();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filterCabang, filterDate]);
+    }, [filterCabang, filterDate, activeTab]);
 
-    const loadData = async () => {
+    const loadData = async (tab = activeTab) => {
         setLoading(true);
         try {
             const payload: any = {
                 kode_cabang: filterCabang,
-                status: ['reserved', 'confirmed', 'booked']
+                status: tab === 'arrivals' 
+                    ? ['reserved', 'confirmed', 'booked', 'assigned', 'checked_in']
+                    : ['cancelled']
             };
             if (filterDate) {
                 payload.check_in_date = formatDateSystem(filterDate, "yyyy-MM-dd");
@@ -242,6 +266,13 @@ const CheckinContent = () => {
                     check_out_date: item.check_out_date,
                     special_request: item.special_request,
                     res_status: item.res_status,
+                    cancellation_reason: item.cancellation_reason,
+                    cancellation_penalty: parseFloat(item.cancellation_penalty || 0),
+                    cancelled_at: item.reservation_updated_at || item.updated_at,
+                    refund_payments: item.refund_payments || [],
+                    refund_amount: parseFloat(item.refund_amount || 0),
+                    source_channel: item.source_channel,
+                    booking_type: item.booking_type,
                     deposit_amount: parseFloat(item.deposit_amount || 0),
                     kode_folio: item.kode_folio,
                     folio_subtotal: item.folio_subtotal,
@@ -314,6 +345,73 @@ const CheckinContent = () => {
         }
     };
 
+        const fetchAvailableRoomsForRoom = async (roomData: any) => {
+        if (!roomData?.kode_tipe_kamar) return [];
+        setLoadingAvailableRooms(true);
+        try {
+            const effectiveCabang = roomData.kode_cabang || filterCabang || (session?.user as any)?.active_kode_cabang || 'CAB0001';
+            const cin = roomData.check_in_date ? formatDateSystem(new Date(roomData.check_in_date), 'yyyy-MM-dd') : formatDateSystem(new Date(), 'yyyy-MM-dd');
+            const cout = roomData.check_out_date ? formatDateSystem(new Date(roomData.check_out_date), 'yyyy-MM-dd') : formatDateSystem(new Date(Date.now() + 86400000), 'yyyy-MM-dd');
+
+            const payload: any = {
+                kode_cabang: effectiveCabang,
+                kode_tipe_kamar: roomData.kode_tipe_kamar,
+                check_in_date: cin,
+                check_out_date: cout
+            };
+            if (roomData.kode_rate_plan) {
+                payload.kode_rate_plan = roomData.kode_rate_plan;
+            }
+
+            const res = await postData(apiKamarAvailability, payload);
+            const rooms = res?.data?.data?.available_rooms || [];
+            setAvailableRoomsForCheckin(rooms);
+            return rooms;
+        } catch (err) {
+            console.error("Gagal mengambil ketersediaan kamar:", err);
+            setAvailableRoomsForCheckin([]);
+            return [];
+        } finally {
+            setLoadingAvailableRooms(false);
+        }
+    };
+
+    const openPreAssignDialog = (room: any, group: GroupedReservation) => {
+        const merged = {
+            ...room,
+            guest_name: group.guest_name,
+            kode_reservasi: group.kode_reservasi,
+            kode_cabang: group.kode_cabang || room.kode_cabang
+        };
+        setSelectedRoomToAssign(merged);
+        setPreAssignRoomCode(room.kode_kamar || '');
+        setAvailableRoomsForCheckin([]);
+        fetchAvailableRoomsForRoom(merged);
+        setShowAssignRoomDialog(true);
+    };
+
+    const handlePreAssignSubmit = async () => {
+        if (!selectedRoomToAssign) return;
+        setPreAssignLoading(true);
+        try {
+            const res = await postData(apiAssignRoom, {
+                kode_reservasi_room: selectedRoomToAssign.kode_reservasi_room,
+                kode_kamar: preAssignRoomCode || null
+            });
+            if (res?.data?.status === '00') {
+                showSuccess(toast, res.data.message || 'Nomor kamar fisik berhasil diperbarui');
+                setShowAssignRoomDialog(false);
+                loadData();
+            } else {
+                showError(toast, res?.data?.message || 'Gagal menetapkan nomor kamar');
+            }
+        } catch (err: any) {
+            showError(toast, err?.response?.data?.message || err.message || 'Terjadi kesalahan sistem');
+        } finally {
+            setPreAssignLoading(false);
+        }
+    };
+
     const processCheckIn = async (roomData: any) => {
         const cinStr = roomData.check_in_date ? roomData.check_in_date.substring(0, 10) : '';
         const todayStr = formatDateSystem(new Date(), 'yyyy-MM-dd') || '';
@@ -327,6 +425,10 @@ const CheckinContent = () => {
         const isEarly = Boolean(cinStr === todayStr && nowTime < stdTime);
 
         setSelectedRes(roomData);
+        setSelectedRoomCode(roomData.kode_kamar || '');
+        setAvailableRoomsForCheckin([]);
+        fetchAvailableRoomsForRoom(roomData);
+
         setIsEarlyCheckin(isEarly);
         setApplyEarlyCheckinFee(true);
         setEarlyCheckinFeeAmount(150000);
@@ -369,6 +471,7 @@ const CheckinContent = () => {
         const stdRef = depositAmount > 0 ? buildStandardReferenceNo(paymentMethod, bankName, cardType, referenceNo) : null;
 
         doSubmitCheckin(selectedRes.kode_reservasi_room, {
+            kode_kamar: selectedRoomCode || null,
             payment_method: depositAmount > 0 ? (paymentMethod || 'cash') : null,
             bank_name: depositAmount > 0 ? (bankName || null) : null,
             card_type: depositAmount > 0 && paymentMethod === 'card' ? (cardType || 'debit') : null,
@@ -613,6 +716,32 @@ const CheckinContent = () => {
         );
     };
 
+        const depositOrRefundBody = (group: GroupedReservation) => {
+        if (activeTab === 'refunds' || group.res_status === 'cancelled') {
+            const hasDeposit = group.deposit_amount > 0;
+            const refAmt = group.refund_amount !== undefined && group.refund_amount > 0 
+                ? group.refund_amount 
+                : Math.max(0, group.deposit_amount - (group.cancellation_penalty || 0));
+
+            return (
+                <div className="flex flex-column gap-1">
+                    <span className="text-xs text-700">
+                        Deposit: <strong>{formatCurrency(group.deposit_amount)}</strong>
+                    </span>
+                    {group.cancellation_penalty ? (
+                        <span className="text-xs text-red-600">
+                            Denda: -{formatCurrency(group.cancellation_penalty)}
+                        </span>
+                    ) : null}
+                    <span className="text-xs font-bold text-green-700">
+                        Refund: {formatCurrency(refAmt)}
+                    </span>
+                </div>
+            );
+        }
+        return group.deposit_amount ? formatCurrency(group.deposit_amount) : '-';
+    };
+
     const statusGroupBody = (group: GroupedReservation) => {
         const activeCount = group.total_rooms - group.cancelled_rooms;
         if (activeCount === 0) {
@@ -629,6 +758,35 @@ const CheckinContent = () => {
     };
 
     const parentActionBody = (group: GroupedReservation) => {
+        const activeCount = group.total_rooms - group.cancelled_rooms;
+        const isCancelled = activeCount === 0 || group.res_status === 'cancelled';
+
+        if (isCancelled) {
+            const hasDeposit = parseFloat(String(group.deposit_amount || 0)) > 0;
+            const hasRefundAmt = parseFloat(String(group.refund_amount || 0)) > 0;
+            const hasRefundList = Array.isArray(group.refund_payments) && group.refund_payments.length > 0;
+            const canPrintRefund = hasDeposit || hasRefundAmt || hasRefundList;
+
+            return (
+                <div className="flex align-items-center justify-content-center gap-2">
+                    <Tag severity="danger" value="Dibatalkan" icon="pi pi-times" className="px-2 py-1 font-semibold" />
+                    {canPrintRefund && (
+                        <Button
+                            icon="pi pi-print"
+                            label="Bukti Refund"
+                            className="p-button-sm p-button-outlined p-button-info text-xs font-semibold"
+                            onClick={() => {
+                                setSelectedRefundRes({ ...group, ...(group.rooms?.[0] || {}) });
+                                setShowRefundSlipDialog(true);
+                            }}
+                            tooltip="Cetak Slip Bukti Pengembalian Dana (Refund)"
+                            tooltipOptions={{ position: 'top' }}
+                        />
+                    )}
+                </div>
+            );
+        }
+
         const isAllCheckedIn = group.pending_rooms === 0 && group.checked_in_rooms > 0;
         const isSingleRoom = group.total_rooms === 1;
 
@@ -802,7 +960,19 @@ const CheckinContent = () => {
 
                             if (isCancelled) {
                                 return (
-                                    <Tag severity="danger" value="Dibatalkan" icon="pi pi-times" className="text-xs" />
+                                    <div className="flex align-items-center justify-content-center gap-2">
+                                        <Tag severity="danger" value="Dibatalkan" icon="pi pi-times" className="text-xs" />
+                                        <Button
+                                            icon="pi pi-print"
+                                            tooltip="Lihat Bukti Refund Reservasi"
+                                            tooltipOptions={{ position: 'top' }}
+                                            className="p-button-sm p-button-outlined p-button-info text-xs p-1"
+                                            onClick={() => {
+                                                setSelectedRefundRes({ ...group, ...rm });
+                                                setShowRefundSlipDialog(true);
+                                            }}
+                                        />
+                                    </div>
                                 );
                             }
 
@@ -925,7 +1095,29 @@ const CheckinContent = () => {
     const headerTemplate = (
         <div className="flex flex-wrap align-items-center justify-content-between gap-3 p-1">
             <div className="flex align-items-center gap-2">
-                <span className="text-xl font-bold text-900">Daftar Kedatangan Tamu</span>
+                <div className="flex align-items-center gap-2 flex-wrap">
+                    <span className="text-xl font-bold text-900">
+                        {activeTab === 'arrivals' ? 'Daftar Kedatangan Tamu' : 'Riwayat Pembatalan & Refund'}
+                    </span>
+                    <div className="flex align-items-center bg-gray-100 p-1 border-round-2xl gap-1">
+                        <Button
+                            type="button"
+                            label="Kedatangan Aktif"
+                            icon="pi pi-calendar"
+                            size="small"
+                            className={`p-button-sm text-xs font-bold border-none ${activeTab === 'arrivals' ? 'p-button-primary shadow-1' : 'p-button-text text-600'}`}
+                            onClick={() => setActiveTab('arrivals')}
+                        />
+                        <Button
+                            type="button"
+                            label="Batal & Refund"
+                            icon="pi pi-history"
+                            size="small"
+                            className={`p-button-sm text-xs font-bold border-none ${activeTab === 'refunds' ? 'p-button-danger shadow-1' : 'p-button-text text-600'}`}
+                            onClick={() => setActiveTab('refunds')}
+                        />
+                    </div>
+                </div>
                 <Button
                     type="button"
                     label={expandedRows && Object.keys(expandedRows).length > 0 ? "Tutup Rincian" : "Buka Rincian"}
@@ -1099,9 +1291,9 @@ const CheckinContent = () => {
                 <Column field="nights" header="Malam" sortable align="center" style={{ width: '5.5rem' }} />
                 <Column
                     field="deposit_amount"
-                    header="Total Deposit"
+                    header={activeTab === 'refunds' ? 'Deposit & Refund' : 'Total Deposit'}
                     sortable
-                    body={(r) => r.deposit_amount ? formatCurrency(r.deposit_amount) : '-'}
+                    body={depositOrRefundBody}
                 />
                 <Column field="res_status" header="Status" sortable body={statusGroupBody} align="center" />
                 <Column header="Aksi" body={parentActionBody} align="center" style={{ minWidth: '13rem' }} />
@@ -1251,6 +1443,48 @@ const CheckinContent = () => {
                                         <Tag severity="warning" value="Rescheduled" className="text-xs font-semibold px-2 py-0" />
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Card Pemilihan Nomor Kamar Fisik */}
+                            <div className="p-3 border-round surface-0 border-1 surface-border mb-3">
+                                <div className="flex align-items-center justify-content-between mb-2">
+                                    <span className="font-bold text-xs text-800 uppercase flex align-items-center gap-1">
+                                        <i className="pi pi-home text-primary"></i>
+                                        Alokasi Nomor Kamar Fisik
+                                    </span>
+                                    {loadingAvailableRooms && (
+                                        <span className="text-xs text-500 flex align-items-center gap-1">
+                                            <i className="pi pi-spin pi-spinner text-xs"></i> Memuat kamar...
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="field mb-1">
+                                    <label className="text-xs font-semibold text-700 block mb-1">
+                                        Pilih Unit Kamar ({selectedRes.tipe_kamar_name || selectedRes.nama_tipe})
+                                    </label>
+                                    <Dropdown
+                                        value={selectedRoomCode}
+                                        options={[
+                                            { label: '— Auto-Assign (Sistem Pilih Otomatis Kamar Bersih Siap Huni) —', value: '' },
+                                            ...availableRoomsForCheckin.map((r: any) => ({
+                                                label: `Kamar ${r.nomor_kamar} ${r.tipe_pemandangan ? `(${r.tipe_pemandangan})` : ''} - Bersih & Siap Huni`,
+                                                value: r.kode_kamar
+                                            })),
+                                            ...(selectedRes.kode_kamar && !availableRoomsForCheckin.some((r: any) => r.kode_kamar === selectedRes.kode_kamar) ? [{
+                                                label: `Kamar ${selectedRes.nomor_kamar || selectedRes.kode_kamar} (Kamar Terpilih Saat Ini)`,
+                                                value: selectedRes.kode_kamar
+                                            }] : [])
+                                        ]}
+                                        onChange={(e) => setSelectedRoomCode(e.value)}
+                                        placeholder="Pilih nomor kamar fisik"
+                                        className="w-full text-xs"
+                                        disabled={loadingAvailableRooms}
+                                    />
+                                    <small className="text-500 block mt-1">
+                                        {selectedRoomCode ? `Unit kamar terpilih akan langsung ditetapkan dan diubah statusnya menjadi Occupied.` : `Jika memilih Auto-Assign, sistem akan secara cerdas mengalokasikan kamar bersih pertama yang siap huni.`}
+                                    </small>
+                                </div>
                             </div>
 
                             {/* Card 2: Ringkasan Nilai Item & Tagihan Sementara */}
@@ -1770,6 +2004,83 @@ const CheckinContent = () => {
             </Dialog>
 
             {/* Modal Dialog Ubah Tanggal (Reschedule) */}
+            {/* Modal Dialog Tentukan / Ganti Nomor Kamar Fisik (Pre-Assign) */}
+            <Dialog
+                header={
+                    <div className="flex align-items-center gap-2">
+                        <i className="pi pi-home text-xl text-primary font-bold"></i>
+                        <span className="font-bold text-lg text-900">Alokasikan Nomor Kamar Fisik</span>
+                    </div>
+                }
+                visible={showAssignRoomDialog}
+                style={{ width: '500px', maxWidth: '95vw' }}
+                onHide={() => !preAssignLoading && setShowAssignRoomDialog(false)}
+                footer={
+                    <div className="flex justify-content-end gap-2 pt-2">
+                        <Button
+                            label="Batal"
+                            icon="pi pi-times"
+                            onClick={() => setShowAssignRoomDialog(false)}
+                            className="p-button-text p-button-secondary"
+                            disabled={preAssignLoading}
+                        />
+                        <Button
+                            label="Simpan Alokasi Kamar"
+                            icon="pi pi-check"
+                            className="p-button-primary font-semibold"
+                            onClick={handlePreAssignSubmit}
+                            loading={preAssignLoading}
+                        />
+                    </div>
+                }
+            >
+                {selectedRoomToAssign && (
+                    <div className="p-fluid">
+                        <div className="p-3 border-round bg-blue-50 border-1 border-blue-200 mb-3">
+                            <span className="font-bold text-900 block text-base">{selectedRoomToAssign.guest_name}</span>
+                            <span className="text-xs text-600 block mt-1">
+                                Reservasi: <strong>{selectedRoomToAssign.kode_reservasi}</strong> • Tipe: <strong>{selectedRoomToAssign.tipe_kamar_name || selectedRoomToAssign.nama_tipe}</strong>
+                            </span>
+                            <span className="text-xs text-700 block mt-1">
+                                Jadwal: <strong>{selectedRoomToAssign.check_in_date ? formatDateSystem(selectedRoomToAssign.check_in_date, 'dd/MM/yyyy') : '-'}</strong> s/d <strong>{selectedRoomToAssign.check_out_date ? formatDateSystem(selectedRoomToAssign.check_out_date, 'dd/MM/yyyy') : '-'}</strong>
+                            </span>
+                        </div>
+
+                        <div className="field mb-2">
+                            <label className="font-semibold text-xs text-800 block mb-1">
+                                Pilih Nomor Kamar Fisik yang Siap & Tersedia:
+                            </label>
+                            {loadingAvailableRooms ? (
+                                <div className="p-3 surface-100 border-round text-center text-xs text-600">
+                                    <i className="pi pi-spin pi-spinner mr-2"></i>Memuat daftar kamar kosong & bersih...
+                                </div>
+                            ) : (
+                                <Dropdown
+                                    value={preAssignRoomCode}
+                                    options={[
+                                        { label: '— Auto-Assign (Belum Ditentukan / Pilih Saat Tamu Tiba) —', value: '' },
+                                        ...availableRoomsForCheckin.map((r: any) => ({
+                                            label: `Kamar ${r.nomor_kamar} ${r.tipe_pemandangan ? `(${r.tipe_pemandangan})` : ''} - Siap Huni`,
+                                            value: r.kode_kamar
+                                        })),
+                                        ...(selectedRoomToAssign.kode_kamar && !availableRoomsForCheckin.some((r: any) => r.kode_kamar === selectedRoomToAssign.kode_kamar) ? [{
+                                            label: `Kamar ${selectedRoomToAssign.nomor_kamar || selectedRoomToAssign.kode_kamar} (Kamar Terpilih Saat Ini)`,
+                                            value: selectedRoomToAssign.kode_kamar
+                                        }] : [])
+                                    ]}
+                                    onChange={(e) => setPreAssignRoomCode(e.value)}
+                                    placeholder="Pilih nomor kamar"
+                                    className="w-full text-sm"
+                                />
+                            )}
+                            <small className="text-500 block mt-2">
+                                *Menentukan nomor kamar sekarang akan mengunci kamar ini agar tidak dipilih tamu lain, namun status tamu tetap menunggu check-in fisik saat tiba.
+                            </small>
+                        </div>
+                    </div>
+                )}
+            </Dialog>
+
             <DialogReschedule
                 visible={showRescheduleDialog}
                 onHide={() => setShowRescheduleDialog(false)}
@@ -1792,6 +2103,14 @@ const CheckinContent = () => {
                     setShiftAktif(s);
                     if (s?.kode_cashier_shift) setShiftCode(s.kode_cashier_shift);
                 }}
+            />
+
+            {/* Modal Dialog Cetak Slip Bukti Refund */}
+            <DialogRefundSlip
+                visible={showRefundSlipDialog}
+                onHide={() => setShowRefundSlipDialog(false)}
+                reservation={selectedRefundRes}
+                currentUserName={session?.user?.name || session?.user?.username || 'Kasir Resepsionis'}
             />
 
             <Print

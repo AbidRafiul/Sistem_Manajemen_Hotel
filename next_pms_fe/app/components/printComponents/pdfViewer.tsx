@@ -123,8 +123,20 @@ export default function PDFViewer({
                 <Button style={{ margin: '3px' }} icon="pi pi-print" onClick={handlePrint} />
             </div>
 
-            <div style={{ overflow: 'auto', height: '59vh', display: 'flex', paddingTop: '10%', justifyContent: 'center', alignItems: 'center' }}>
-                <div className="pdf-canvas" style={{ background: 'lightgray', marginTop: '640px', padding: '10px' }}>
+            <div
+                style={{
+                    overflow: 'auto',
+                    height: '66vh',
+                    display: 'flex',
+                    padding: '1.25rem',
+                    justifyContent: 'center',
+                    alignItems: 'flex-start',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    marginTop: '8px'
+                }}
+            >
+                <div className="pdf-canvas" style={{ background: '#cbd5e1', padding: '12px', borderRadius: '6px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.12)' }}>
                     <div className="pdf-frame" style={{ border: 'none', padding: '0px', maxWidth: '100%', maxHeight: '100%' }}></div>
                     <Document file={pdfUrl}>
                         <Page

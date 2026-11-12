@@ -282,7 +282,33 @@ export const DialogCancelRefund: React.FC<DialogCancelRefundProps> = ({
                                             placeholder="Rp 0"
                                             className="w-full text-sm"
                                         />
-                                        <small className="text-500 block mt-1">Kosongkan (Rp 0) untuk Full Refund 100%.</small>
+                                        <div className="flex gap-1 mt-2 flex-wrap">
+                                            <Button
+                                                type="button"
+                                                label="Bebas Denda (0%)"
+                                                className="p-button-xs p-button-outlined p-button-secondary text-xs py-1 px-2"
+                                                onClick={() => setPenaltyAmount(0)}
+                                            />
+                                            <Button
+                                                type="button"
+                                                label="Denda 20% (H-2)"
+                                                className="p-button-xs p-button-outlined p-button-warning text-xs py-1 px-2"
+                                                onClick={() => setPenaltyAmount(Math.round(depositAmount * 0.2))}
+                                            />
+                                            <Button
+                                                type="button"
+                                                label="Denda 50% (Hari H)"
+                                                className="p-button-xs p-button-outlined p-button-danger text-xs py-1 px-2"
+                                                onClick={() => setPenaltyAmount(Math.round(depositAmount * 0.5))}
+                                            />
+                                            <Button
+                                                type="button"
+                                                label="Hangus (100%)"
+                                                className="p-button-xs p-button-outlined p-button-danger text-xs py-1 px-2"
+                                                onClick={() => setPenaltyAmount(depositAmount)}
+                                            />
+                                        </div>
+                                        <small className="text-500 block mt-1">Klik preset di atas atau ketik nominal denda secara manual.</small>
                                     </div>
                                     <div className="col-12 sm:col-6">
                                         <div className="p-2 border-round bg-blue-50 border-1 border-blue-200 text-center">

@@ -150,14 +150,14 @@ export default function MasterTamuPage() {
       });
 
       const columnStyles = {
-        0: { halign: 'center', cellWidth: 10 },    // No
+        0: { halign: 'center', cellWidth: 11 },    // No.
         1: { halign: 'left', cellWidth: 'auto' },  // Nama Lengkap
-        2: { halign: 'left', cellWidth: 35 },      // No. Identitas
-        3: { halign: 'center', cellWidth: 28 },    // No. Telepon
-        4: { halign: 'center', cellWidth: 26 },    // Kewarganegaraan
-        5: { halign: 'center', cellWidth: 24 },    // Jenis Tamu
-        6: { halign: 'center', cellWidth: 24 },    // Tingkat VIP
-        7: { halign: 'center', cellWidth: 18 }     // Status
+        2: { halign: 'left', cellWidth: 37 },      // No. Identitas
+        3: { halign: 'center', cellWidth: 25 },    // No. Telepon
+        4: { halign: 'center', cellWidth: 29 },    // Kewarganegaraan
+        5: { halign: 'center', cellWidth: 21 },    // Jenis Tamu
+        6: { halign: 'center', cellWidth: 20 },    // Tingkat VIP
+        7: { halign: 'center', cellWidth: 14 }     // Status
       };
 
       setDataRekap((p) => ({

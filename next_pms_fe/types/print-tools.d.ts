@@ -37,6 +37,13 @@ export interface XLSXProps<T> {
     data: T[];
     fileName: string;
     removeFields?: (keyof T)[];
+    judulLaporan?: string;
+    periodeLaporan?: string;
+    companyConfig?: any;
+    columnStyles?: Record<string, any>;
+    adjust?: PrintPageSettingState;
+    disableHeader?: boolean;
+    disableFooter?: boolean;
 }
 
 // Untuk Ukuran Kertas

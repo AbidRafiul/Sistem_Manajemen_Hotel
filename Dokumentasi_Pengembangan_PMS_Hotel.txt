@@ -1,0 +1,114 @@
+Website Manajemen Properti Hotel (PMS) Menu
+Website Manajemen Properti Hotel (PMS / Property Management System) adalah platform ekosistem terpadu yang dirancang untuk administrasi operasional perhotelan, pengelolaan meja depan (front desk), serta mobilitas layanan staf dan pelanggan. Sistem ini hadir dalam tiga pilar terintegrasi: aplikasi Website Front-End (Next.js) untuk operasional terpusat di meja resepsionis, aplikasi Mobile (Flutter) untuk mobilitas staf front desk/kasir serta reservasi mandiri oleh tamu, dan server Back-End (Express.js) sebagai pusat logika bisnis dan penyedia REST API terpadu. Website dan aplikasi ini digunakan pengguna untuk memproses reservasi kamar (reservasi baru walk-in maupun booking online), mengelola kedatangan tamu (check-in), serah terima kamar dan pelunasan folio tagihan (check-out), mengatur sesi shift kasir operasional, mengontrol ketersediaan fisik kamar (room rack), hingga mengelola pembatalan dan pencairan pengembalian dana (refund) secara terstruktur dan real-time. Tujuan sistem ini untuk meningkatkan kenyamanan layanan bagi tamu serta memudahkan manajemen hotel dalam mengelola, memantau tingkat hunian kamar (occupancy rate), dan mengontrol arus kas operasional properti secara real-time. Berikut adalah tahap perancangan dan pengembangan Sistem Manajemen Properti Hotel (PMS):
+
+Pengembangan
+Teknologi yang digunakan
+Bahasa                           Framework/Tools                           Versi
+TypeScript                       Next.js (FrontEnd Web)                    15.4.10
+Dart                             Flutter (Mobile App)                      3.44.1 (Dart 3.12.1)
+JavaScript (ES Module)           Express.js (BackEnd API)                  4.21.2
+Node.js (Runtime Environment)    -                                         22.20.0
+SQL                              MySQL (Database)                          8.0.30
+JavaScript                       Knex.js (Query Builder/ORM)               3.1.0
+React / CSS                      PrimeReact & PrimeFlex (Web UI)           10.9.7
+Dart / Riverpod                  Flutter Riverpod (Mobile State)           3.4.3
+Package Manager Web              NPM                                       11.6.2
+Local Server Environment         Laragon / XAMPP                           6.0
+
+FrontEnd (Next.Js)
+Tahap pengembangan front-end website bertujuan untuk mengimplementasikan desain UI/UX yang telah dibuat ke dalam kode sehingga dapat ditampilkan pada peramban web meja resepsionis dan manajemen. Berikut adalah beberapa alat dan komponen yang digunakan dalam pengembangan front-end:
+
+Framework
+Menggunakan Next.js sebagai framework utama untuk pengembangan front-end web. Berikut adalah langkah-langkah instalasi framework pada projek:
+1. Langkah pertama, clone project dari github dan buka pada text editor.
+2. Navigasikan ke folder front-end: cd next_pms_fe
+3. Install semua dependensi yang diperlukan: npm install
+4. Ubah nama file .env.example menjadi .env
+5. Buka file .env dan atur konfigurasi URL API agar terhubung dengan server back-end (jika dijalankan secara lokal, biarkan default seperti ini):
+   API_URL=http://localhost:8000/api/v1
+   NEXT_PUBLIC_URL_API=http://localhost:8000/api/v1
+   NEXTAUTH_URL=http://localhost:3000/
+6. Jalankan aplikasi front-end dalam mode pengembangan: npm run dev
+Untuk semua dokumentasi library dan component yang di-install pada project ini, selengkapnya terdapat di dalam file package.json.
+
+Komponen Interface
+Komponen dan pustaka (library) yang digunakan untuk frontend pada project ini antara lain:
+- PrimeReact dan PrimeFlex sebagai komponen UI (User Interface) utama dan tata letak (layout) antarmuka front desk yang responsif.
+- PrimeIcons sebagai pustaka ikon antarmuka utama sistem perhotelan.
+- NextAuth.js dan Middleware (dari Next.js) pada sistem login untuk melindungi rute (route protection), manajemen multi-role (superadmin, manager, front office, kasir, housekeeping), serta pembatasan akses data per cabang (branch scoping).
+- Chart.js untuk membuat visualisasi data interaktif pada dashboard analitik tamu, segmen pasar, dan performansi hunian hotel.
+- FullCalendar untuk integrasi matriks monitoring timeline hunian kamar dan penjadwalan pemesanan ruang event.
+- jsPDF, jspdf-autotable, dan react-pdf untuk fitur preview dan cetak dokumen resmi seperti faktur invoice checkout tamu, kuitansi folio, slip bukti tanda terima refund, dan laporan cetak PDF manajerial.
+- ExcelJS untuk ekspor data laporan operasional tamu dan transaksi ke format spreadsheet (.xlsx) lengkap dengan kop dokumen berlogo resmi hotel.
+- Formik untuk manajemen isian formulir (seperti reservasi kamar, pendaftaran data tamu, pengaturan tarif dan konfigurasi kamar) beserta sistem validasinya.
+
+Rest API
+Dalam pengembangan ini, API digunakan untuk menghubungkan antarmuka dengan data dan logika di back-end. API mempermudah proses pengambilan dan pengiriman data secara real-time antara client dan server.
+
+Mobile App (Flutter)
+Tahap pengembangan aplikasi mobile dirancang menggunakan framework Flutter untuk menghadirkan fleksibilitas bagi staf operasional front desk/kasir hotel saat bergerak dinamis di area properti (on-the-go), sekaligus memberikan kenyamanan bagi pelanggan (customer) dalam mengecek ketersediaan kamar, melakukan booking online, hingga mengajukan pembatalan dan klaim refund secara mandiri dari smartphone. Berikut adalah langkah-langkah instalasi dan komponen yang digunakan pada aplikasi mobile:
+
+Framework
+Menggunakan Flutter (Dart) sebagai framework utama pengembangan multi-platform (Android & iOS). Berikut adalah langkah-langkah untuk menjalankan aplikasi mobile pada projek:
+1. Navigasikan ke direktori projek mobile: cd Mobile_PMS_Hotel
+2. Unduh seluruh dependensi pubspec: flutter pub get
+3. Konfigurasikan alamat IP server back-end pada file lib/core/config/app_config.dart agar terhubung ke API Express.js (sesuaikan dengan IP lokal jaringan Wi-Fi komputer Anda, misalnya: http://192.168.1.18:8000/api/v1).
+4. Pastikan perangkat fisik Android/iOS telah terhubung via USB Debugging atau emulator telah aktif.
+5. Jalankan aplikasi dalam mode pengembangan: flutter run
+   (Atau gunakan flag environment: flutter run --dart-define=API_BASE_URL=http://<IP_KOMPUTER>:8000/api/v1)
+
+Komponen Interface & Arsitektur Mobile
+Pustaka dan komponen yang digunakan dalam pengembangan aplikasi mobile antara lain:
+- Flutter Riverpod sebagai pengelola state reaktif (state management) aplikasi untuk sinkronisasi sesi login staf/tamu, shift kasir aktif, serta pembaruan data reservasi real-time.
+- Dio sebagai klien HTTP berkinerja tinggi yang dilengkapi dengan Interceptor untuk penyematan token autentikasi JWT otomatis serta penanganan error jaringan terpusat.
+- GoRouter untuk manajemen routing dan navigasi deklaratif yang mendukung proteksi halaman (route guard) berdasarkan status autentikasi dan role pengguna.
+- Flutter Secure Storage untuk penyimpanan data kredensial terenkripsi (seperti auth token dan preferensi cabang aktif) langsung pada penyimpanan aman perangkat mobile.
+- Intl untuk pemformatan lokal mata uang Rupiah (IDR), waktu check-in/check-out, dan kalender sistem Indonesia.
+- Cached Network Image untuk optimasi pemuatan dan caching foto tipe kamar hotel secara halus dan hemat kuota.
+- Modul Layanan Pelanggan (Customer Self-Service) yang mencakup katalog pemesanan kamar mandiri, daftar riwayat pesanan (My Bookings), pengajuan reschedule, serta form pembatalan reservasi yang langsung tersinkronisasi ke meja kasir front desk.
+
+BackEnd
+Tahap pengembangan back-end berfokus pada logika, pengolahan data, dan konektivitas antara antarmuka pengguna dengan server. Berikut adalah beberapa alat dan komponen yang digunakan dalam pengembangan back-end:
+- Axios sebagai klien HTTP (HTTP Client) utama untuk melakukan pengujian dan permintaan REST API (seperti metode POST, GET, PUT, dan DELETE) dari antarmuka pengguna ke server.
+- Node.js sebagai runtime environment untuk menjalankan server aplikasi secara lokal, dipadukan dengan Laragon / XAMPP yang bertugas khusus untuk menyediakan layanan (service) database MySQL.
+- Knex.js (Query Builder) untuk memanipulasi database dan mengelola transaksi atomik perbankan/hotel (database transaction) pada alur reservasi, check-in, checkout, pembatalan/refund, serta shift kasir, yang di dalamnya juga memanfaatkan metode Left Join / Inner Join untuk merelasikan data antar tabel secara efisien.
+- Joi sebagai library skema validasi request payload di setiap endpoint API untuk menjamin keabsahan dan keakuratan data transaksi baik yang berasal dari web front desk maupun aplikasi mobile.
+- phpMyAdmin / HeidiSQL sebagai antarmuka GUI (Graphical User Interface) untuk mempermudah pemantauan dan pengelolaan database MySQL.
+- Bcrypt, JSON Web Token (JWT), dan enkripsi HMAC SHA-512 sebagai sistem keamanan (security) untuk mengenkripsi password dan memvalidasi sesi otorisasi pengguna secara aman.
+
+Framework
+Menggunakan Express.js (ES Module) sebagai framework utama untuk pengembangan back-end. Berikut adalah langkah-langkah untuk mengatur back-end pada projek:
+1. Navigasikan ke folder back-end: cd express_pms_be
+2. Install semua dependensi dengan npm: npm install
+3. Ubah nama file .env.example menjadi .env
+4. Atur konfigurasi database di file .env sesuai kebutuhan:
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_USERNAME=root
+   DB_PASSWORD=
+   DB_DATABASE=hotel_pms
+5. Jalankan migrasi dan seeder untuk membuat tabel serta mengisi master data awal: npm run seed:all
+6. Jalankan server back-end dalam mode pengembangan (development): npm run dev
+
+Rest API
+Dalam pengembangan ini, API digunakan untuk menghubungkan antarmuka dengan data dan logika di back-end. API mempermudah proses pengambilan dan pengiriman data secara real-time antara client (Web & Mobile) dan server.
+
+Integrasi Back-End dengan Front-End & Mobile
+Langkah-langkah untuk mengintegrasikan back-end Express.js dengan front-end Next.js serta Mobile Flutter:
+1. Buka file .env yang berada di dalam direktori utama front-end: next_pms_fe/.env
+2. Sesuaikan URL/IP back-end di baris konfigurasi berikut:
+   API_URL=http://localhost:8000/api/v1
+   NEXT_PUBLIC_URL_API=http://localhost:8000/api/v1
+   (Catatan: Jika server back-end dijalankan di komputer yang berbeda atau sudah di-hosting, ubah localhost menjadi alamat IP atau domain server tersebut)
+3. Untuk aplikasi mobile, buka file Mobile_PMS_Hotel/lib/core/config/app_config.dart dan pastikan konstanta apiBaseUrl mengarah ke alamat IP lokal komputer tempat server Express.js berjalan (misal: http://192.168.1.18:8000/api/v1).
+
+Untuk pengujian aplikasi, silakan login menggunakan akun administrator berikut:
+Email / Username : superadmin@admin.com
+Password         : Superadmin321!
+
+Link Repository GitHub:
+- Repositori Web & Back-End PMS : https://github.com/AbidRafiul/Sistem_Manajemen_Hotel.git (Branch: main)
+- Repositori Mobile PMS         : https://github.com/SyifaNurrohmahW/Mobile_PMS-hotel.git (Branch: main)
+
+(*Seluruh proses pengembangan, pengujian fitur, dan penulisan kode pada Sistem Manajemen Properti Hotel (PMS) ini diintegrasikan dan dipelihara secara terpusat melalui branch main pada masing-masing repository GitHub).
+

@@ -251,8 +251,18 @@ router.post("/", async (req, res) => {
       total: 0
     };
 
+    let totalRefundAmount = 0;
+    let totalRefundCount = 0;
+
     paymentList.forEach((pay) => {
       const amt = parseFloat(pay.amount) || 0;
+      const isRef = amt < 0 || (pay.reference_no && String(pay.reference_no).includes('REFUND'));
+      pay.is_refund = isRef;
+      if (isRef) {
+        totalRefundAmount += Math.abs(amt);
+        totalRefundCount += 1;
+      }
+
       const m = (pay.payment_method || "").toLowerCase();
       if (paymentSummary[m] !== undefined) {
         paymentSummary[m] += amt;
@@ -293,6 +303,8 @@ router.post("/", async (req, res) => {
         total_cash_in: totalCashIn,
         total_non_cash_in: totalNonCashIn,
         total_payment_in: paymentSummary.total,
+        total_refund_amount: totalRefundAmount,
+        total_refund_count: totalRefundCount,
         system_cash: systemCash,
         closing_cash: closingCash,
         cash_difference: cashDifference,

@@ -762,37 +762,40 @@ const CheckoutContent = () => {
                 onHide={() => setCheckoutDialogVisible(false)}
                 header={
                     <div className="flex align-items-center gap-3">
-                        <div className="w-2.5rem h-2.5rem border-round-xl bg-primary-50 text-primary flex align-items-center justify-content-center flex-shrink-0 border-1 border-primary-200 shadow-1">
+                        <div
+                            className="border-round-xl bg-primary-50 text-primary flex align-items-center justify-content-center flex-shrink-0 border-1 border-primary-200 shadow-1"
+                            style={{ width: '2.75rem', height: '2.75rem' }}
+                        >
                             <i className="pi pi-sign-out text-xl"></i>
                         </div>
-                        <div>
+                        <div className="flex flex-column gap-1">
                             <span className="font-bold text-lg text-900 block line-height-2">
                                 Proses Checkout &amp; Pelunasan Folio
                             </span>
-                            <span className="text-xs text-500 font-normal block">
+                            <span className="text-xs text-500 font-normal block line-height-2">
                                 Administrasi pembayaran kasir dan serah terima kamar tamu
                             </span>
                         </div>
                     </div>
                 }
-                style={{ width: '720px' }}
-                breakpoints={{ '960px': '85vw', '641px': '95vw' }}
+                style={{ width: '780px', maxWidth: '95vw' }}
+                breakpoints={{ '960px': '88vw', '641px': '96vw' }}
                 modal
                 closable
                 footer={
-                    <div className="flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top-1 surface-border">
+                    <div className="flex justify-content-between align-items-center flex-wrap gap-2 pt-3 border-top-1 surface-border">
                         <Button
                             label="Tutup"
                             icon="pi pi-times"
-                            className="p-button-outlined p-button-sm"
+                            className="p-button-outlined p-button-sm px-3 py-2"
                             onClick={() => setCheckoutDialogVisible(false)}
                         />
-                        <div className="flex gap-2">
+                        <div className="flex align-items-center flex-wrap gap-2">
                             {selectedRoom && (
                                 <Button
                                     label="Pratinjau Invoice"
                                     icon="pi pi-file-pdf"
-                                    className="p-button-outlined p-button-sm font-semibold"
+                                    className="p-button-outlined p-button-sm font-semibold px-3 py-2"
                                     severity="info"
                                     onClick={() => {
                                         setActiveInvoiceFolio(selectedRoom.kode_folio);
@@ -810,7 +813,7 @@ const CheckoutContent = () => {
                                     }
                                     icon="pi pi-check"
                                     severity="success"
-                                    className="p-button-sm font-bold shadow-1"
+                                    className="p-button-sm font-bold shadow-1 px-3 py-2"
                                     onClick={() => handleCheckout(false)}
                                     loading={submitLoad}
                                     disabled={selectedRoomIds.length === 0}
@@ -824,7 +827,7 @@ const CheckoutContent = () => {
                                     }
                                     icon="pi pi-credit-card"
                                     severity="warning"
-                                    className="p-button-sm font-bold shadow-1"
+                                    className="p-button-sm font-bold shadow-1 px-3 py-2"
                                     onClick={() => handleCheckout(true)}
                                     loading={submitLoad}
                                     disabled={(paymentMethod === 'cash' && !shiftAktif) || selectedRoomIds.length === 0}
@@ -838,49 +841,56 @@ const CheckoutContent = () => {
                     <div className="flex flex-column gap-3 pt-2">
                         {/* ── Section 1: Informasi Tamu & Kamar ── */}
                         <div className="surface-50 border-1 surface-border border-round-xl p-3">
-                            <div className="flex justify-content-between align-items-center mb-2.5">
-                                <span className="text-xs font-bold text-color-secondary uppercase letter-spacing-1">
-                                    Informasi Tamu &amp; Kamar
+                            <div className="flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom-1 surface-border">
+                                <span className="text-xs font-bold text-color-secondary uppercase flex align-items-center gap-2">
+                                    <i className="pi pi-id-card text-primary text-sm"></i>
+                                    <span>Informasi Tamu &amp; Kamar</span>
                                 </span>
-                                <div className="flex align-items-center gap-2">
+                                <div className="flex align-items-center gap-2 flex-wrap">
                                     <span className="text-xs font-mono font-bold px-2 py-1 bg-white border-round border-1 surface-border text-800">
                                         Folio: {selectedRoom.kode_folio}
                                     </span>
-                                    {selectedRoom.kode_reservasi && (
+                                    {(selectedRoom.kode_reservasi || selectedRoom.kode_reservation) && (
                                         <span className="text-xs font-mono font-semibold px-2 py-1 bg-primary-50 text-primary border-round border-1 border-primary-200">
-                                            {selectedRoom.kode_reservasi}
+                                            {selectedRoom.kode_reservasi || selectedRoom.kode_reservation}
                                         </span>
                                     )}
                                 </div>
                             </div>
+
                             <div className="flex align-items-center gap-3">
-                                <div className="w-3.5rem h-3.5rem border-round-xl bg-primary text-white font-bold text-xl flex align-items-center justify-content-center shadow-1 flex-shrink-0">
+                                <div
+                                    className="border-round-xl bg-primary text-white font-bold text-xl flex align-items-center justify-content-center shadow-1 flex-shrink-0"
+                                    style={{ width: '3.5rem', height: '3.5rem' }}
+                                >
                                     {selectedRoom.room_count > 1 ? `${selectedRoom.room_count}K` : selectedRoom.nomor_kamar}
                                 </div>
-                                <div className="flex flex-column gap-1 flex-grow-1">
-                                    <div className="flex align-items-center justify-content-between flex-wrap gap-1">
-                                        <span className="text-lg font-bold text-900">{selectedRoom.guest_name}</span>
+                                <div className="flex flex-column gap-2 flex-grow-1 min-w-0">
+                                    <div className="flex align-items-center justify-content-between flex-wrap gap-2">
+                                        <span className="text-lg font-bold text-900 line-height-2">{selectedRoom.guest_name}</span>
                                         {selectedRoom.nama_tipe && (
-                                            <span className="text-xs font-semibold text-700 bg-white px-2 py-0.5 border-round border-1 surface-border">
+                                            <span className="text-xs font-semibold text-700 bg-white px-2 py-1 border-round border-1 surface-border">
                                                 {selectedRoom.nama_tipe}
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex align-items-center gap-3 text-xs text-600 flex-wrap">
-                                        <span>
-                                            <i className="pi pi-key mr-1 text-primary"></i>
-                                            Kamar: <strong>{selectedRoom.nomor_kamar}</strong>
+                                    <div className="flex align-items-center gap-3 text-xs text-700 flex-wrap line-height-3">
+                                        <span className="inline-flex align-items-center gap-1">
+                                            <i className="pi pi-key text-primary text-xs"></i>
+                                            <span>Kamar: <strong>{selectedRoom.nomor_kamar}</strong></span>
                                         </span>
                                         {selectedRoom.check_in_date && selectedRoom.check_out_date && (
-                                            <span>
-                                                <i className="pi pi-calendar mr-1 text-primary"></i>
-                                                {formatDateSystem(selectedRoom.check_in_date, 'dd/MM/yyyy')} — {formatDateSystem(selectedRoom.check_out_date, 'dd/MM/yyyy')}
+                                            <span className="inline-flex align-items-center gap-1">
+                                                <i className="pi pi-calendar text-primary text-xs"></i>
+                                                <span>
+                                                    {formatDateSystem(selectedRoom.check_in_date, 'dd/MM/yyyy')} &mdash; {formatDateSystem(selectedRoom.check_out_date, 'dd/MM/yyyy')}
+                                                </span>
                                             </span>
                                         )}
                                         {selectedRoom.guest_phone && (
-                                            <span>
-                                                <i className="pi pi-phone mr-1 text-primary"></i>
-                                                {selectedRoom.guest_phone}
+                                            <span className="inline-flex align-items-center gap-1">
+                                                <i className="pi pi-phone text-primary text-xs"></i>
+                                                <span>{selectedRoom.guest_phone}</span>
                                             </span>
                                         )}
                                     </div>
@@ -892,7 +902,7 @@ const CheckoutContent = () => {
                         {selectedRoom.rooms && selectedRoom.rooms.length > 1 && (
                             <div className="surface-50 border-1 surface-border border-round-xl p-3">
                                 <div className="flex justify-content-between align-items-center mb-2">
-                                    <span className="text-xs font-bold text-color-secondary uppercase letter-spacing-1">
+                                    <span className="text-xs font-bold text-color-secondary uppercase">
                                         Pilih Kamar yang Di-Checkout ({selectedRoomIds.length} dari {selectedRoom.rooms.length} Kamar)
                                     </span>
                                     <Button
@@ -913,8 +923,9 @@ const CheckoutContent = () => {
                                         return (
                                             <div
                                                 key={idx}
-                                                className={`flex align-items-center justify-content-between p-2.5 border-round-lg cursor-pointer transition-colors ${isChecked ? 'bg-primary-50 border-1 border-primary-300' : 'surface-100 border-1 surface-border'
-                                                    }`}
+                                                className={`flex align-items-center justify-content-between p-2 border-round-lg cursor-pointer transition-colors ${
+                                                    isChecked ? 'bg-primary-50 border-1 border-primary-300' : 'surface-100 border-1 surface-border'
+                                                }`}
                                                 onClick={() => {
                                                     if (isChecked) {
                                                         setSelectedRoomIds(selectedRoomIds.filter((id) => id !== rm.kode_reservasi_room));
@@ -940,9 +951,10 @@ const CheckoutContent = () => {
 
                         {/* ── Section 2: Pilihan Alur Checkout ── */}
                         <div className="surface-50 border-1 surface-border border-round-xl p-3">
-                            <div className="flex justify-content-between align-items-center mb-2.5 flex-wrap gap-2">
-                                <span className="text-xs font-bold text-color-secondary uppercase letter-spacing-1 flex align-items-center gap-1.5">
-                                    <i className="pi pi-compass text-primary"></i> Pilihan Alur Checkout
+                            <div className="flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                <span className="text-xs font-bold text-color-secondary uppercase flex align-items-center gap-2">
+                                    <i className="pi pi-compass text-primary text-sm"></i>
+                                    <span>Pilihan Alur Checkout</span>
                                 </span>
                                 {selectedRoom.inspection_status && selectedRoom.inspection_status !== 'not_requested' && (
                                     <Tag
@@ -967,9 +979,9 @@ const CheckoutContent = () => {
                             </div>
 
                             {/* Option Selection Cards */}
-                            <div className="grid grid-nogutter gap-2.5 mb-1">
+                            <div className="flex flex-column sm:flex-row gap-3">
                                 <div
-                                    className={`col p-3 border-round-xl cursor-pointer border-2 transition-all transition-duration-200 ${
+                                    className={`flex-1 p-3 border-round-xl cursor-pointer border-2 transition-all transition-duration-200 ${
                                         checkoutFlowMode === 'direct'
                                             ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-1'
                                             : 'bg-white border-200 hover:border-300'
@@ -977,19 +989,22 @@ const CheckoutContent = () => {
                                     onClick={() => setCheckoutFlowMode('direct')}
                                 >
                                     <div className="flex align-items-center justify-content-between mb-2">
-                                        <div className="w-2.5rem h-2.5rem border-circle bg-blue-100 text-blue-700 flex align-items-center justify-content-center">
+                                        <div
+                                            className="border-circle bg-blue-100 text-blue-700 flex align-items-center justify-content-center"
+                                            style={{ width: '2.25rem', height: '2.25rem' }}
+                                        >
                                             <i className="pi pi-bolt font-bold text-base"></i>
                                         </div>
                                         <i className={`pi ${checkoutFlowMode === 'direct' ? 'pi-check-circle text-blue-600 font-bold text-lg' : 'pi-circle text-400'}`}></i>
                                     </div>
-                                    <div className="font-bold text-sm text-900 mb-1">Checkout Langsung</div>
+                                    <div className="font-bold text-sm text-900 mb-1 line-height-2">Checkout Langsung</div>
                                     <p className="text-xs text-600 m-0 line-height-3">
-                                        Express / VIP. Pelunasan tanpa menunggu Housekeeping.
+                                        Express / VIP. Pelunasan kasir tanpa menunggu pemeriksaan Housekeeping.
                                     </p>
                                 </div>
 
                                 <div
-                                    className={`col p-3 border-round-xl cursor-pointer border-2 transition-all transition-duration-200 ${
+                                    className={`flex-1 p-3 border-round-xl cursor-pointer border-2 transition-all transition-duration-200 ${
                                         checkoutFlowMode === 'inspection'
                                             ? 'bg-orange-50 border-orange-500 text-orange-900 shadow-1'
                                             : 'bg-white border-200 hover:border-300'
@@ -997,33 +1012,38 @@ const CheckoutContent = () => {
                                     onClick={() => setCheckoutFlowMode('inspection')}
                                 >
                                     <div className="flex align-items-center justify-content-between mb-2">
-                                        <div className="w-2.5rem h-2.5rem border-circle bg-orange-100 text-orange-700 flex align-items-center justify-content-center">
+                                        <div
+                                            className="border-circle bg-orange-100 text-orange-700 flex align-items-center justify-content-center"
+                                            style={{ width: '2.25rem', height: '2.25rem' }}
+                                        >
                                             <i className="pi pi-search-plus font-bold text-base"></i>
                                         </div>
                                         <i className={`pi ${checkoutFlowMode === 'inspection' ? 'pi-check-circle text-orange-600 font-bold text-lg' : 'pi-circle text-400'}`}></i>
                                     </div>
-                                    <div className="font-bold text-sm text-900 mb-1">Cek Kamar (Room Check)</div>
+                                    <div className="font-bold text-sm text-900 mb-1 line-height-2">Cek Kamar (Room Check)</div>
                                     <p className="text-xs text-600 m-0 line-height-3">
-                                        HK cek minibar, linen, &amp; barang tertinggal tamu.
+                                        Housekeeping memeriksa minibar, kondisi linen, &amp; barang tertinggal tamu.
                                     </p>
                                 </div>
                             </div>
 
                             {/* Section Details if Mode Inspection is active */}
                             {checkoutFlowMode === 'inspection' && (
-                                <div className="bg-white p-3 border-round-xl border-1 surface-border mt-2.5">
+                                <div className="bg-white p-3 border-round-xl border-1 surface-border mt-3">
                                     {(!selectedRoom.active_inspection_task || selectedRoom.active_inspection_task.status === 'canceled') ? (
-                                        <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center gap-2">
-                                            <div>
+                                        <div className="flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center gap-3">
+                                            <div className="flex flex-column gap-1">
                                                 <span className="font-bold text-sm text-900 block">Pemeriksaan Kamar Belum Diminta</span>
-                                                <small className="text-600">Panggil petugas Housekeeping untuk mengecek kondisi kamar dan minibar.</small>
+                                                <small className="text-600 line-height-3 block">
+                                                    Panggil petugas Housekeeping untuk mengecek kondisi kamar dan minibar sebelum tamu checkout.
+                                                </small>
                                             </div>
                                             <Button
                                                 label="Panggil Cek Kamar"
                                                 icon="pi pi-send"
                                                 severity="warning"
                                                 size="small"
-                                                className="font-bold text-xs"
+                                                className="font-bold text-xs white-space-nowrap"
                                                 loading={requestingInspection}
                                                 onClick={handleRequestInspection}
                                             />
@@ -1033,7 +1053,7 @@ const CheckoutContent = () => {
                                             <div className="flex justify-content-between align-items-center flex-wrap gap-2">
                                                 <div className="flex align-items-center gap-2">
                                                     <i className="pi pi-spin pi-spinner text-orange-600 text-xl"></i>
-                                                    <div>
+                                                    <div className="flex flex-column gap-1">
                                                         <span className="font-bold text-sm text-900">Sedang Diperiksa Petugas HK</span>
                                                         <small className="text-500 block">
                                                             PIC: <strong>{selectedRoom.active_inspection_task.pic_name || 'Petugas HK'}</strong> &bull; Dimulai: {formatDateSystem(selectedRoom.active_inspection_task.created_at, 'HH:mm')}
@@ -1061,7 +1081,7 @@ const CheckoutContent = () => {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="text-xs text-orange-700 bg-orange-50 p-2 border-round-lg border-1 border-orange-200">
+                                            <div className="text-xs text-orange-700 bg-orange-50 p-2 border-round-lg border-1 border-orange-200 line-height-3">
                                                 * Mohon tunggu sejenak sementara tim Housekeeping mengonfirmasi minibar &amp; kondisi linen di kamar.
                                             </div>
                                         </div>
@@ -1070,7 +1090,7 @@ const CheckoutContent = () => {
                                             <div className="flex justify-content-between align-items-center flex-wrap gap-2">
                                                 <div className="flex align-items-center gap-2">
                                                     <i className="pi pi-check-circle text-green-600 text-xl"></i>
-                                                    <div>
+                                                    <div className="flex flex-column gap-1">
                                                         <span className="font-bold text-sm text-900">Pemeriksaan Kamar Selesai</span>
                                                         <small className="text-500 block">
                                                             Diperiksa oleh: <strong>{selectedRoom.active_inspection_task.pic_name || 'Petugas HK'}</strong>
@@ -1086,14 +1106,14 @@ const CheckoutContent = () => {
 
                                             {/* Findings details if with_charges */}
                                             {selectedRoom.active_inspection_task.inspection_details && (
-                                                <div className="surface-50 p-2.5 border-round-lg text-xs mt-1 border-1 surface-border">
+                                                <div className="surface-50 p-3 border-round-lg text-xs mt-1 border-1 surface-border flex flex-column gap-1">
                                                     {selectedRoom.active_inspection_task.inspection_details.minibar_items?.length > 0 && (
-                                                        <div className="mb-1 text-700">
+                                                        <div className="text-700 line-height-3">
                                                             <strong>Konsumsi Minibar:</strong> {selectedRoom.active_inspection_task.inspection_details.minibar_items.map((m: any) => `${m.item_name} (${m.qty}x)`).join(', ')}
                                                         </div>
                                                     )}
                                                     {selectedRoom.active_inspection_task.inspection_details.damaged_items?.length > 0 && (
-                                                        <div className="mb-1 text-red-700">
+                                                        <div className="text-red-700 line-height-3">
                                                             <strong>Denda Kerusakan:</strong> {selectedRoom.active_inspection_task.inspection_details.damaged_items.map((d: any) => d.item_name).join(', ')}
                                                         </div>
                                                     )}
@@ -1111,16 +1131,16 @@ const CheckoutContent = () => {
 
                             {/* Lost and Found Alert Banner if item left behind */}
                             {selectedRoom.active_inspection_task?.inspection_details?.lost_and_found && (
-                                <div className="p-3 border-round-xl bg-orange-100 border-2 border-orange-500 text-orange-900 text-xs mt-2.5 flex align-items-center gap-3 shadow-1">
-                                    <i className="pi pi-bell text-orange-600 text-2xl flex-shrink-0 animate-pulse"></i>
-                                    <div>
+                                <div className="p-3 border-round-xl bg-orange-100 border-2 border-orange-500 text-orange-900 text-xs mt-3 flex align-items-center gap-3 shadow-1">
+                                    <i className="pi pi-bell text-orange-600 text-2xl flex-shrink-0"></i>
+                                    <div className="flex flex-column gap-1">
                                         <div className="font-bold text-sm text-orange-900">
-                                            ⚠️ PERHATIAN: BARANG TAMU TERTINGGAL (LOST &amp; FOUND)!
+                                            PERHATIAN: BARANG TAMU TERTINGGAL (LOST &amp; FOUND)!
                                         </div>
-                                        <div className="text-xs text-orange-800 mt-1 font-medium">
+                                        <div className="text-xs text-orange-800 font-medium line-height-3">
                                             Housekeeping menemukan: <strong>{selectedRoom.active_inspection_task.inspection_details.lost_and_found.item_description}</strong>
                                         </div>
-                                        <div className="text-xs text-orange-700 italic mt-0.5">
+                                        <div className="text-xs text-orange-700 italic line-height-3">
                                             Segera serahkan barang ini ke tamu di lobi sebelum tamu meninggalkan hotel!
                                         </div>
                                     </div>
@@ -1131,139 +1151,195 @@ const CheckoutContent = () => {
                         {/* ── Section 3: Status Tagihan ── */}
                         {isSelectedSettled ? (
                             <div className="p-3 border-round-xl bg-green-50 border-1 border-green-300 text-green-900 flex align-items-center gap-3">
-                                <div className="w-2.5rem h-2.5rem border-round-lg bg-green-100 text-green-700 flex align-items-center justify-content-center flex-shrink-0">
+                                <div
+                                    className="border-round-lg bg-green-100 text-green-700 flex align-items-center justify-content-center flex-shrink-0"
+                                    style={{ width: '2.5rem', height: '2.5rem' }}
+                                >
                                     <i className="pi pi-check-circle text-xl font-bold"></i>
                                 </div>
-                                <div>
+                                <div className="flex flex-column gap-1">
                                     <div className="font-bold text-sm text-green-900">Status Tagihan: LUNAS / SETTLED</div>
-                                    <div className="text-xs text-green-700 mt-0.5 line-height-3">
+                                    <div className="text-xs text-green-700 line-height-3">
                                         Seluruh biaya tagihan kamar dan fasilitas telah terselesaikan. Kamar siap di-checkout langsung.
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="p-3 border-round-xl bg-red-50 border-1 border-red-300 text-red-900 flex align-items-center gap-3">
-                                <div className="w-2.5rem h-2.5rem border-round-lg bg-red-100 text-red-700 flex align-items-center justify-content-center flex-shrink-0">
+                                <div
+                                    className="border-round-lg bg-red-100 text-red-700 flex align-items-center justify-content-center flex-shrink-0"
+                                    style={{ width: '2.5rem', height: '2.5rem' }}
+                                >
                                     <i className="pi pi-exclamation-triangle text-xl font-bold"></i>
                                 </div>
-                                <div>
+                                <div className="flex flex-column gap-1">
                                     <div className="font-bold text-sm text-red-900">Status Tagihan: BELUM LUNAS</div>
-                                    <div className="text-xs text-red-700 mt-0.5 line-height-3">
-                                        Terdapat sisa tagihan sebesar <strong className="text-red-900 font-bold bg-white px-1.5 py-0.5 border-round border-1 surface-border">{formatCurrency(selectedBalance)}</strong> yang harus dilunasi sebelum checkout disetujui.
+                                    <div className="text-xs text-red-700 line-height-3">
+                                        Terdapat sisa tagihan sebesar{' '}
+                                        <strong className="text-red-900 font-bold bg-white px-2 py-1 border-round border-1 border-red-200 mx-1">
+                                            {formatCurrency(selectedBalance)}
+                                        </strong>{' '}
+                                        yang harus dilunasi sebelum checkout disetujui.
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* ── Section 4: Rincian Biaya & Riwayat Pembayaran ── */}
-                        <TabView className="checkout-tabview">
-                            <TabPanel header="Rincian Biaya" leftIcon="pi pi-list mr-2">
-                                <div className="flex flex-column gap-2 max-h-12rem overflow-y-auto pr-1">
-                                    <div className="text-xs font-bold text-color-secondary uppercase mb-1">
-                                        Kamar Ditempati ({selectedRoom.rooms?.length || 1} Kamar):
-                                    </div>
-                                    {(selectedRoom.rooms || [selectedRoom]).map((rm: any, idx: number) => {
-                                        const tipeKamar = rm.nama_tipe || selectedRoom.nama_tipe;
-                                        const roomAmount = rm.subtotal || rm.total_charges || rm.rate_per_night || selectedRoom.subtotal || selectedRoom.current_grand_total;
-                                        return (
-                                            <div key={idx} className="flex justify-content-between align-items-center text-sm border-bottom-1 surface-border py-1.5">
-                                                <div className="flex align-items-center gap-2">
-                                                    <span className="font-semibold text-900">Kamar {rm.nomor_kamar}</span>
-                                                    {tipeKamar && (
-                                                        <span className="text-xs text-600 bg-surface-100 px-2 py-0.5 border-round">
-                                                            {tipeKamar}
+                        <div className="border-1 surface-border border-round-xl overflow-hidden bg-white">
+                            <TabView className="checkout-tabview">
+                                <TabPanel header="Rincian Biaya" leftIcon="pi pi-list mr-2">
+                                    <div className="flex flex-column gap-3 max-h-15rem overflow-y-auto px-1 py-1">
+                                        {/* Daftar Kamar */}
+                                        <div className="flex flex-column gap-2">
+                                            <div className="text-xs font-bold text-color-secondary uppercase">
+                                                Kamar Ditempati ({selectedRoom.rooms?.length || 1} Kamar)
+                                            </div>
+                                            {(selectedRoom.rooms || [selectedRoom]).map((rm: any, idx: number) => {
+                                                const tipeKamar = rm.nama_tipe || selectedRoom.nama_tipe;
+                                                const roomAmount = rm.subtotal || rm.total_charges || rm.rate_per_night || selectedRoom.subtotal || selectedRoom.current_grand_total;
+                                                const nightsCount = rm.nights || selectedRoom.nights || 1;
+                                                return (
+                                                    <div key={idx} className="flex justify-content-between align-items-center text-sm border-bottom-1 surface-border py-2">
+                                                        <div className="flex align-items-center gap-2 flex-wrap">
+                                                            <span className="font-bold text-900">Kamar {rm.nomor_kamar}</span>
+                                                            {tipeKamar && (
+                                                                <span className="text-xs text-700 surface-100 px-2 py-1 border-round font-medium">
+                                                                    {tipeKamar}
+                                                                </span>
+                                                            )}
+                                                            <span className="text-xs text-500">({nightsCount} Malam)</span>
+                                                        </div>
+                                                        <span className="font-bold text-900 text-sm">
+                                                            {formatCurrency(roomAmount)}
                                                         </span>
-                                                    )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Layanan / Fasilitas Tambahan (selain sewa kamar utama) */}
+                                        {(() => {
+                                            const extraCharges = (selectedRoom.charges || []).filter((ch: any) => ch.charge_type !== 'room');
+                                            if (extraCharges.length === 0) return null;
+                                            return (
+                                                <div className="flex flex-column gap-2">
+                                                    <div className="text-xs font-bold text-color-secondary uppercase">
+                                                        Layanan &amp; Fasilitas Tambahan
+                                                    </div>
+                                                    {extraCharges.map((ch: any, idx: number) => {
+                                                        const chargeLabel = ch.description || ch.nama_charge || 'Biaya Layanan';
+                                                        const chargeTotal = ch.amount ?? ch.total_amount ?? 0;
+                                                        return (
+                                                            <div key={idx} className="flex justify-content-between align-items-center text-sm border-bottom-1 surface-border py-2">
+                                                                <div className="flex align-items-center gap-2">
+                                                                    <span className="text-800">{chargeLabel}</span>
+                                                                    {ch.qty > 1 && (
+                                                                        <span className="text-xs text-600 surface-100 px-2 py-0 border-round font-semibold">
+                                                                            x{ch.qty}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-bold text-900 text-sm">{formatCurrency(chargeTotal)}</span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                                <span className="font-bold text-900 text-sm">
-                                                    {formatCurrency(roomAmount)}
-                                                </span>
+                                            );
+                                        })()}
+
+                                        {/* Pajak & Layanan */}
+                                        {selectedRoom.tax_details && selectedRoom.tax_details.length > 0 && (
+                                            <div className="flex flex-column gap-2">
+                                                <div className="text-xs font-bold text-color-secondary uppercase">
+                                                    Rincian Pajak &amp; Layanan
+                                                </div>
+                                                {selectedRoom.tax_details.map((tx: any, idx: number) => {
+                                                    const taxLabel = tx.name || tx.tax_name || (tx.tax_type === 'service_charge' ? 'Service Charge' : 'Pajak Hotel');
+                                                    const taxPct = tx.percentage ?? tx.tax_rate ?? 0;
+                                                    const taxNominal = tx.amount ?? tx.tax_amount ?? 0;
+                                                    return (
+                                                        <div key={idx} className="flex justify-content-between align-items-center text-sm border-bottom-1 surface-border py-2">
+                                                            <span className="text-700">
+                                                                {taxLabel} <span className="text-500 font-medium">({taxPct}%)</span>
+                                                            </span>
+                                                            <span className="text-800 font-semibold">{formatCurrency(taxNominal)}</span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
-                                        );
-                                    })}
+                                        )}
+                                    </div>
+                                </TabPanel>
 
-                                    {selectedRoom.charges && selectedRoom.charges.length > 0 && (
-                                        <>
-                                            <div className="text-xs font-bold text-color-secondary uppercase mt-2 mb-1">Layanan Tambahan:</div>
-                                            {selectedRoom.charges.map((ch: any, idx: number) => (
-                                                <div key={idx} className="flex justify-content-between align-items-center text-sm border-bottom-1 surface-border py-1.5">
-                                                    <span>
-                                                        {ch.nama_charge} <span className="text-xs text-500 font-semibold">x{ch.qty}</span>
-                                                    </span>
-                                                    <span className="font-bold text-900 text-sm">{formatCurrency(ch.total_amount)}</span>
-                                                </div>
-                                            ))}
-                                        </>
-                                    )}
-
-                                    {selectedRoom.tax_details && selectedRoom.tax_details.length > 0 && (
-                                        <>
-                                            <div className="text-xs font-bold text-color-secondary uppercase mt-2 mb-1">Pajak &amp; Layanan:</div>
-                                            {selectedRoom.tax_details.map((tx: any, idx: number) => (
-                                                <div key={idx} className="flex justify-content-between align-items-center text-sm border-bottom-1 surface-border py-1">
-                                                    <span className="text-600">
-                                                        {tx.tax_name} ({tx.tax_rate}%)
-                                                    </span>
-                                                    <span className="text-700 font-semibold">{formatCurrency(tx.tax_amount)}</span>
-                                                </div>
-                                            ))}
-                                        </>
-                                    )}
-                                </div>
-                            </TabPanel>
-
-                            <TabPanel header="Riwayat Pembayaran" leftIcon="pi pi-credit-card mr-2">
-                                <div className="flex flex-column gap-2 max-h-12rem overflow-y-auto pr-1">
-                                    {(!selectedRoom.payments || selectedRoom.payments.length === 0) ? (
-                                        <div className="text-center text-500 text-xs py-3">Belum ada riwayat pembayaran pada folio ini.</div>
-                                    ) : (
-                                        selectedRoom.payments.map((p: any, idx: number) => (
-                                            <div key={idx} className="surface-50 p-2.5 border-round-lg text-xs flex justify-content-between align-items-center border-1 surface-border">
-                                                <div>
-                                                    <span className="font-bold uppercase text-primary text-sm">{p.payment_method}</span>
-                                                    <span className="text-500 ml-2 font-medium">{formatDateSystem(p.payment_date, 'dd/MM/yyyy HH:mm')}</span>
-                                                    {p.reference_no && <div className="text-500 mt-1 font-mono">Ref: {p.reference_no}</div>}
-                                                </div>
-                                                <span className="font-bold text-green-700 text-base">{formatCurrency(p.amount)}</span>
+                                <TabPanel header="Riwayat Pembayaran" leftIcon="pi pi-credit-card mr-2">
+                                    <div className="flex flex-column gap-2 max-h-14rem overflow-y-auto px-1 py-1">
+                                        {(!selectedRoom.payments || selectedRoom.payments.length === 0) ? (
+                                            <div className="text-center text-500 text-sm py-4">
+                                                Belum ada riwayat pembayaran yang tercatat pada folio ini.
                                             </div>
-                                        ))
-                                    )}
-                                </div>
-                            </TabPanel>
-                        </TabView>
+                                        ) : (
+                                            selectedRoom.payments.map((p: any, idx: number) => {
+                                                const paidDate = p.paid_at || p.payment_date || p.created_at;
+                                                return (
+                                                    <div key={idx} className="surface-50 p-3 border-round-lg text-xs flex justify-content-between align-items-center border-1 surface-border">
+                                                        <div className="flex flex-column gap-1">
+                                                            <div className="flex align-items-center gap-2">
+                                                                <Tag severity="info" value={(p.payment_method || 'CASH').toUpperCase()} className="text-xs" />
+                                                                {paidDate && (
+                                                                    <span className="text-600 font-medium">
+                                                                        {formatDateSystem(paidDate, 'dd/MM/yyyy HH:mm')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {p.reference_no && (
+                                                                <span className="text-500 font-mono">Ref: {p.reference_no}</span>
+                                                            )}
+                                                        </div>
+                                                        <span className="font-bold text-green-700 text-base">{formatCurrency(p.amount)}</span>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </TabPanel>
+                            </TabView>
+                        </div>
 
                         {/* ── Section 5: Ringkasan Keuangan ── */}
-                        <div className="surface-100 p-3.5 border-round-xl border-1 surface-border">
-                            <div className="flex justify-content-between align-items-center text-sm py-1.5">
-                                <span className="text-700">Subtotal Biaya</span>
+                        <div className="surface-100 p-3 border-round-xl border-1 surface-border flex flex-column gap-2">
+                            <div className="flex justify-content-between align-items-center text-sm py-1">
+                                <span className="text-700 font-medium">Subtotal Biaya Kamar &amp; Layanan</span>
                                 <span className="font-bold text-900">{formatCurrency(activePricing.subtotal)}</span>
                             </div>
-                            <div className="flex justify-content-between align-items-center text-sm py-1.5">
-                                <span className="text-700">Pajak &amp; Service Charge</span>
+                            <div className="flex justify-content-between align-items-center text-sm py-1">
+                                <span className="text-700 font-medium">Total Pajak &amp; Service Charge</span>
                                 <span className="font-bold text-900">{formatCurrency(activePricing.tax)}</span>
                             </div>
-                            <Divider className="my-1.5" />
-                            <div className="flex justify-content-between align-items-center text-base py-1.5 font-bold">
+
+                            <Divider className="my-1" />
+
+                            <div className="flex justify-content-between align-items-center text-base py-1 font-bold">
                                 <span className="text-900">Total Tagihan (Grand Total)</span>
-                                <span className="text-primary text-lg font-black">{formatCurrency(activePricing.grandTotal)}</span>
+                                <span className="text-primary text-lg font-bold">{formatCurrency(activePricing.grandTotal)}</span>
                             </div>
-                            <div className="flex justify-content-between align-items-center text-sm py-1.5">
+                            <div className="flex justify-content-between align-items-center text-sm py-1">
                                 <span className="text-green-700 font-semibold">Total Pembayaran Masuk</span>
                                 <span className="font-bold text-green-700">- {formatCurrency(activePricing.paid)}</span>
                             </div>
-                            <Divider className="my-1.5" />
-                            <div className={`flex justify-content-between align-items-center p-3 border-round-xl mt-1 ${
+
+                            <div className={`flex justify-content-between align-items-center p-3 border-round-xl mt-2 ${
                                 isSelectedSettled ? 'bg-green-100 text-green-900 border-1 border-green-300' : 'bg-red-100 text-red-900 border-1 border-red-300'
                             }`}>
-                                <div className="flex flex-column">
-                                    <span className="text-xs uppercase font-bold tracking-wider">
-                                        {isSelectedSettled ? 'Status Folio' : 'Sisa Tagihan (Saldo Akhir)'}
+                                <div className="flex flex-column gap-1">
+                                    <span className="text-xs uppercase font-bold">
+                                        {isSelectedSettled ? 'Status Akhir Folio' : 'Sisa Tagihan (Saldo Akhir)'}
                                     </span>
                                     <span className="text-xs text-700 font-medium">
-                                        {isSelectedSettled ? 'Tagihan lunas, siap checkout' : 'Wajib diselesaikan di kasir'}
+                                        {isSelectedSettled ? 'Tagihan lunas, siap checkout' : 'Wajib diselesaikan di kasir sebelum checkout'}
                                     </span>
                                 </div>
-                                <span className={`text-2xl font-black ${isSelectedSettled ? 'text-green-700' : 'text-red-700'}`}>
+                                <span className={`text-2xl font-bold ${isSelectedSettled ? 'text-green-700' : 'text-red-700'}`}>
                                     {formatCurrency(selectedBalance)}
                                 </span>
                             </div>
@@ -1271,13 +1347,14 @@ const CheckoutContent = () => {
 
                         {/* ── Section 6: Form Pelunasan Kasir jika Belum Lunas ── */}
                         {!isSelectedSettled && (
-                            <div className="surface-50 p-3.5 border-round-xl border-1 surface-border p-fluid">
-                                <div className="text-xs font-bold text-color-secondary uppercase mb-3 letter-spacing-1 flex align-items-center gap-1.5">
-                                    <i className="pi pi-credit-card text-primary"></i> Formulir Pelunasan Kasir
+                            <div className="surface-50 p-3 border-round-xl border-1 surface-border p-fluid flex flex-column gap-3">
+                                <div className="text-xs font-bold text-color-secondary uppercase flex align-items-center gap-2 pb-2 border-bottom-1 surface-border">
+                                    <i className="pi pi-credit-card text-primary text-sm"></i>
+                                    <span>Formulir Pelunasan Kasir</span>
                                 </div>
 
-                                <div className="field mb-3">
-                                    <label className="text-sm font-bold text-800 block mb-2">
+                                <div className="field m-0 flex flex-column gap-2">
+                                    <label className="text-sm font-bold text-800 block m-0">
                                         Nominal Pembayaran Pelunasan <span className="text-red-500">*</span>
                                     </label>
                                     <InputNumber
@@ -1288,10 +1365,10 @@ const CheckoutContent = () => {
                                         locale="id-ID"
                                         placeholder="Jumlah bayar"
                                         className="w-full"
-                                        inputClassName="font-bold text-xl py-2.5 text-900"
+                                        inputClassName="font-bold text-xl py-2 text-900"
                                     />
-                                    <small className="text-600 text-xs mt-1.5 block">
-                                        Total sisa tagihan belum lunas: <strong className="text-900">Rp {selectedBalance.toLocaleString('id-ID')}</strong>
+                                    <small className="text-600 text-xs block line-height-3">
+                                        Total sisa tagihan belum lunas: <strong className="text-900">{formatCurrency(selectedBalance)}</strong>
                                     </small>
                                 </div>
 
@@ -1313,8 +1390,8 @@ const CheckoutContent = () => {
                                 />
 
                                 {paymentMethod === 'cash' && !shiftAktif && (
-                                    <div className="p-3 border-round-lg bg-red-50 text-red-700 border-1 border-red-300 text-xs mt-2 flex align-items-center gap-2">
-                                        <i className="pi pi-exclamation-triangle text-base text-red-600"></i>
+                                    <div className="p-3 border-round-lg bg-red-50 text-red-700 border-1 border-red-300 text-xs flex align-items-center gap-2 line-height-3">
+                                        <i className="pi pi-exclamation-triangle text-base text-red-600 flex-shrink-0"></i>
                                         <span>Shift kasir belum aktif! Buka sesi shift kasir terlebih dahulu untuk penerimaan pembayaran tunai.</span>
                                     </div>
                                 )}

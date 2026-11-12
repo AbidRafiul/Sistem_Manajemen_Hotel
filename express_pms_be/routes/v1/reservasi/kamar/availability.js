@@ -36,7 +36,7 @@ router.post("/", async (req, res) => {
     const schema = {
       kode_cabang: Joi.string().required().label("Kode Cabang"),
       kode_tipe_kamar: Joi.string().required().label("Kode Tipe Kamar"),
-      kode_rate_plan: Joi.string().required().label("Kode Rate Plan"),
+      kode_rate_plan: Joi.string().optional().allow(null, "").label("Kode Rate Plan"),
       kode_season: Joi.string().optional().allow(null, "").label("Kode Season"),
       check_in_date: Joi.date().iso().required().label("Tanggal Check In"),
       check_out_date: Joi.date().iso().required().label("Tanggal Check Out")
@@ -92,6 +92,7 @@ router.post("/", async (req, res) => {
 
     // 2. Hitung harga menggunakan helper dengan tanggal check-in aktual
     let rateInfo = null;
+    if (oPayload.kode_rate_plan) {
     try {
         rateInfo = await hitungHargaKamar({
             kode_tipe_kamar: oPayload.kode_tipe_kamar,
@@ -105,6 +106,7 @@ router.post("/", async (req, res) => {
             message: e.message || "Gagal menghitung tarif kamar",
             datetime: formatDateSystem(),
         });
+    }
     }
 
     return res.status(200).json({

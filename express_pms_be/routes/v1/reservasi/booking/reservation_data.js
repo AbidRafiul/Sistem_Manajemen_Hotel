@@ -46,8 +46,7 @@ router.post("/", async (req, res) => {
             .leftJoin('mst_cabang as c', 'r.kode_cabang', 'c.kode_cabang')
             .leftJoin('mst_kamar as k', 'rr.kode_kamar', 'k.kode_kamar')
             .leftJoin('trx_folio as f', function() {
-                this.on('f.kode_reservation', '=', 'r.kode_reservasi')
-                    .andOn('f.status', '=', db.raw("'open'"));
+                this.on('f.kode_reservation', '=', 'r.kode_reservasi');
             })
             .select(
                 'rr.kode_reservasi_room',
@@ -65,6 +64,12 @@ router.post("/", async (req, res) => {
                 'r.check_out_date',
                 'r.special_request',
                 'r.status as res_status',
+                'r.source_channel',
+                'r.booking_type',
+                'r.cancellation_reason',
+                'r.cancellation_penalty',
+                'r.created_at as reservation_created_at',
+                'r.updated_at as reservation_updated_at',
                 'rr.kode_tipe_kamar',
                 'rr.kode_rate_plan',
                 'rr.rate_per_night',
@@ -98,8 +103,8 @@ router.post("/", async (req, res) => {
                     .orWhereIn('r.status', statusArr);
             });
         } else {
-            // Default filter yang belum check-in tapi sudah dibook / assigned
-            query.whereIn('rr.status', ['booked', 'assigned', 'reserved', 'confirmed']);
+            // Default filter kedatangan (termasuk reservasi booking yang menunggu maupun walk-in/booking yang sudah check-in)
+            query.whereIn('rr.status', ['booked', 'assigned', 'reserved', 'confirmed', 'checked_in']);
         }
 
         if (oPayload.check_in_date) {
@@ -107,7 +112,7 @@ router.post("/", async (req, res) => {
             query.where('r.check_in_date', cin);
         }
 
-        query.orderBy('r.check_in_date', 'asc');
+        query.orderBy('r.check_in_date', 'asc').orderBy('r.id', 'desc');
 
         const data = await query;
 
@@ -124,12 +129,44 @@ router.post("/", async (req, res) => {
                 chargesByFolio[c.kode_folio].push(c);
             });
 
+            const payments = await db('trx_payment as p')
+                .leftJoin('mst_user as u', 'p.received_by', 'u.id')
+                .whereIn('p.kode_folio', folioCodes)
+                .where('p.is_active', 1)
+                .select(
+                    'p.id',
+                    'p.kode_payment',
+                    'p.kode_folio',
+                    'p.payment_method',
+                    'p.bank_name',
+                    'p.card_type',
+                    'p.amount',
+                    'p.reference_no',
+                    'p.kode_cashier_shift',
+                    'p.paid_at',
+                    'u.fullname as received_by_name'
+                );
+
+            const paymentsByFolio = {};
+            payments.forEach(p => {
+                if (!paymentsByFolio[p.kode_folio]) paymentsByFolio[p.kode_folio] = [];
+                paymentsByFolio[p.kode_folio].push(p);
+            });
+
             data.forEach(d => {
                 d.charges = chargesByFolio[d.kode_folio] || [];
+                const folioPays = paymentsByFolio[d.kode_folio] || [];
+                d.payments = folioPays;
+                const refundPays = folioPays.filter(p => Number(p.amount) < 0 || (p.reference_no && p.reference_no.includes('REFUND')));
+                d.refund_payments = refundPays;
+                d.refund_amount = refundPays.reduce((acc, curr) => acc + Math.abs(Number(curr.amount || 0)), 0);
             });
         } else {
             data.forEach(d => {
                 d.charges = [];
+                d.payments = [];
+                d.refund_payments = [];
+                d.refund_amount = 0;
             });
         }
 
